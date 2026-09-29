@@ -1,6 +1,6 @@
 # Architecture
 
-Status: Phase 1 shell implemented; service architecture remains proposed. The app currently contains `OrbitConvertApp.swift`, `AppIdentity.swift`, and `ContentView.swift`.
+Status: Phases 1-2 implemented; conversion architecture remains proposed. The app has `OrbitConvertApp.swift`, `AppIdentity.swift`, `ContentView.swift`, and `FileIntakeService.swift`.
 
 ## Small native application
 
@@ -15,7 +15,9 @@ The project has one application target and one test target. Create files when th
 | Tests | Service behavior, fixtures, later radial geometry |
 | RadialMenu, later | Geometry, view, controller, floating panel |
 
-Main flow: a user grants file access; inspection creates FileItem values; UI shows available formats; an immutable job captures options; conversion encodes to a temporary file; output publishes safely; UI receives a result. Both the normal window and future radial menu use the same job path.
+Current intake flow: user selects or drops file URLs; FileIntakeService checks local, regular, readable image files using provisional system type information; UI stores accepted URLs and shows individual issues. Scope is started and stopped around intake inspection. Phase 3 will validate image contents and build richer FileItem values; processing will reacquire scope for its full operation.
+
+Planned conversion flow: inspection creates FileItem values; UI shows available formats; an immutable job captures options; conversion encodes to a temporary file; output publishes safely; UI receives a result. Both the normal window and future radial menu use the same job path.
 
 ## Concurrency
 

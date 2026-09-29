@@ -1,6 +1,8 @@
 # Testing and validation
 
-Status: Phase 1 test target exists and its configuration smoke test passed on Apple Silicon macOS 27.0. No conversion tests, meaningful coverage result, or signed sandbox verification exists yet.
+Status: Phase 2 unit tests passed on Apple Silicon macOS 27.0. The user reports the UI works in manual testing. No conversion tests or signed sandbox verification exist yet.
+
+The 2026-09-29 Phase 2 coverage report measured 91.9% of `FileIntakeService.swift` and 55.0% of the full app target. The full-app result remains below the 80% target because file-picker/drop UI callbacks lack automated coverage. Do not treat the service result as whole-app coverage.
 
 ## Workflow
 

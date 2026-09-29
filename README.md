@@ -4,7 +4,7 @@ OrbitConvert is a planned native macOS utility for local image conversion, follo
 
 ## Current status
 
-Phase 1 shell is implemented: native SwiftUI window, macOS-only target, and a unit-test target. File import, conversion, tools, and radial menu are not implemented yet.
+Phases 1-2 are implemented: native SwiftUI window, macOS-only target, test target, image file selection, and drag/drop intake. Conversion, tools, and radial menu are not implemented yet.
 
 ## Requirements
 
@@ -39,7 +39,7 @@ The shell enables App Sandbox and read-only user-selected files. Conversion will
 
 ## Known limitations
 
-Current UI displays a branded empty state. macOS 14 runtime, Intel runtime, codecs, signing, and sandbox behavior remain unverified. Finder-wide drag detection is not promised.
+Current UI lists selected image names and per-file intake errors. Image content is not decoded or verified until Phase 3. macOS 14 runtime, Intel runtime, codecs, signing, and sandbox behavior remain unverified. Finder-wide drag detection is not promised.
 
 ## Documentation and roadmap
 
@@ -54,4 +54,4 @@ Current UI displays a branded empty state. macOS 14 runtime, Intel runtime, code
 
 ## Testing
 
-The `OrbitConvertTests` target contains one configuration smoke test. Run `xcodebuild test -project OrbitConvert.xcodeproj -scheme OrbitConvert -destination 'platform=macOS' -derivedDataPath /tmp/OrbitConvert-tests CODE_SIGNING_ALLOWED=NO`. The test passed on the local Mac. Planned cases and commands are in [testing](docs/testing.md). No meaningful conversion coverage exists yet.
+The `OrbitConvertTests` target contains a configuration smoke test and intake tests. Run `xcodebuild test -project OrbitConvert.xcodeproj -scheme OrbitConvert -destination 'platform=macOS' -derivedDataPath /tmp/OrbitConvert-tests CODE_SIGNING_ALLOWED=NO`. Automated tests passed on the local Mac. Planned cases and commands are in [testing](docs/testing.md). No conversion coverage exists yet.

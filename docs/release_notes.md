@@ -1,5 +1,13 @@
 # Release notes
 
+## Unreleased - Phase 2 file intake, 2026-09-29
+
+- Added native Choose Files picker and multi-file drop zone.
+- Added provisional UTType image filtering and individual errors for non-file URLs, folders, unreadable or missing files, and non-image files.
+- Valid images remain selected when other files in a batch fail; repeated imports do not duplicate selected URLs.
+- Two automated tests pass and the x86_64 build succeeds. The user reports the Phase 2 UI works in manual testing. Signed sandbox testing remains open.
+- Measured coverage: 91.9% of intake service, 55.0% of the app target; UI callbacks still need automated coverage.
+
 ## Unreleased - Phase 1 shell, 2026-09-29
 
 - Added macOS-only SwiftUI app shell with OrbitConvert branding and a clear empty state.
