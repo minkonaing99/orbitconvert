@@ -1,12 +1,12 @@
 # Image conversion
 
-Status: planned. No codec has been validated by this repository yet.
+Status: Phase 3 reading and thumbnail generation are implemented and tested. Output encoding for conversion remains planned.
 
 ## Capability and detection
 
-Use URL resource content information and UTType as hints, then ImageIO source inspection to validate actual image data. An extension alone is not proof of content. Decode failure remains possible after header inspection. Reject directories and invalid URLs before opening a source.
+URL resource content information is a hint; ImageIO source type and thumbnail decode validate actual image data. A misleading extension does not determine the detected type. Full-resolution decode may still fail during Phase 4 conversion. Reject directories and invalid URLs before opening a source.
 
-Initial required inputs and outputs are PNG, JPEG, HEIC/HEIF, and TIFF, subject to actual source decoding and destination availability. Query [CGImageDestination supported type identifiers](https://developer.apple.com/documentation/imageio/cgimagedestination) and restrict choices to the planned allowlist. HEIC availability and successful encoding must be tested on each supported architecture/runtime; never show an unsupported encoder as working.
+Phase 3 accepts single-image PNG, JPEG, HEIC/HEIF, and TIFF sources that ImageIO can preview. It queries [CGImageDestination supported type identifiers](https://developer.apple.com/documentation/imageio/cgimagedestination) and restricts displayed outputs to the planned allowlist, excluding the input format. Displayed capabilities are not a claim that conversion is implemented. HEIC encoding must still be verified on each supported architecture/runtime.
 
 BMP and GIF input are later compatibility additions. Initially reject animated/multi-image files with a clear explanation rather than silently dropping frames or pages, including multi-page TIFF and multi-image HEIF. WebP and AVIF remain deferred.
 

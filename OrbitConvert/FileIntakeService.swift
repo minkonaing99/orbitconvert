@@ -1,26 +1,25 @@
 import Foundation
-import UniformTypeIdentifiers
 
-struct ImportedFile: Identifiable {
+struct ImportedFile: Identifiable, Sendable {
     let url: URL
     let name: String
 
     var id: URL { url }
 }
 
-struct FileIntakeIssue: Identifiable {
+struct FileIntakeIssue: Identifiable, Sendable {
     let id = UUID()
     let name: String
     let message: String
 }
 
-struct FileIntakeResult {
+struct FileIntakeResult: Sendable {
     let files: [ImportedFile]
     let issues: [FileIntakeIssue]
 }
 
-struct FileIntakeService {
-    func inspect(_ urls: [URL]) -> FileIntakeResult {
+struct FileIntakeService: Sendable {
+    nonisolated func inspect(_ urls: [URL]) -> FileIntakeResult {
         let outcomes = urls.map(inspectOne)
         return FileIntakeResult(
             files: outcomes.compactMap { if case .success(let file) = $0 { file } else { nil } },
@@ -28,7 +27,7 @@ struct FileIntakeService {
         )
     }
 
-    private func inspectOne(_ url: URL) -> Result<ImportedFile, FileIntakeIssue> {
+    nonisolated private func inspectOne(_ url: URL) -> Result<ImportedFile, FileIntakeIssue> {
         let name = url.lastPathComponent.isEmpty ? "Dropped item" : url.lastPathComponent
         guard url.isFileURL else {
             return .failure(FileIntakeIssue(name: name, message: "Only local files can be imported."))
@@ -38,15 +37,12 @@ struct FileIntakeService {
         defer { if scoped { url.stopAccessingSecurityScopedResource() } }
 
         do {
-            let values = try url.resourceValues(forKeys: [.isRegularFileKey, .contentTypeKey])
+            let values = try url.resourceValues(forKeys: [.isRegularFileKey])
             guard values.isRegularFile == true else {
                 return .failure(FileIntakeIssue(name: name, message: "Choose a file, not a folder."))
             }
             guard FileManager.default.isReadableFile(atPath: url.path) else {
                 return .failure(FileIntakeIssue(name: name, message: "This file cannot be read."))
-            }
-            guard values.contentType?.conforms(to: .image) == true else {
-                return .failure(FileIntakeIssue(name: name, message: "Only image files are supported."))
             }
             return .success(ImportedFile(url: url, name: name))
         } catch {

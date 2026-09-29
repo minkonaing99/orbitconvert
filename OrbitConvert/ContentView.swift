@@ -4,8 +4,10 @@ import UniformTypeIdentifiers
 struct ContentView: View {
     @State private var isImporting = false
     @State private var isDropTargeted = false
-    @State private var files: [ImportedFile] = []
+    @State private var files: [FileItem] = []
     @State private var issues: [FileIntakeIssue] = []
+    @State private var inspectionTask: Task<Void, Never>?
+    @State private var pendingInspections = 0
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
@@ -34,6 +36,10 @@ struct ContentView: View {
             }
             .onDrop(of: [.fileURL], isTargeted: $isDropTargeted, perform: importDrop)
 
+            if pendingInspections > 0 {
+                ProgressView("Inspecting images...")
+            }
+
             if !files.isEmpty || !issues.isEmpty {
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 8) {
@@ -41,8 +47,31 @@ struct ContentView: View {
                             Text("Selected files")
                                 .font(.headline)
                             ForEach(files) { file in
-                                Label(file.name, systemImage: "photo")
-                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                HStack(alignment: .top, spacing: 12) {
+                                    if let preview = NSImage(data: file.thumbnailData) {
+                                        Image(nsImage: preview)
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: 72, height: 72)
+                                            .accessibilityHidden(true)
+                                    }
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(file.fileName).fontWeight(.medium)
+                                        Text("\(file.contentTypeName) · \(file.fileExtension.uppercased()) · \(ByteCountFormatter.string(fromByteCount: file.fileSize, countStyle: .file))")
+                                            .foregroundStyle(.secondary)
+                                        Text("\(file.pixelWidth) × \(file.pixelHeight) px")
+                                            .foregroundStyle(.secondary)
+                                        if let created = file.creationDate {
+                                            Text("Created \(created.formatted(date: .abbreviated, time: .omitted))")
+                                                .foregroundStyle(.secondary)
+                                        }
+                                        Text("Available outputs: \(file.supportedConversions.map(\.label).joined(separator: ", "))")
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    Spacer(minLength: 0)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.vertical, 4)
                             }
                         }
                         if !issues.isEmpty {
@@ -74,26 +103,46 @@ struct ContentView: View {
         let fileProviders = providers.filter { $0.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) }
         guard !fileProviders.isEmpty else { return false }
         issues = []
-        for provider in fileProviders {
-            _ = provider.loadObject(ofClass: NSURL.self) { object, _ in
-                Task { @MainActor in
-                    if let url = object as? URL {
-                        accept([url])
-                    } else {
-                        issues = issues + [FileIntakeIssue(name: "Dropped item", message: "This file could not be opened.")]
-                    }
+        Task {
+            var urls: [URL] = []
+            for provider in fileProviders {
+                if let url = await droppedURL(from: provider) {
+                    urls = urls + [url]
+                } else {
+                    issues = issues + [FileIntakeIssue(name: "Dropped item", message: "This file could not be opened.")]
                 }
             }
+            accept(urls)
         }
         return true
     }
 
-    private func accept(_ urls: [URL]) {
-        let result = FileIntakeService().inspect(urls)
-        files = (files + result.files).reduce(into: [ImportedFile]()) { unique, file in
-            if !unique.contains(where: { $0.url == file.url }) { unique.append(file) }
+    private func droppedURL(from provider: NSItemProvider) async -> URL? {
+        await withCheckedContinuation { continuation in
+            _ = provider.loadObject(ofClass: NSURL.self) { object, _ in
+                continuation.resume(returning: object as? URL)
+            }
         }
-        issues = issues + result.issues
+    }
+
+    private func accept(_ urls: [URL]) {
+        let previous = inspectionTask
+        pendingInspections += 1
+        inspectionTask = Task {
+            await previous?.value
+            let intakeService = FileIntakeService()
+            let typeService = FileTypeService()
+            let (intake, inspected) = await Task.detached(priority: .userInitiated) {
+                let intake = intakeService.inspect(urls)
+                let inspected = typeService.inspect(intake.files.map(\.url))
+                return (intake, inspected)
+            }.value
+            files = (files + inspected.files).reduce(into: [FileItem]()) { unique, file in
+                if !unique.contains(where: { $0.url == file.url }) { unique.append(file) }
+            }
+            issues = issues + intake.issues + inspected.issues
+            pendingInspections -= 1
+        }
     }
 }
 

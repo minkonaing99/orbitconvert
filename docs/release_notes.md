@@ -1,5 +1,13 @@
 # Release notes
 
+## Unreleased - Phase 3 image inspection, 2026-09-29
+
+- Added ImageIO byte-based detection for single-image PNG, JPEG, HEIC/HEIF, and TIFF inputs, including misleading extensions.
+- Added bounded, orientation-aware thumbnails; displayed file size, dimensions, content type, optional creation date, and encoder-filtered output options.
+- Moved intake and ImageIO inspection to serial background work; kept security-scoped access balanced around reads.
+- Seven tests passed for supported formats, corrupt and multi-image files, runtime output availability, thumbnails, and mixed batches; an x86_64 build passed. The user supplied a screenshot of the metadata UI. Conversion remains Phase 4.
+- Measured coverage: 81.6% of type service and 44.6% of the app target. Automated UI coverage remains open.
+
 ## Unreleased - Phase 2 file intake, 2026-09-29
 
 - Added native Choose Files picker and multi-file drop zone.

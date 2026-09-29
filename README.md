@@ -4,7 +4,7 @@ OrbitConvert is a planned native macOS utility for local image conversion, follo
 
 ## Current status
 
-Phases 1-2 are implemented: native SwiftUI window, macOS-only target, test target, image file selection, and drag/drop intake. Conversion, tools, and radial menu are not implemented yet.
+Phases 1-3 are implemented: native SwiftUI window, macOS-only target, test target, file selection, drag/drop intake, image detection, thumbnails, metadata, and available output formats. Conversion, tools, and radial menu are not implemented yet.
 
 ## Requirements
 
@@ -31,7 +31,7 @@ SwiftUI owns presentation; focused services own file access, inspection, thumbna
 
 ## Supported conversions and tools
 
-None implemented. Phase 1-4 targets PNG, JPEG, HEIC, and TIFF conversion, subject to runtime encoder availability. Tools and PDF support come later. See [product scope and roadmap](docs/product-plan.md).
+None implemented yet. PNG, JPEG, HEIC, and TIFF inputs are recognized from image data; output options are shown only when an Apple encoder is available. Phase 4 will add conversion. Tools and PDF support come later. See [product scope and roadmap](docs/product-plan.md).
 
 ## Sandbox permissions
 
@@ -39,7 +39,7 @@ The shell enables App Sandbox and read-only user-selected files. Conversion will
 
 ## Known limitations
 
-Current UI lists selected image names and per-file intake errors. Image content is not decoded or verified until Phase 3. macOS 14 runtime, Intel runtime, codecs, signing, and sandbox behavior remain unverified. Finder-wide drag detection is not promised.
+Current UI inspects one still image per file. Animated or multi-image files are rejected; BMP, GIF, WebP, and AVIF remain unsupported. Output formats are display only until Phase 4. macOS 14 runtime, Intel runtime, signing, and signed sandbox behavior remain unverified. Finder-wide drag detection is not promised.
 
 ## Documentation and roadmap
 
@@ -54,4 +54,4 @@ Current UI lists selected image names and per-file intake errors. Image content 
 
 ## Testing
 
-The `OrbitConvertTests` target contains a configuration smoke test and intake tests. Run `xcodebuild test -project OrbitConvert.xcodeproj -scheme OrbitConvert -destination 'platform=macOS' -derivedDataPath /tmp/OrbitConvert-tests CODE_SIGNING_ALLOWED=NO`. Automated tests passed on the local Mac. Planned cases and commands are in [testing](docs/testing.md). No conversion coverage exists yet.
+The `OrbitConvertTests` target contains shell, intake, and type-detection tests. Run `xcodebuild test -project OrbitConvert.xcodeproj -scheme OrbitConvert -destination 'platform=macOS' -derivedDataPath /tmp/OrbitConvert-tests CODE_SIGNING_ALLOWED=NO`. Planned cases and commands are in [testing](docs/testing.md). No conversion coverage exists yet.

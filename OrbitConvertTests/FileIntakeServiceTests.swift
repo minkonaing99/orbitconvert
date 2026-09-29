@@ -2,7 +2,7 @@ import XCTest
 @testable import OrbitConvert
 
 final class FileIntakeServiceTests: XCTestCase {
-    func testMixedBatchKeepsImagesAndReportsEachRejectedURL() throws {
+    func testMixedBatchKeepsReadableFilesAndReportsInvalidURLs() throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -23,8 +23,8 @@ final class FileIntakeServiceTests: XCTestCase {
             jpeg
         ])
 
-        XCTAssertEqual(result.files.map(\.name), ["first.png", "second.jpg"])
-        XCTAssertEqual(result.issues.count, 4)
+        XCTAssertEqual(result.files.map(\.name), ["first.png", "notes.txt", "second.jpg"])
+        XCTAssertEqual(result.issues.count, 3)
         XCTAssertTrue(result.issues.allSatisfy { !$0.message.isEmpty })
     }
 }
