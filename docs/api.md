@@ -1,14 +1,13 @@
 # Internal API contracts
 
-Status: FileItem, ConversionFormat, and file intake/type inspection are implemented. Conversion and output contracts remain planned. OrbitConvert has no network API, HTTP server, or OpenAPI schema.
+Status: FileItem, ConversionFormat, intake, type inspection, conversion, and safe output are implemented. OrbitConvert has no network API, HTTP server, or OpenAPI schema.
 
 ## Core values
 
 - FileItem: URL identity, URL, display name, extension, detected type identifier/name, byte size, optional creation date, pixel dimensions, bounded thumbnail data, and available conversion formats. URL permission is not retained after inspection.
 - ConversionFormat: stable identifier, UTType, canonical extension, label, relevant options. Display JPG; write `.jpg`. Treat JPEG as the same format.
-- ConversionJob: ID, source FileItem, output format, validated options, authorized destination. Capture a new immutable snapshot when submitted.
-- ConversionResult: source and output URLs, format, original/result byte counts, and preservation warnings. No result URL until publication succeeds.
-- ConversionOptions: JPEG quality in the closed range 0...1 (default 0.90), metadata/profile policy, destination policy. Reject nonfinite quality.
+- ConversionResult: source and output URLs and original/result byte counts. No result URL until publication succeeds.
+- ConversionOptions: JPEG quality in the closed range 0...1 (default 0.90) and metadata stripping flag. Reject nonfinite quality.
 
 ## Service boundaries
 

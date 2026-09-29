@@ -65,8 +65,7 @@ struct ContentView: View {
                                             Text("Created \(created.formatted(date: .abbreviated, time: .omitted))")
                                                 .foregroundStyle(.secondary)
                                         }
-                                        Text("Available outputs: \(file.supportedConversions.map(\.label).joined(separator: ", "))")
-                                            .foregroundStyle(.secondary)
+                                        ConversionControlsView(file: file)
                                     }
                                     Spacer(minLength: 0)
                                 }

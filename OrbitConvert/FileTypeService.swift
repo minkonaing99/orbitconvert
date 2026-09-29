@@ -25,6 +25,8 @@ enum ConversionFormat: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
+    nonisolated var fileExtension: String { self == .jpeg ? "jpg" : rawValue }
+
     nonisolated static func sourceFormat(for identifier: String) -> Self? {
         if identifier == UTType.heif.identifier { return .heic }
         return allCases.first { $0.typeIdentifier == identifier }

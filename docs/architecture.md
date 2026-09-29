@@ -1,6 +1,6 @@
 # Architecture
 
-Status: Phases 1-3 implemented; conversion architecture remains proposed. The app has `OrbitConvertApp.swift`, `AppIdentity.swift`, `ContentView.swift`, `FileIntakeService.swift`, and `FileTypeService.swift`.
+Status: Phases 1-4 implemented. The app adds `ConversionControlsView`, `ImageConversionService`, and `FileOutputService` to the shell and intake/type services.
 
 ## Small native application
 
@@ -17,7 +17,7 @@ The project has one application target and one test target. Create files when th
 
 Current intake flow: user selects or drops file URLs; FileIntakeService checks local, regular, readable files. FileTypeService then inspects actual bytes with ImageIO, creates bounded oriented thumbnails, reads file metadata, and intersects output formats with installed encoders. Both checks run in a serial background job. Each service balances its security-scoped access around its own read. The UI stores FileItem values and individual issues. Conversion must reacquire scope for its full operation.
 
-Planned conversion flow: inspection creates FileItem values; UI shows available formats; an immutable job captures options; conversion encodes to a temporary file; output publishes safely; UI receives a result. Both the normal window and future radial menu use the same job path.
+Conversion flow: each file row presents available formats and captures JPEG quality and metadata choice. A detached worker reacquires source and destination scope, ImageIO encodes to a temporary file, FileOutputService publishes it without replacement, and the row presents the result. The future radial menu can call the same service.
 
 ## Concurrency
 

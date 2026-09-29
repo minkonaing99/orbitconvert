@@ -1,5 +1,12 @@
 # Release notes
 
+## Unreleased - Phase 4 image conversion, 2026-09-29
+
+- Added ImageIO conversion among PNG, JPEG, HEIC, and TIFF when the encoder is available, with JPEG quality and optional metadata removal.
+- Added white flattening for transparent JPEG output, per-file progress and cancellation, and Finder reveal for results.
+- Added temporary output and atomic no-overwrite publication with numeric collision suffixes. The app requests an output folder when same-folder saving is denied.
+- Sixteen tests passed on Apple Silicon macOS 27.0; an x86_64 build passed. Image conversion service coverage measured 90.3%; full-app coverage measured 42.1% because UI paths are not automated. Signed sandbox behavior and other macOS runtimes remain untested.
+
 ## Unreleased - Phase 3 image inspection, 2026-09-29
 
 - Added ImageIO byte-based detection for single-image PNG, JPEG, HEIC/HEIF, and TIFF inputs, including misleading extensions.
@@ -30,6 +37,6 @@
 - Recorded configuration gaps: macOS deployment target 27.0, multiplatform target, Swift language mode 5.0, and read-only user-selected access.
 - Observed local Xcode 27.0 (27A266a) and Swift compiler 6.4. No build or tests were performed during this documentation-only task.
 
-No application feature is released. Next implementation milestone is Phase 2 file intake; radial and Finder workflows remain deferred.
+No application feature is released. The next milestone is the in-window radial menu; Finder workflows remain deferred.
 
 Related: [product plan](product-plan.md), [testing](testing.md), [README](../README.md).

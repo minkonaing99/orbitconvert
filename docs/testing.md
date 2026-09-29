@@ -1,8 +1,8 @@
 # Testing and validation
 
-Status: Phase 3 tests cover byte-based PNG/JPEG/TIFF/HEIC detection, misleading extensions, corruption, multi-image rejection, thumbnails, metadata, runtime output filtering, and mixed batches. Seven tests passed on Apple Silicon macOS 27.0; an x86_64 build passed. The user supplied a screenshot showing the Phase 3 thumbnail and metadata UI. No conversion tests or signed sandbox verification exist yet.
+Status: Phase 4 tests cover byte-based image detection, PNG/JPEG/HEIC/TIFF conversion, transparency flattening, metadata preservation/removal, private temporary output, safe collision naming, concurrent publication, invalid output, and corrupt source. Sixteen tests passed on Apple Silicon macOS 27.0; an x86_64 build passed. Signed sandbox verification remains manual.
 
-The 2026-09-29 Phase 3 coverage report measured 81.6% of `FileTypeService.swift` and 44.6% of the full app target. The full-app result remains below the 80% target because file-picker/drop and populated SwiftUI callbacks lack automated coverage. Do not treat service coverage as whole-app coverage.
+The 2026-09-29 Phase 4 coverage report measured 90.3% of `ImageConversionService.swift`, 77.6% of `FileOutputService.swift`, and 42.1% of the full app target. The full-app result remains below the 80% target because file-picker/drop and populated SwiftUI callbacks lack automated coverage. Do not treat service coverage as whole-app coverage.
 
 ## Workflow
 

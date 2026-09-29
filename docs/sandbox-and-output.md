@@ -1,6 +1,6 @@
 # Sandbox and safe output
 
-Status: planned. The current Xcode project enables sandboxing and read-only user-selected access.
+Status: Phase 4 enables sandboxing and read/write user-selected access. Signed sandbox behavior needs manual verification.
 
 ## Permission model
 
@@ -25,7 +25,7 @@ Never return a temporary scoped URL and stop its access before an async consumer
 5. On a collision, retry `photo.jpg`, `photo-1.jpg`, `photo-2.jpg`, and so on without changing existing files. Let the filesystem resolve case sensitivity and equivalent names.
 6. Remove only the temporary artifact created by this job on failure or cancellation. Preserve every source and pre-existing destination.
 
-Select and verify the concrete no-replace publication primitive during implementation; require a concurrent collision test before claiming safety. Avoid replaceItem-style overwrite behavior. For same-format conversion, the existing source is itself a collision and must remain intact.
+Phase 4 creates a private mode-0700 temporary directory with `mkdtemp` inside the destination folder, encodes and validates a file inside it, then calls POSIX `link` to publish without replacing any existing name. The private directory prevents another local user from swapping the in-progress file in a shared folder. If the output name exists, publication retries with a numeric suffix. Concurrent collision tests pass. This method requires a filesystem supporting hard links; a destination that does not support them produces a write error. For same-format conversion, the existing source is itself a collision and remains intact.
 
 Handle full disk, revoked grants, read-only folders, disconnected volumes, disappearing sources, symlink destinations, and destination changes as recoverable failures. Do not follow a symlink to overwrite its target. Return the final URL only after successful publication; reveal it using NSWorkspace when requested.
 
