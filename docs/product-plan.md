@@ -1,6 +1,6 @@
 # Product plan
 
-Status: Phases 1-3 implemented; later phases planned. This document translates the supplied product brief into delivery gates.
+Status: Phases 1-5 implemented; later phases planned. This document translates the supplied product brief into delivery gates.
 
 ## Product
 
@@ -11,7 +11,7 @@ Build an original, minimal macOS utility named OrbitConvert. Import files, inspe
 1. Completed: configured a macOS 14+ SwiftUI app and unit-test target, isolated the working name, and verified build, test, and launch on Apple Silicon macOS 27.0. An x86_64 build passed; macOS 14 and Intel runtime still need verification.
 2. Completed: added Choose Files and native file-URL drag/drop, including multiple files. Per-file errors leave valid files selected.
 3. Completed: ImageIO validates image data and detects PNG, JPEG, HEIC, and TIFF; the UI shows filename, extension, bounded thumbnail, byte size, detected content type, dimensions, optional creation date, and output types supported by installed Apple encoders. Animated/multi-image files are rejected.
-4. Convert supported still images to PNG, JPEG, HEIC, and TIFF using available Apple encoders. Provide JPEG quality (default 0.90), metadata policy, progress, safe output, collision handling, useful errors, and basic tests.
+4. Completed: convert supported still images to PNG, JPEG, HEIC, and TIFF using available Apple encoders. JPEG quality, optional metadata removal, progress, safe output, collision handling, useful errors, and basic tests are implemented.
 
 Default output is beside the source when authorized. Otherwise explain the permission need and let the user choose that folder or another destination. Never overwrite originals or existing results. Process imported files sequentially initially to bound memory; richer batch controls come later.
 

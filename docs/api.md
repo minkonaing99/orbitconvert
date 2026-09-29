@@ -1,6 +1,6 @@
 # Internal API contracts
 
-Status: FileItem, ConversionFormat, intake, type inspection, conversion, and safe output are implemented. OrbitConvert has no network API, HTTP server, or OpenAPI schema.
+Status: FileItem, ConversionFormat, FileAction descriptors, intake, type inspection, conversion, safe output, and in-window radial selection are implemented. OrbitConvert has no network API, HTTP server, or OpenAPI schema.
 
 ## Core values
 
@@ -8,6 +8,7 @@ Status: FileItem, ConversionFormat, intake, type inspection, conversion, and saf
 - ConversionFormat: stable identifier, UTType, canonical extension, label, relevant options. Display JPG; write `.jpg`. Treat JPEG as the same format.
 - ConversionResult: source and output URLs and original/result byte counts. No result URL until publication succeeds.
 - ConversionOptions: JPEG quality in the closed range 0...1 (default 0.90) and metadata stripping flag. Reject nonfinite quality.
+- FileAction: stable format-based ID, display title, SF Symbol, and conversion format. The menu receives these values but never executes conversions itself.
 
 ## Service boundaries
 
@@ -39,6 +40,6 @@ Cancellation is a separate expected terminal state, not a failure alert. Keep un
 
 ## Future actions
 
-When tools arrive, introduce FileAction descriptors and FileActionHandler with identifier, displayName, iconName, canHandle, and async execute responsibilities. Descriptors drive UI; handlers own work. Register built-in handlers in app composition, not a dynamic code-loading plugin system. Add explicit batch input only when merge/collection actions require it.
+When tools arrive, extend action descriptors and introduce handlers only where multiple operations require them. Descriptors drive UI; handlers own work. Do not add a dynamic code-loading plugin system. Add explicit batch input only when merge/collection actions require it.
 
 Related: [architecture](architecture.md), [output](sandbox-and-output.md).

@@ -1,8 +1,8 @@
 # Testing and validation
 
-Status: Phase 4 tests cover byte-based image detection, PNG/JPEG/HEIC/TIFF conversion, transparency flattening, metadata preservation/removal, private temporary output, safe collision naming, concurrent publication, invalid output, and corrupt source. Sixteen tests passed on Apple Silicon macOS 27.0; an x86_64 build passed. Signed sandbox verification remains manual.
+Status: Phase 5 adds five radial geometry tests for zero, one, and many items, exact boundaries, radii, and wraparound. The full 21-test suite passes on Apple Silicon macOS 27.0; an x86_64 build passes. Signed sandbox and manual keyboard/VoiceOver verification remain open.
 
-The 2026-09-29 Phase 4 coverage report measured 90.3% of `ImageConversionService.swift`, 77.6% of `FileOutputService.swift`, and 42.1% of the full app target. The full-app result remains below the 80% target because file-picker/drop and populated SwiftUI callbacks lack automated coverage. Do not treat service coverage as whole-app coverage.
+The 2026-09-29 Phase 5 coverage report measured 100% of `RadialMenuGeometry.swift`, 90.3% of `ImageConversionService.swift`, and 32.7% of the full app target. `RadialMenuView.swift` has no automated UI coverage. The full-app result remains below the 80% target because file-picker/drop and populated SwiftUI callbacks lack automated coverage. Do not treat service coverage as whole-app coverage.
 
 ## Workflow
 

@@ -1,6 +1,6 @@
 # Architecture
 
-Status: Phases 1-4 implemented. The app adds `ConversionControlsView`, `ImageConversionService`, and `FileOutputService` to the shell and intake/type services.
+Status: Phases 1-5 implemented. The app has in-window radial selection alongside the existing converter.
 
 ## Small native application
 
@@ -17,7 +17,7 @@ The project has one application target and one test target. Create files when th
 
 Current intake flow: user selects or drops file URLs; FileIntakeService checks local, regular, readable files. FileTypeService then inspects actual bytes with ImageIO, creates bounded oriented thumbnails, reads file metadata, and intersects output formats with installed encoders. Both checks run in a serial background job. Each service balances its security-scoped access around its own read. The UI stores FileItem values and individual issues. Conversion must reacquire scope for its full operation.
 
-Conversion flow: each file row presents available formats and captures JPEG quality and metadata choice. A detached worker reacquires source and destination scope, ImageIO encodes to a temporary file, FileOutputService publishes it without replacement, and the row presents the result. The future radial menu can call the same service.
+Conversion flow: each file row presents available formats and captures JPEG quality and metadata choice. A detached worker reacquires source and destination scope, ImageIO encodes to a temporary file, FileOutputService publishes it without replacement, and the row presents the result. The in-window radial menu returns a `FileAction` descriptor to the row, which uses the same conversion path as the standard buttons.
 
 ## Concurrency
 
@@ -37,9 +37,9 @@ Use os.Logger categories FileAccess, Conversion, UI, RadialMenu, Permissions, an
 
 ## Radial menu, Phase 5
 
-Pass action descriptors to the menu; execution belongs to services. Separate pure geometry from SwiftUI drawing. Handle zero/one/many actions, inner dead zone, outer boundary, wraparound, and coordinate direction explicitly. Use atan2 and a normalized angle for selection, with the same origin and ordering used for rendering.
+`RadialMenuView` receives `[FileAction]`, thumbnail data, and select/dismiss closures; it contains no conversion logic. `RadialMenuGeometry` uses angle zero at the top, increasing clockwise in SwiftUI's downward Y coordinate system. It supplies points for segment drawing/labels and uses `atan2(dx, -dy)` for hit testing within inclusive inner and outer radii. Tests cover zero/one/many actions, boundaries, dead zone, and wraparound.
 
-Provide arrows, Return, Escape, VoiceOver labels, visible focus, and a conventional list alternative. Do not depend on hover alone. For mixed file types, offer only actions valid for the complete selection, or explain exclusions before execution.
+Hover highlights a segment; click or Return invokes selection. Arrows move selection, Escape dismisses, and the existing buttons remain the conventional keyboard/VoiceOver alternative. The menu exposes named accessibility actions and respects reduced motion. Manual keyboard and VoiceOver verification remains open. For mixed file types, actions are shown per file rather than for the entire selection.
 
 ## Floating NSPanel, Phase 6
 

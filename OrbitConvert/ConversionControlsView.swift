@@ -9,6 +9,7 @@ struct ConversionControlsView: View {
     @State private var stripMetadata = false
     @State private var isConverting = false
     @State private var isChoosingFolder = false
+    @State private var isShowingRadial = false
     @State private var pendingFormat: ConversionFormat?
     @State private var message: String?
     @State private var resultURL: URL?
@@ -23,6 +24,16 @@ struct ConversionControlsView: View {
                     Button(format.label) { convert(to: format, in: file.url.deletingLastPathComponent()) }
                         .disabled(isConverting)
                         .accessibilityLabel("Convert \(file.fileName) to \(format.label)")
+                }
+                Button("Radial Menu") { isShowingRadial.toggle() }
+                    .disabled(isConverting || file.supportedConversions.isEmpty)
+            }
+            if isShowingRadial {
+                RadialMenuView(file: file, actions: file.supportedConversions.map { FileAction(format: $0) }) { action in
+                    isShowingRadial = false
+                    convert(to: action.format, in: file.url.deletingLastPathComponent())
+                } onDismiss: {
+                    isShowingRadial = false
                 }
             }
             HStack(spacing: 16) {
@@ -70,6 +81,8 @@ struct ConversionControlsView: View {
     }
 
     private func convert(to format: ConversionFormat, in directory: URL) {
+        guard !isConverting else { return }
+        isShowingRadial = false
         isConverting = true
         message = nil
         resultURL = nil

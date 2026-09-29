@@ -1,5 +1,12 @@
 # Release notes
 
+## Unreleased - Phase 5 in-window radial menu, 2026-09-29
+
+- Added dynamic SwiftUI radial segments with mathematically matched drawing, hover, and click hit testing.
+- Added thumbnail and filename center, arrow-key selection, Return to convert, Escape to dismiss, reduced-motion-aware highlighting, and accessibility actions.
+- Kept the existing conversion buttons and conversion service path. Five geometry tests bring the suite to 21 passing tests; an x86_64 build passes.
+- Geometry coverage measured 100%; full-app coverage measured 32.7% because radial UI interactions are not yet automated. Manual keyboard, VoiceOver, and signed sandbox checks remain open.
+
 ## Unreleased - Phase 4 image conversion, 2026-09-29
 
 - Added ImageIO conversion among PNG, JPEG, HEIC, and TIFF when the encoder is available, with JPEG quality and optional metadata removal.
@@ -37,6 +44,6 @@
 - Recorded configuration gaps: macOS deployment target 27.0, multiplatform target, Swift language mode 5.0, and read-only user-selected access.
 - Observed local Xcode 27.0 (27A266a) and Swift compiler 6.4. No build or tests were performed during this documentation-only task.
 
-No application feature is released. The next milestone is the in-window radial menu; Finder workflows remain deferred.
+No application feature is released. The next milestone is the floating AppKit panel; Finder workflows remain deferred.
 
 Related: [product plan](product-plan.md), [testing](testing.md), [README](../README.md).
