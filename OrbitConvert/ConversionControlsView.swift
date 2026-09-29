@@ -4,6 +4,8 @@ import UniformTypeIdentifiers
 
 struct ConversionControlsView: View {
     let file: FileItem
+    let autoOpenFloating: Bool
+    let onFloatingOpened: () -> Void
 
     @State private var jpegQuality = 0.90
     @State private var stripMetadata = false
@@ -82,6 +84,11 @@ struct ConversionControlsView: View {
             }
         }
         .onDisappear { floatingController?.dismiss() }
+        .task(id: autoOpenFloating) {
+            guard autoOpenFloating else { return }
+            showFloatingMenu()
+            onFloatingOpened()
+        }
     }
 
     private func showFloatingMenu() {

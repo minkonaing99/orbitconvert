@@ -1,8 +1,8 @@
 # Testing and validation
 
-Status: Phase 6 adds five placement tests and two AppKit panel tests for window style, Escape, and transparent-corner dismissal. All 28 tests pass on Apple Silicon macOS 27.0, and an x86_64 build passes. Signed sandbox and manual floating-panel checks remain open.
+Status: Finder drop-target phase adds an AppKit panel test. All 29 tests pass on Apple Silicon macOS 27.0, and an x86_64 build passes. Signed sandbox and live drop checks remain open.
 
-The 2026-09-29 Phase 6 coverage report measured 100% of `FloatingRadialPlacement.swift`, 78.6% of `FloatingRadialWindowController.swift`, and 54.9% of the full app target. The full-app result remains below the 80% target because other AppKit/SwiftUI interaction paths lack automated coverage. Do not treat geometry coverage as whole-app coverage.
+The 2026-09-29 Finder drop-target coverage report measured 53.91% (965/1790) of the full app target, below the 80% target. Most SwiftUI/AppKit interaction paths lack automated coverage. Do not treat passing service and panel tests as live Finder drag verification.
 
 ## Workflow
 
@@ -50,6 +50,8 @@ Use controlled service failures for deterministic permission tests; chmod alone 
 Phase 5 adds radial zero/one/many item geometry, inner/outer bounds, exact segment boundaries, wraparound, and rendering/hit-test agreement. Test keyboard, VoiceOver, and reduced motion.
 
 Phase 6 placement tests cover multiple monitors, negative origins, and visible-frame edges. Manually check display removal/repositioning, focus, Return/Escape, outside clicks, dark/light appearance, and panel dismissal before claiming the live UI is verified.
+
+Finder drop-target manual checks: open the floating target, switch to Finder, drop one and several supported images, and confirm the first image opens the radial menu near the pointer. Check an unsupported file, a corrupted image, an off-screen existing scroll position, target close/reopen, multiple displays, and source/output grants in a signed sandbox build. Confirm the target never claims to appear automatically when a Finder drag starts.
 
 Phase 8 adds resize aspect ratio, compression arithmetic including larger outputs, GPS removal, ordered PDF pages and page size, and optional Vision capability checks.
 

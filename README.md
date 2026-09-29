@@ -4,7 +4,7 @@ OrbitConvert is a native macOS utility for local image conversion. It uses Swift
 
 ## Current status
 
-Phases 1-6 are implemented: native SwiftUI window, file selection and drag/drop, image inspection, safe conversion, in-window radial selection, and a floating radial panel. Tools and Finder integration come later.
+Phases 1-6 and a supported Finder drop workflow are implemented: native SwiftUI window, file selection and drag/drop, image inspection, safe conversion, in-window radial selection, a floating radial panel, and an app-owned floating drop target. Tools and direct Finder commands come later.
 
 ## Requirements
 
@@ -27,7 +27,7 @@ Unsigned compilation does not verify sandbox permissions or distribution readine
 
 ## Architecture
 
-SwiftUI owns presentation; AppKit owns only the floating panel and its lifecycle. Focused services own file access, inspection, conversion, and safe output. Both radial presentations return the selected action to the existing conversion controls. No external dependencies are used. See [architecture](docs/architecture.md) and [internal contracts](docs/api.md).
+SwiftUI owns presentation; AppKit owns the floating windows and their lifecycle. Focused services own file access, inspection, conversion, and safe output. Both radial presentations return the selected action to the existing conversion controls. No external dependencies are used. See [architecture](docs/architecture.md) and [internal contracts](docs/api.md).
 
 ## Supported conversions and tools
 
@@ -39,7 +39,7 @@ The project enables App Sandbox and read/write user-selected files. A dropped so
 
 ## Known limitations
 
-Current UI handles one still image per file; each selected file has conversion buttons, an in-window menu, and a Floating Menu button. Displays smaller than the menu use the in-window menu. Animated or multi-image files are rejected; BMP, GIF, WebP, AVIF, and PDF remain unsupported. Full-size conversions can use substantial memory. Progress and cancellation are per-file. macOS 14 runtime, Intel runtime, signing, signed sandbox behavior, and manual panel/focus/accessibility behavior remain unverified. Finder-wide drag detection is not promised.
+Current UI handles one still image per file; each selected file has conversion buttons, an in-window menu, and a Floating Menu button. Open Floating Drop Target from the main window before dragging Finder files to it. The first supported image opens a radial menu after drop; other imported files stay in the main window. Displays smaller than the menu use the in-window menu. Animated or multi-image files are rejected; BMP, GIF, WebP, AVIF, and PDF remain unsupported. Full-size conversions can use substantial memory. Progress and cancellation are per-file. macOS 14 runtime, Intel runtime, signing, signed sandbox behavior, and manual panel/focus/accessibility behavior remain unverified. Finder-wide drag detection is not available through the APIs used here.
 
 ## Documentation and roadmap
 
@@ -50,6 +50,7 @@ Current UI handles one still image per file; each selected file has conversion b
 - [Sandbox and output safety](docs/sandbox-and-output.md)
 - [Persistence and database policy](docs/database.md)
 - [Testing and validation](docs/testing.md)
+- [Finder workflow feasibility](docs/finder-integration.md)
 - [Release notes](docs/release_notes.md)
 
 ## Testing

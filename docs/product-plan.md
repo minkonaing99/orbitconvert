@@ -1,6 +1,6 @@
 # Product plan
 
-Status: Phases 1-6 implemented in code; live Phase 6 interaction checks remain open. Later phases are planned. This document translates the supplied product brief into delivery gates.
+Status: Phases 1-6 and a supported Phase 9 Finder drop-target workflow are implemented in code; live panel and signed sandbox checks remain open. Other phases are planned. This document translates the supplied product brief into delivery gates.
 
 ## Product
 
@@ -29,7 +29,7 @@ The Phase 1-4 gate is a working normal-window converter. It is not the complete 
 | 6 | Floating AppKit panel | Multi-display placement, appearance, focus, Escape tested |
 | 7 | Configurable modifiers | Distinct conversion/tool mode without global interception |
 | 8 | Tools | Incremental compression, resize, metadata, stripping, image-to-PDF |
-| 9 | Finder feasibility | Public API investigation and approved supported workflow |
+| 9 | Finder feasibility | Public API comparison complete; app-owned floating drop target implemented; live signed verification pending |
 | 10 | Release preparation | Signed sandbox tests, accessibility, performance, release checks |
 
 Testing, accessibility, and sandbox design start in Phase 1, not Phase 10. Advanced Finder integration requires explicit approval before implementation.

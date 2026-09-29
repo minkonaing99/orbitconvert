@@ -1,5 +1,11 @@
 # Release notes
 
+## Unreleased - supported Finder drop workflow, 2026-09-29
+
+- Compared Finder Sync, Services/Quick Actions, Share extensions, app-owned drop destinations, menu bar entry, and global NSEvent monitoring against public APIs. Documented the limits in [Finder workflow feasibility](finder-integration.md).
+- Added an explicitly opened floating drop target. Finder files dropped there use existing inspection and conversion; the first supported image opens the existing radial menu. Started file-provider loading inside the drop callback.
+- Added a panel test. All 29 tests pass on Apple Silicon macOS 27.0, and an x86_64 build passes. Full-app coverage is 53.91%, below the 80% target. Live Finder drag, macOS 14, Intel runtime, and signed sandbox behavior remain unverified.
+
 ## Unreleased - Phase 6 floating radial panel, 2026-09-29
 
 - Added a borderless transparent, nonactivating floating NSPanel that hosts the existing SwiftUI menu and forwards selections to the existing converter.
@@ -50,6 +56,6 @@
 - Recorded configuration gaps: macOS deployment target 27.0, multiplatform target, Swift language mode 5.0, and read-only user-selected access.
 - Observed local Xcode 27.0 (27A266a) and Swift compiler 6.4. No build or tests were performed during this documentation-only task.
 
-No application feature is released. The next milestone is modifier-based action modes; Finder workflows remain deferred.
+No application feature is released. Modifier-based action modes and selection-based Finder commands remain deferred.
 
 Related: [product plan](product-plan.md), [testing](testing.md), [README](../README.md).

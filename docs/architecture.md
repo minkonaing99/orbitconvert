@@ -1,6 +1,6 @@
 # Architecture
 
-Status: Phases 1-6 implemented. The app has in-window and floating radial selection alongside the existing converter.
+Status: Phases 1-6 and the supported Phase 9 drop-target workflow are implemented. The app has in-window and floating radial selection alongside the existing converter.
 
 ## Small native application
 
@@ -49,8 +49,8 @@ SwiftUI's regular window scene does not expose the panel's nonactivating style, 
 
 ## Finder integration, Phase 9
 
-No public global drag detector has been established by this plan. Do not infer reliable Finder-wide drag interception from a mouse monitor. Apple's [Finder Sync documentation](https://developer.apple.com/library/archive/documentation/General/Conceptual/ExtensibilityPG/Finder.html) describes synchronization-oriented integration; it is not a general drag-interception contract.
+`FloatingDropWindowController` owns a visible nonactivating drop-target panel. The main window opens it on request. SwiftUI's `onDrop` receives Finder file providers only after the pointer enters and drops on this app-owned window; loading starts inside the drop callback. `ContentView` performs the existing intake/type inspection, scrolls the first supported item into view, and tells its existing `ConversionControlsView` to open the floating radial panel. Extra files remain in the main window. Panel code does not inspect or convert files.
 
-Investigate Services/Quick Actions, Share extensions, a menu bar entry, and an explicitly opened drag-destination panel. Compare file grants, invocation, sandbox behavior, and review suitability. Choose a supported alternative before implementing. Do not request Accessibility permission unless a specific justified design requires it; App Store acceptance remains subject to review.
+This does not detect arbitrary Finder drag starts. No Accessibility permission or Finder extension is used. Details and official API sources: [Finder feasibility](finder-integration.md). Signed sandbox, inactive-app drop delivery, and multi-display behavior still require manual tests; App Store acceptance remains subject to review.
 
 Related: [product plan](product-plan.md), [conversion](image-conversion.md), [sandbox](sandbox-and-output.md).
