@@ -7,5 +7,8 @@ struct OrbitConvertApp: App {
             ContentView()
         }
         .defaultSize(width: 680, height: 480)
+        Settings {
+            CompressionSettingsView()
+        }
     }
 }

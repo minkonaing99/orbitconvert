@@ -53,6 +53,22 @@ final class FileOutputServiceTests: XCTestCase {
         XCTAssertEqual(try Data(contentsOf: source), Data("source".utf8))
     }
 
+    func testGenericPDFNameCollidesWithoutOverwriting() throws {
+        let folder = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let existing = folder.appendingPathComponent("report-pages-4-7.pdf")
+        try Data("original".utf8).write(to: existing)
+        let service = FileOutputService()
+        let temporary = try service.makeTemporaryFile(in: folder)
+        try Data("new".utf8).write(to: temporary)
+
+        let output = try service.publish(temporary, stem: "report-pages-4-7", fileExtension: "pdf", in: folder)
+
+        XCTAssertEqual(output.lastPathComponent, "report-pages-4-7-1.pdf")
+        XCTAssertEqual(try Data(contentsOf: existing), Data("original".utf8))
+        XCTAssertEqual(try Data(contentsOf: output), Data("new".utf8))
+    }
+
     func testTemporaryOutputIsPrivateAndCleanedUp() throws {
         let folder = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: folder) }

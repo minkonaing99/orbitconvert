@@ -4,7 +4,7 @@ OrbitConvert is a native macOS utility for local image conversion. It uses Swift
 
 ## Current status
 
-Phases 1-6 and a supported Finder drop workflow are implemented: native SwiftUI window, file selection and drag/drop, image inspection, safe conversion, in-window radial selection, a floating radial panel, and an app-owned floating drop target. Tools and direct Finder commands come later.
+Phases 1-6 and a supported Finder drop workflow are implemented. PDF conversion, PDF page utilities, and manual image/PDF optimization have been added. The app has a native SwiftUI window, file drag/drop, in-window and floating radial menus, and an app-owned floating drop target.
 
 ## Requirements
 
@@ -31,7 +31,7 @@ SwiftUI owns presentation; AppKit owns the floating windows and their lifecycle.
 
 ## Supported conversions and tools
 
-Single-image PNG, JPEG, HEIC/HEIF, and TIFF inputs can convert to a different format among PNG, JPEG, HEIC, and TIFF when the Apple encoder is available. JPEG quality defaults to 90%; metadata can be removed. Tools and PDF support come later. See [product scope and roadmap](docs/product-plan.md).
+Single-image PNG, JPEG, HEIC/HEIF, and TIFF inputs can convert to a different format among PNG, JPEG, HEIC, and TIFF when the Apple encoder is available. Images can also become PDF pages. PDFs can be rendered as JPEG/PNG, extracted by page or range, and merged in selection order. JPEG, PNG, and PDF files have a manual Compress action; batch optimization is available for multiple selected files. Settings control compression mode, JPEG export quality, PDF image resolution, and metadata removal. [PDF and compression details](docs/pdf-compression.md) describe each native backend and its limits.
 
 ## Sandbox permissions
 
@@ -39,7 +39,7 @@ The project enables App Sandbox and read/write user-selected files. A dropped so
 
 ## Known limitations
 
-Current UI handles one still image per file; each selected file has conversion buttons, an in-window menu, and a Floating Menu button. Open Floating Drop Target from the main window before dragging Finder files to it. The first supported image opens a radial menu after drop; other imported files stay in the main window. Displays smaller than the menu use the in-window menu. Animated or multi-image files are rejected; BMP, GIF, WebP, AVIF, and PDF remain unsupported. Full-size conversions can use substantial memory. Progress and cancellation are per-file. macOS 14 runtime, Intel runtime, signing, signed sandbox behavior, and manual panel/focus/accessibility behavior remain unverified. Finder-wide drag detection is not available through the APIs used here.
+Each selected file has action buttons, an in-window menu, and a Floating Menu button. Open Floating Drop Target from the main window before dragging Finder files to it. Displays smaller than the menu use the in-window menu. Animated or multi-image inputs are rejected; BMP, GIF, WebP, and AVIF remain unsupported. PDF optimization uses PDFKit write options, so exact compression DPI and JPEG quality are unavailable. Replace Original and Undo are not yet offered; originals are always kept. Full-size conversions can use substantial memory. macOS 14 runtime, Intel runtime, signing, signed sandbox behavior, and manual panel/focus/accessibility behavior remain unverified. Finder-wide drag detection is not available through the APIs used here.
 
 ## Documentation and roadmap
 
@@ -51,8 +51,9 @@ Current UI handles one still image per file; each selected file has conversion b
 - [Persistence and database policy](docs/database.md)
 - [Testing and validation](docs/testing.md)
 - [Finder workflow feasibility](docs/finder-integration.md)
+- [PDF and compression implementation](docs/pdf-compression.md)
 - [Release notes](docs/release_notes.md)
 
 ## Testing
 
-The `OrbitConvertTests` target covers shell, intake, detection, conversion, collision-safe output, radial geometry, and floating placement. Run `xcodebuild test -project OrbitConvert.xcodeproj -scheme OrbitConvert -destination 'platform=macOS' -derivedDataPath /tmp/OrbitConvert-tests CODE_SIGNING_ALLOWED=NO`. Planned cases and commands are in [testing](docs/testing.md).
+The `OrbitConvertTests` target covers intake, detection, conversion, PDF utilities, optimization, collision-safe output, radial geometry, and floating placement. The latest run passed 48 tests on Apple Silicon; the x86_64 build passed. Full app line coverage is 50.2%, below the 80% target. Run `xcodebuild test -project OrbitConvert.xcodeproj -scheme OrbitConvert -destination 'platform=macOS' -derivedDataPath /tmp/OrbitConvert-tests CODE_SIGNING_ALLOWED=NO`. Planned cases and commands are in [testing](docs/testing.md).

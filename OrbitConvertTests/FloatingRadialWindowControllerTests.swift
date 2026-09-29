@@ -8,7 +8,7 @@ final class FloatingRadialWindowControllerTests: XCTestCase {
         let file = FileItem(
             url: URL(fileURLWithPath: "/tmp/sample.png"), fileName: "sample.png", fileExtension: "png",
             contentTypeIdentifier: "public.png", contentTypeName: "PNG image", fileSize: 100,
-            creationDate: nil, pixelWidth: 10, pixelHeight: 10, thumbnailData: Data(),
+            creationDate: nil, pixelWidth: 10, pixelHeight: 10, pageCount: nil, thumbnailData: Data(),
             supportedConversions: [.jpeg]
         )
         var didClose = false
@@ -41,7 +41,7 @@ final class FloatingRadialWindowControllerTests: XCTestCase {
         let file = FileItem(
             url: URL(fileURLWithPath: "/tmp/sample.png"), fileName: "sample.png", fileExtension: "png",
             contentTypeIdentifier: "public.png", contentTypeName: "PNG image", fileSize: 100,
-            creationDate: nil, pixelWidth: 10, pixelHeight: 10, thumbnailData: Data(),
+            creationDate: nil, pixelWidth: 10, pixelHeight: 10, pageCount: nil, thumbnailData: Data(),
             supportedConversions: [.jpeg]
         )
         var didClose = false

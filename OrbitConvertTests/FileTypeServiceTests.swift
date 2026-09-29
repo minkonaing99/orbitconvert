@@ -1,5 +1,6 @@
 import CoreGraphics
 import ImageIO
+import PDFKit
 import UniformTypeIdentifiers
 import XCTest
 @testable import OrbitConvert
@@ -96,6 +97,23 @@ final class FileTypeServiceTests: XCTestCase {
         XCTAssertTrue(intake.issues.isEmpty)
         XCTAssertEqual(inspected.files.map(\.fileName), ["image.png"])
         XCTAssertEqual(inspected.issues.map(\.name), ["notes.txt"])
+    }
+
+    func testDetectsPDFAndItsPageCount() throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("document.dat")
+        let document = PDFDocument()
+        document.insert(PDFPage(), at: 0)
+        document.insert(PDFPage(), at: 1)
+        XCTAssertTrue(document.write(to: url))
+
+        let result = FileTypeService().inspect([url])
+
+        XCTAssertTrue(result.issues.isEmpty)
+        XCTAssertEqual(result.files.first?.contentTypeIdentifier, UTType.pdf.identifier)
+        XCTAssertEqual(result.files.first?.pageCount, 2)
+        XCTAssertFalse(result.files.first?.thumbnailData.isEmpty ?? true)
     }
 
     private func temporaryDirectory() throws -> URL {

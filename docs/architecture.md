@@ -1,6 +1,6 @@
 # Architecture
 
-Status: Phases 1-6 and the supported Phase 9 drop-target workflow are implemented. The app has in-window and floating radial selection alongside the existing converter.
+Status: Phases 1-6 and the supported Phase 9 drop-target workflow are implemented. PDF conversion and manual compression now use the same in-window and floating radial menus.
 
 ## Small native application
 
@@ -17,7 +17,9 @@ The project has one application target and one test target. Create files when th
 
 Current intake flow: user selects or drops file URLs; FileIntakeService checks local, regular, readable files. FileTypeService then inspects actual bytes with ImageIO, creates bounded oriented thumbnails, reads file metadata, and intersects output formats with installed encoders. Both checks run in a serial background job. Each service balances its security-scoped access around its own read. The UI stores FileItem values and individual issues. Conversion must reacquire scope for its full operation.
 
-Conversion flow: each file row presents available formats and captures JPEG quality and metadata choice. A detached worker reacquires source and destination scope, ImageIO encodes to a temporary file, FileOutputService publishes it without replacement, and the row presents the result. The in-window radial menu returns a `FileAction` descriptor to the row, which uses the same conversion path as the standard buttons.
+Action flow: each file row presents actions valid for its detected ImageIO or PDFKit content. Buttons and both radial menus return the same `FileAction` descriptor to `ConversionControlsView`. A detached worker calls `FileActionService`, which routes to ImageIO conversion, PDFKit/Core Graphics PDF operations, or native optimization. Services reacquire source and destination scope, validate temporary output, and use `FileOutputService` for no-overwrite publication. Batch optimization processes selected eligible files sequentially and reports each failure without discarding prior results.
+
+PDFKit owns document/page structure for image-to-PDF, extraction, merge, and optimization. Core Graphics renders individual PDF pages for JPEG/PNG export; ImageIO encodes the bitmap. PDFKit optimization write options may reduce embedded image size without flattening every page. Apple does not expose exact PDF compression DPI or JPEG quality through these options; precise controls require a separate vetted backend. See [PDF and compression](pdf-compression.md).
 
 ## Concurrency
 

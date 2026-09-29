@@ -23,6 +23,8 @@ struct ConversionResult: Sendable {
 struct ImageConversionService: Sendable {
     private let output = FileOutputService()
 
+    nonisolated init() {}
+
     nonisolated func convert(
         _ file: FileItem, to format: ConversionFormat, in directory: URL,
         options: ConversionOptions = ConversionOptions()

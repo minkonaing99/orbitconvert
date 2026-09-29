@@ -28,6 +28,8 @@ enum ConversionError: Error, LocalizedError, Equatable, Sendable {
 }
 
 struct FileOutputService: Sendable {
+    nonisolated init() {}
+
     nonisolated func makeTemporaryFile(in directory: URL) throws -> URL {
         guard directory.isFileURL else { throw ConversionError.invalidDestination }
         var template = Array(directory.appendingPathComponent(".orbitconvert-XXXXXX").path.utf8CString)
@@ -39,16 +41,24 @@ struct FileOutputService: Sendable {
     }
 
     nonisolated func publish(_ temporary: URL, beside source: URL, as format: ConversionFormat, in directory: URL) throws -> URL {
-        guard source.isFileURL, temporary.isFileURL, directory.isFileURL,
+        guard source.isFileURL else { throw ConversionError.invalidDestination }
+        return try publish(temporary, stem: source.deletingPathExtension().lastPathComponent,
+                           fileExtension: format.fileExtension, in: directory)
+    }
+
+    nonisolated func publish(_ temporary: URL, stem: String, fileExtension: String, in directory: URL) throws -> URL {
+        guard temporary.isFileURL, directory.isFileURL,
               temporary.lastPathComponent == "image",
               temporary.deletingLastPathComponent().lastPathComponent.hasPrefix(".orbitconvert-"),
-              temporary.deletingLastPathComponent().deletingLastPathComponent().standardizedFileURL == directory.standardizedFileURL else {
+              temporary.deletingLastPathComponent().deletingLastPathComponent().standardizedFileURL == directory.standardizedFileURL,
+              !stem.isEmpty, stem != ".", stem != "..", stem == (stem as NSString).lastPathComponent,
+              !stem.contains("\0"), !fileExtension.isEmpty,
+              fileExtension.range(of: "^[A-Za-z0-9]+$", options: .regularExpression) != nil else {
             throw ConversionError.invalidDestination
         }
-        let stem = source.deletingPathExtension().lastPathComponent
         var suffix = 0
         while true {
-            let name = stem + (suffix == 0 ? "" : "-\(suffix)") + "." + format.fileExtension
+            let name = stem + (suffix == 0 ? "" : "-\(suffix)") + "." + fileExtension
             let output = directory.appendingPathComponent(name)
             let result = temporary.path.withCString { oldPath in
                 output.path.withCString { newPath in link(oldPath, newPath) }

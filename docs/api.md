@@ -1,6 +1,6 @@
 # Internal API contracts
 
-Status: FileItem, ConversionFormat, FileAction descriptors, intake, type inspection, conversion, safe output, and in-window radial selection are implemented. OrbitConvert has no network API, HTTP server, or OpenAPI schema.
+Status: Image and PDF detection, conversion, optimization, safe output, batch optimization, and radial actions are implemented. OrbitConvert has no network API, HTTP server, or OpenAPI schema.
 
 ## Core values
 
@@ -8,16 +8,22 @@ Status: FileItem, ConversionFormat, FileAction descriptors, intake, type inspect
 - ConversionFormat: stable identifier, UTType, canonical extension, label, relevant options. Display JPG; write `.jpg`. Treat JPEG as the same format.
 - ConversionResult: source and output URLs and original/result byte counts. No result URL until publication succeeds.
 - ConversionOptions: JPEG quality in the closed range 0...1 (default 0.90) and metadata stripping flag. Reject nonfinite quality.
-- FileAction: stable format-based ID, display title, SF Symbol, and conversion format. The menu receives these values but never executes conversions itself.
+- FileAction: stable action kind, ID, title, and SF Symbol. The menu receives descriptors but never executes conversions itself.
+- CompressionResult: source/output URLs and byte counts; savings and percentage are derived from the counts, with zero-byte input handled.
 
 ## Service boundaries
 
 | Service | Input | Output and responsibility |
 | --- | --- | --- |
 | FileIntakeService | User-selected or dropped URLs | Local, regular, readable files and individual intake issues |
-| FileTypeService | Validated local file URLs | ImageIO byte-based type, metadata, bounded oriented thumbnail, installed output formats |
+| FileTypeService | Validated local file URLs | ImageIO/PDFKit byte-based type, metadata, bounded thumbnail, installed output formats |
 | ThumbnailService, if later needed | Image source and display bound | Downsampled, oriented preview |
 | ImageConversionService | Validated job and temporary destination | Encoded image or typed error |
+| PDFConversionService | Images or PDF and output options | Validated PDF creation, page rendering, extraction, and merge |
+| ImageOptimizationService | JPEG/PNG and compression preset | Smaller validated candidate or no-reduction outcome |
+| PDFOptimizationService | PDF and native PDFKit options | Structure-checked smaller candidate or no-reduction outcome |
+| BatchOptimizationService | Ordered files and output folder | Sequential results, skipped files, and per-file failures |
+| FileActionService | Action descriptor and settings | Dispatch to conversion or optimization outside the radial UI |
 | FileOutputService | Authorized directory and proposed basename | No-overwrite publication with collision retry |
 | SecurityScopedAccessService | User-granted URL/bookmark | Scoped lifetime, bookmark resolution and renewal |
 | Conversion coordinator | Immutable jobs | Ordered progress, cancellation, per-file results |
@@ -40,6 +46,6 @@ Cancellation is a separate expected terminal state, not a failure alert. Keep un
 
 ## Future actions
 
-When tools arrive, extend action descriptors and introduce handlers only where multiple operations require them. Descriptors drive UI; handlers own work. Do not add a dynamic code-loading plugin system. Add explicit batch input only when merge/collection actions require it.
+Action descriptors drive UI; services own work. A dynamic code-loading plugin system is not needed. See [PDF and compression](pdf-compression.md) for native backend limits.
 
 Related: [architecture](architecture.md), [output](sandbox-and-output.md).

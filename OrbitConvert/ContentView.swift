@@ -10,13 +10,17 @@ struct ContentView: View {
     @State private var pendingInspections = 0
     @State private var dropWindow: FloatingDropWindowController?
     @State private var pendingFloatingFileURL: URL?
+    @State private var isChoosingBatchFolder = false
+    @State private var batchTask: Task<BatchOptimizationResult, Never>?
+    @State private var batchProgress: String?
+    @State private var batchResult: BatchOptimizationResult?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(AppIdentity.name)
                     .font(.largeTitle.weight(.semibold))
-                Text("Local image conversion starts here")
+                Text("Local file conversion starts here")
                     .foregroundStyle(.secondary)
             }
 
@@ -41,8 +45,10 @@ struct ContentView: View {
             .onDrop(of: [.fileURL], isTargeted: $isDropTargeted) { importDrop($0) }
 
             if pendingInspections > 0 {
-                ProgressView("Inspecting images...")
+                ProgressView("Inspecting files...")
             }
+
+            if files.count > 1 { batchControls }
 
             if !files.isEmpty || !issues.isEmpty {
                 ScrollViewReader { scroll in
@@ -64,17 +70,30 @@ struct ContentView: View {
                                             Text(file.fileName).fontWeight(.medium)
                                             Text("\(file.contentTypeName) · \(file.fileExtension.uppercased()) · \(ByteCountFormatter.string(fromByteCount: file.fileSize, countStyle: .file))")
                                                 .foregroundStyle(.secondary)
-                                            Text("\(file.pixelWidth) × \(file.pixelHeight) px")
-                                                .foregroundStyle(.secondary)
+                                            if let pages = file.pageCount {
+                                                Text("\(pages) \(pages == 1 ? "page" : "pages")")
+                                                    .foregroundStyle(.secondary)
+                                            } else {
+                                                Text("\(file.pixelWidth) × \(file.pixelHeight) px")
+                                                    .foregroundStyle(.secondary)
+                                            }
                                             if let created = file.creationDate {
                                                 Text("Created \(created.formatted(date: .abbreviated, time: .omitted))")
                                                     .foregroundStyle(.secondary)
                                             }
                                             ConversionControlsView(
                                                 file: file,
+                                                selection: files,
                                                 autoOpenFloating: pendingFloatingFileURL == file.url,
                                                 onFloatingOpened: { pendingFloatingFileURL = nil }
                                             )
+                                            if file.isPDF, files.filter(\.isPDF).count > 1 {
+                                                HStack {
+                                                    Button("Move Up") { reorderPDF(file.url, by: -1) }
+                                                    Button("Move Down") { reorderPDF(file.url, by: 1) }
+                                                }
+                                                .font(.caption)
+                                            }
                                         }
                                         Spacer(minLength: 0)
                                     }
@@ -110,7 +129,75 @@ struct ContentView: View {
                 issues = issues + [FileIntakeIssue(name: "Selection", message: "The selected files could not be opened.")]
             }
         }
-        .onDisappear { dropWindow?.dismiss() }
+        .fileImporter(isPresented: $isChoosingBatchFolder, allowedContentTypes: [.folder]) { result in
+            switch result {
+            case .success(let folder): optimizeBatch(in: folder)
+            case .failure: batchProgress = "No output folder was selected."
+            }
+        }
+        .onDisappear {
+            dropWindow?.dismiss()
+            batchTask?.cancel()
+        }
+    }
+
+    private var batchControls: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Button("Compress All Supported Files") { isChoosingBatchFolder = true }
+                .disabled(batchTask != nil)
+            if let batchProgress {
+                HStack {
+                    ProgressView(batchProgress).controlSize(.small)
+                    if batchTask != nil { Button("Cancel") { batchTask?.cancel() } }
+                }
+            }
+            if let batchResult {
+                Text("\(batchResult.successCount) of \(batchResult.attemptedCount) processed · \(ByteCountFormatter.string(fromByteCount: batchResult.originalBytes, countStyle: .file)) to \(ByteCountFormatter.string(fromByteCount: batchResult.outputBytes, countStyle: .file)) · \(ByteCountFormatter.string(fromByteCount: batchResult.savingsBytes, countStyle: .file)) saved (\(batchResult.savingsPercentage.formatted(.number.precision(.fractionLength(0))))%)")
+                    .font(.caption)
+                if !batchResult.saved.isEmpty {
+                    Button("Reveal Results in Finder") {
+                        NSWorkspace.shared.activateFileViewerSelecting(batchResult.saved.map(\.outputURL))
+                    }
+                }
+                ForEach(batchResult.failures, id: \.fileName) { failure in
+                    Text("\(failure.fileName): \(failure.message)").foregroundStyle(.red).font(.caption)
+                }
+            }
+        }
+    }
+
+    private func optimizeBatch(in directory: URL) {
+        let eligible = files.filter {
+            $0.isPDF || [.jpeg, .png].contains(ConversionFormat.sourceFormat(for: $0.contentTypeIdentifier))
+        }
+        guard !eligible.isEmpty else { return }
+        batchResult = nil
+        batchProgress = "Preparing..."
+        let (updates, continuation) = AsyncStream<String>.makeStream()
+        Task { for await update in updates { batchProgress = update } }
+        let preset = CompressionPreset(rawValue: UserDefaults.standard.string(forKey: "defaultCompressionPreset") ?? "") ?? .balanced
+        let removeMetadata = UserDefaults.standard.bool(forKey: "removeMetadata")
+        let job = Task.detached(priority: .userInitiated) {
+            defer { continuation.finish() }
+            return BatchOptimizationService().optimize(eligible, in: directory, preset: preset,
+                removeMetadata: removeMetadata,
+                progress: { current, total in continuation.yield("Optimizing \(current) of \(total)") })
+        }
+        batchTask = job
+        Task {
+            batchResult = await job.value
+            batchTask = nil
+            batchProgress = nil
+        }
+    }
+
+    private func reorderPDF(_ url: URL, by direction: Int) {
+        let pdfIndices = files.indices.filter { files[$0].isPDF }
+        guard let current = pdfIndices.firstIndex(where: { files[$0].url == url }),
+              pdfIndices.indices.contains(current + direction) else { return }
+        var reordered = files
+        reordered.swapAt(pdfIndices[current], pdfIndices[current + direction])
+        files = reordered
     }
 
     private func toggleDropWindow() {
@@ -171,7 +258,7 @@ struct ContentView: View {
             issues = issues + intake.issues + inspected.issues
             pendingInspections -= 1
             if openFloatingOnImport,
-               let first = inspected.files.first(where: { !$0.supportedConversions.isEmpty }) {
+               let first = inspected.files.first(where: { !FileAction.available(for: $0, selection: inspected.files).isEmpty }) {
                 pendingFloatingFileURL = first.url
             } else if openFloatingOnImport, !issues.isEmpty {
                 NSApp.activate(ignoringOtherApps: true)

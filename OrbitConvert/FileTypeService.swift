@@ -1,5 +1,6 @@
 import Foundation
 import ImageIO
+import PDFKit
 import UniformTypeIdentifiers
 
 enum ConversionFormat: String, CaseIterable, Identifiable, Sendable {
@@ -43,10 +44,12 @@ struct FileItem: Identifiable, Sendable {
     let creationDate: Date?
     let pixelWidth: Int
     let pixelHeight: Int
+    let pageCount: Int?
     let thumbnailData: Data
     let supportedConversions: [ConversionFormat]
 
     var id: URL { url }
+    nonisolated var isPDF: Bool { contentTypeIdentifier == UTType.pdf.identifier }
 }
 
 struct FileTypeResult: Sendable {
@@ -75,6 +78,13 @@ struct FileTypeService: Sendable {
             let values = try url.resourceValues(forKeys: [.isRegularFileKey, .fileSizeKey, .creationDateKey, .contentTypeKey])
             guard values.isRegularFile == true, FileManager.default.isReadableFile(atPath: url.path) else {
                 return .failure(FileIntakeIssue(name: name, message: "This file is unavailable or cannot be read."))
+            }
+            if let document = PDFDocument(url: url) {
+                return inspectPDF(document, url: url, fileSize: values.fileSize,
+                                  creationDate: values.creationDate)
+            }
+            if values.contentType?.conforms(to: .pdf) == true {
+                return .failure(FileIntakeIssue(name: name, message: "This PDF could not be opened; it may be damaged or locked."))
             }
             guard let source = CGImageSourceCreateWithURL(url as CFURL, [kCGImageSourceShouldCache: false] as CFDictionary),
                   let type = CGImageSourceGetType(source) else {
@@ -105,12 +115,31 @@ struct FileTypeService: Sendable {
                 url: url, fileName: name, fileExtension: url.pathExtension,
                 contentTypeIdentifier: identifier, contentTypeName: UTType(identifier)?.localizedDescription ?? format.label,
                 fileSize: Int64(size), creationDate: values.creationDate,
-                pixelWidth: width, pixelHeight: height,
+                pixelWidth: width, pixelHeight: height, pageCount: nil,
                 thumbnailData: thumbnail, supportedConversions: outputs
             ))
         } catch {
             return .failure(FileIntakeIssue(name: name, message: "This file is unavailable or cannot be read."))
         }
+    }
+
+    nonisolated private func inspectPDF(_ document: PDFDocument, url: URL, fileSize: Int?,
+                                        creationDate: Date?) -> Result<FileItem, FileIntakeIssue> {
+        let name = url.lastPathComponent
+        guard !document.isLocked, document.pageCount > 0,
+              let first = document.page(at: 0), let fileSize,
+              let tiff = first.thumbnail(of: CGSize(width: 256, height: 256), for: .mediaBox).tiffRepresentation,
+              let bitmap = NSBitmapImageRep(data: tiff),
+              let thumbnail = bitmap.representation(using: .png, properties: [:]) else {
+            return .failure(FileIntakeIssue(name: name, message: "This PDF could not be opened; it may be damaged or locked."))
+        }
+        return .success(FileItem(
+            url: url, fileName: name, fileExtension: url.pathExtension,
+            contentTypeIdentifier: UTType.pdf.identifier, contentTypeName: "PDF document",
+            fileSize: Int64(fileSize), creationDate: creationDate,
+            pixelWidth: 0, pixelHeight: 0, pageCount: document.pageCount,
+            thumbnailData: thumbnail, supportedConversions: []
+        ))
     }
 
     nonisolated private func thumbnailData(from source: CGImageSource) -> Data? {

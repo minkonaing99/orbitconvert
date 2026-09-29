@@ -1,5 +1,13 @@
 # Release notes
 
+## Unreleased - PDF conversion and manual compression, 2026-09-29
+
+- Added PDF detection, image-to-PDF, PDF-to-JPEG/PNG, page extraction, and PDF merge through existing action buttons and radial menus.
+- Added ImageIO JPEG/PNG optimization and PDFKit native rewrite/embedded-image optimization. Candidates must reopen, pass validation, and be smaller before collision-safe publication. Originals remain untouched.
+- Added sequential batch optimization with per-file failures, byte savings display, and native Settings for implemented compression/export preferences.
+- No third-party dependencies or external processes. Ghostscript was evaluated but not bundled due AGPL/commercial distribution considerations. PDFKit cannot set an exact compressed-PDF DPI or JPEG quality; Replace Original/Undo and signed sandbox verification remain open.
+- 48 automated tests pass; x86_64 build passes. Full app line coverage is 50.2%, below the 80% target, mainly from unautomated SwiftUI/AppKit interaction paths.
+
 ## Unreleased - supported Finder drop workflow, 2026-09-29
 
 - Compared Finder Sync, Services/Quick Actions, Share extensions, app-owned drop destinations, menu bar entry, and global NSEvent monitoring against public APIs. Documented the limits in [Finder workflow feasibility](finder-integration.md).
