@@ -4,7 +4,7 @@ Status: Phases 1-6 and a supported Phase 9 Finder drop-target workflow are imple
 
 ## Product
 
-Build an original, minimal macOS utility named OrbitConvert. Import files, inspect their content, choose an available action, process locally, save a new file, and show a useful result. The normal window remains usable independently of radial interactions. Do not copy another product's branding, assets, exact visual design, or code.
+Build an original, minimal macOS utility named OrbitConvert. Import files, inspect their content, choose an available action in a rectangular panel, process locally, save a new file, and show a useful result. The normal window remains usable independently of the floating panel. Do not copy another product's branding, assets, exact visual design, or code.
 
 ## Immediate scope: phases 1-4
 
@@ -13,9 +13,9 @@ Build an original, minimal macOS utility named OrbitConvert. Import files, inspe
 3. Completed: ImageIO validates image data and detects PNG, JPEG, HEIC, and TIFF; the UI shows filename, extension, bounded thumbnail, byte size, detected content type, dimensions, optional creation date, and output types supported by installed Apple encoders. Animated/multi-image files are rejected.
 4. Completed: convert supported still images to PNG, JPEG, HEIC, and TIFF using available Apple encoders. JPEG quality, optional metadata removal, progress, safe output, collision handling, useful errors, and basic tests are implemented.
 
-Default output is beside the source when authorized. Otherwise explain the permission need and let the user choose that folder or another destination. Never overwrite originals or existing results. Process imported files sequentially initially to bound memory; richer batch controls come later.
+Default output is beside the source when authorized. Otherwise explain the permission need and let the user choose that folder or another destination. Never overwrite originals or existing results. Batch conversion and optimization process files sequentially to bound memory.
 
-The Phase 1-4 gate is a working normal-window converter. It is not the complete radial-menu MVP. Stop after this implementation milestone and report files changed, architecture, completed features, testing, limitations, and the next milestone.
+The Phase 1-4 gate established a working normal-window converter. The current action panels expose those services without changing conversion engines.
 
 ## Roadmap
 
@@ -25,7 +25,7 @@ The Phase 1-4 gate is a working normal-window converter. It is not the complete 
 | 2 | File selection and drop | Single and multiple imports; invalid items handled |
 | 3 | Detection and preview | Content-based type, bounded thumbnails, supported actions |
 | 4 | Image conversion and output | Required conversion and safety tests pass |
-| 5 | In-window radial menu | Dynamic geometry, hover, click, keyboard, VoiceOver tested |
+| 5 | In-window action panel | Valid grouped buttons, keyboard, VoiceOver tested |
 | 6 | Floating AppKit panel | Multi-display placement, appearance, focus, Escape tested |
 | 7 | Configurable modifiers | Distinct conversion/tool mode without global interception |
 | 8 | Tools | Incremental compression, resize, metadata, stripping, image-to-PDF |
@@ -40,12 +40,12 @@ Testing, accessibility, and sandbox design start in Phase 1, not Phase 10. Advan
 - Detect PNG, JPEG, HEIC, and TIFF and list available output formats.
 - Convert PNG to JPEG, JPEG to PNG, and HEIC to JPEG on a supported runtime.
 - Save safely without overwriting existing files and show actionable errors.
-- Open a radial menu for a selected file; hover highlights and click converts.
+- Open a rectangular action panel for a selected file; buttons invoke valid conversions and tools.
 - Pass core unit tests and accessibility checks.
 
 ## Second milestone
 
-Add a transparent floating panel near the cursor with thumbnail center, screen-bound placement, light/dark appearance, keyboard input, and close-on-selection/cancel/Escape behavior. It is app-owned and explicitly invoked; automatic detection of arbitrary Finder drags is not part of this milestone.
+Add a transparent floating rectangular panel near the cursor with a compact file header, screen-bound placement, light/dark appearance, keyboard input, and close-on-selection/cancel/Escape behavior. It is app-owned and explicitly invoked; automatic detection of arbitrary Finder drags is not part of this milestone.
 
 ## Third milestone and later tools
 
@@ -58,9 +58,9 @@ Add a transparent floating panel near the cursor with thumbnail center, screen-b
 
 ## Settings and experience
 
-Introduce settings as their features ship: output location (source folder, ask, custom), filename suffix, JPEG quality, metadata/profile preservation, radial visibility/size, animation, modifiers, notifications, and automatic Finder reveal. Use native controls and @AppStorage for simple preferences.
+Introduce settings as their features ship: output location (source folder, ask, custom), filename suffix, JPEG quality, metadata/profile preservation, panel size, modifiers, notifications, and automatic Finder reveal. Use native controls and @AppStorage for simple preferences.
 
-Use macOS materials, SF Symbols, accessible contrast, clear focus, light/dark appearance, and reduced-motion support. Radial animation target is 150-250 ms. Progress states are Preparing, Converting, Saving, Completed, Failed, and Cancelled; counts describe files, not invented codec progress.
+Use macOS materials, SF Symbols, accessible contrast, clear focus, light/dark appearance, and reduced-motion support. Progress states are Preparing, Converting, Saving, Completed, Failed, and Cancelled; counts describe files, not invented codec progress.
 
 Optional menu bar mode may expose Open Converter, Choose Files, Recent Conversions, Settings, and Quit. Keep the Dock icon unless the user intentionally configures otherwise. Recent history is not required for Phase 1-4.
 

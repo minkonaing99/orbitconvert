@@ -1,6 +1,6 @@
 # Testing and validation
 
-Status: 48 tests pass on Apple Silicon macOS 27.0; x86_64 compilation passes. The full app target measures 50.2% line coverage (1,442/2,870), below the 80% target because SwiftUI/AppKit interaction code remains largely untested. Signed sandbox and live drop checks remain open.
+Status: 46 tests pass on Apple Silicon macOS 27.0; x86_64 compilation passes. The full app target measures 49.5% line coverage (1,377/2,780), below the 80% target because SwiftUI/AppKit interaction code remains largely untested. Signed sandbox and live drop checks remain open.
 
 The 2026-09-29 Finder drop-target coverage report measured 53.91% (965/1790) of the full app target, below the 80% target. Most SwiftUI/AppKit interaction paths lack automated coverage. Do not treat passing service and panel tests as live Finder drag verification.
 
@@ -47,11 +47,11 @@ Use controlled service failures for deterministic permission tests; chmod alone 
 
 ## Later gates
 
-Phase 5 adds radial zero/one/many item geometry, inner/outer bounds, exact segment boundaries, wraparound, and rendering/hit-test agreement. Test keyboard, VoiceOver, and reduced motion.
+Action-panel tests cover grouping conversion and tool actions. AppKit tests cover floating panel Return for its initial action and Escape; Tab-to-another-action, VoiceOver, and reduced motion still need live checks.
 
 Phase 6 placement tests cover multiple monitors, negative origins, and visible-frame edges. Manually check display removal/repositioning, focus, Return/Escape, outside clicks, dark/light appearance, and panel dismissal before claiming the live UI is verified.
 
-Finder drop-target manual checks: open the floating target, switch to Finder, drop one and several supported images, and confirm the first image opens the radial menu near the pointer. Check an unsupported file, a corrupted image, an off-screen existing scroll position, target close/reopen, multiple displays, and source/output grants in a signed sandbox build. Confirm the target never claims to appear automatically when a Finder drag starts.
+Finder drop-target manual checks: open the floating target, switch to Finder, drop one and several supported files, and confirm the first file opens the rectangular action panel near the pointer. Check an unsupported file, a corrupted image, an off-screen existing scroll position, target close/reopen, multiple displays, and source/output grants in a signed sandbox build. Confirm the target never claims to appear automatically when a Finder drag starts.
 
 PDF/compression automated cases now include PDF recognition, page count, 150-DPI output dimensions, rotated page export, visible annotation rendering, extraction/merge with selectable text, corrupt PDF rejection, image-to-PDF page count, PNG lossless pixel equivalence, JPEG original preservation, rejection of Lossless JPEG, PDFKit rewrite text preservation, no-reduction policy, savings arithmetic, and a batch with one missing file. A manual PDF matrix remains: linked and bookmarked documents, scanned/image-heavy files, interactive widgets, transparency, EXIF orientation, complex outlines, and large page counts. Image-to-PDF visual layout and metadata should be compared in Preview. Replacement/Undo and exact PDF compression DPI remain unimplemented, so related tests are deferred. No test uses Desktop or Documents.
 

@@ -1,8 +1,8 @@
 # PDF and compression implementation
 
-Status: implemented core actions and native optimization. Existing image conversion and both radial presentations remain in place.
+Status: implemented core actions and native optimization. Existing image conversion remains; both action presentations are rectangular panels.
 
-1. Extend byte-validated intake to PDF. Widen the format-only `FileAction` descriptor to image, PDF, and Compress actions; keep `RadialMenuView` generic. Add ordered batch selection for image-to-PDF, PDF merge, and Compress All.
+1. Extend byte-validated intake to PDF. Widen the format-only `FileAction` descriptor to image, PDF, and Compress actions; keep panel rendering separate from service dispatch. Add ordered batch selection for image-to-PDF, PDF merge, and Compress All.
 2. Generalize `FileOutputService` naming and extension while keeping its private temporary directory, no-overwrite publication, and source preservation. Add tests before changing the output service.
 3. Add PDFKit/Core Graphics services for image-to-PDF, PDF page rendering to JPEG/PNG, page extraction, and merge. Render pages sequentially off the main actor. Validate each output by reopening it before publication.
 4. Add JPEG and PNG optimization with ImageIO. JPEG re-encoding is lossy even at high quality; PNG remains lossless unless a future palette optimizer is added. Preserve metadata by default. Discard a candidate that is not smaller.

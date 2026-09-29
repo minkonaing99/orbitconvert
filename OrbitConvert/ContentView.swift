@@ -2,6 +2,10 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct ContentView: View {
+    private enum BatchPanelAction: Sendable {
+        case convert(ConversionFormat), createPDF
+    }
+
     @State private var isImporting = false
     @State private var isDropTargeted = false
     @State private var files: [FileItem] = []
@@ -14,6 +18,12 @@ struct ContentView: View {
     @State private var batchTask: Task<BatchOptimizationResult, Never>?
     @State private var batchProgress: String?
     @State private var batchResult: BatchOptimizationResult?
+    @State private var batchMessage: String?
+    @State private var isChoosingBatchActionFolder = false
+    @State private var pendingBatchAction: BatchPanelAction?
+    @State private var batchConversionTask: Task<BatchConversionResult, Never>?
+    @State private var batchConversionProgress: String?
+    @State private var batchConversionResult: BatchConversionResult?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
@@ -58,44 +68,20 @@ struct ContentView: View {
                                 Text("Selected files")
                                     .font(.headline)
                                 ForEach(files) { file in
-                                    HStack(alignment: .top, spacing: 12) {
-                                        if let preview = NSImage(data: file.thumbnailData) {
-                                            Image(nsImage: preview)
-                                                .resizable()
-                                                .scaledToFit()
-                                                .frame(width: 72, height: 72)
-                                                .accessibilityHidden(true)
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        ConversionControlsView(
+                                            file: file,
+                                            selection: files,
+                                            autoOpenPanel: pendingFloatingFileURL == file.url,
+                                            onFloatingOpened: { pendingFloatingFileURL = nil }
+                                        )
+                                        if file.isPDF, files.filter(\.isPDF).count > 1 {
+                                            HStack {
+                                                Button("Move Up") { reorderPDF(file.url, by: -1) }
+                                                Button("Move Down") { reorderPDF(file.url, by: 1) }
+                                            }
+                                            .font(.caption)
                                         }
-                                        VStack(alignment: .leading, spacing: 4) {
-                                            Text(file.fileName).fontWeight(.medium)
-                                            Text("\(file.contentTypeName) · \(file.fileExtension.uppercased()) · \(ByteCountFormatter.string(fromByteCount: file.fileSize, countStyle: .file))")
-                                                .foregroundStyle(.secondary)
-                                            if let pages = file.pageCount {
-                                                Text("\(pages) \(pages == 1 ? "page" : "pages")")
-                                                    .foregroundStyle(.secondary)
-                                            } else {
-                                                Text("\(file.pixelWidth) × \(file.pixelHeight) px")
-                                                    .foregroundStyle(.secondary)
-                                            }
-                                            if let created = file.creationDate {
-                                                Text("Created \(created.formatted(date: .abbreviated, time: .omitted))")
-                                                    .foregroundStyle(.secondary)
-                                            }
-                                            ConversionControlsView(
-                                                file: file,
-                                                selection: files,
-                                                autoOpenFloating: pendingFloatingFileURL == file.url,
-                                                onFloatingOpened: { pendingFloatingFileURL = nil }
-                                            )
-                                            if file.isPDF, files.filter(\.isPDF).count > 1 {
-                                                HStack {
-                                                    Button("Move Up") { reorderPDF(file.url, by: -1) }
-                                                    Button("Move Down") { reorderPDF(file.url, by: 1) }
-                                                }
-                                                .font(.caption)
-                                            }
-                                        }
-                                        Spacer(minLength: 0)
                                     }
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                     .padding(.vertical, 4)
@@ -132,23 +118,50 @@ struct ContentView: View {
         .fileImporter(isPresented: $isChoosingBatchFolder, allowedContentTypes: [.folder]) { result in
             switch result {
             case .success(let folder): optimizeBatch(in: folder)
-            case .failure: batchProgress = "No output folder was selected."
+            case .failure: batchMessage = "No output folder was selected."
+            }
+        }
+        .fileImporter(isPresented: $isChoosingBatchActionFolder, allowedContentTypes: [.folder]) { result in
+            guard let action = pendingBatchAction else { return }
+            pendingBatchAction = nil
+            switch result {
+            case .success(let folder): runBatchAction(action, in: folder)
+            case .failure: batchMessage = "No output folder was selected."
             }
         }
         .onDisappear {
             dropWindow?.dismiss()
             batchTask?.cancel()
+            batchConversionTask?.cancel()
         }
     }
 
     private var batchControls: some View {
         VStack(alignment: .leading, spacing: 8) {
+            Text("\(files.count) files · \(ByteCountFormatter.string(fromByteCount: files.reduce(0) { $0 + $1.fileSize }, countStyle: .file))")
+                .font(.headline)
             Button("Compress All Supported Files") { isChoosingBatchFolder = true }
-                .disabled(batchTask != nil)
-            if let batchProgress {
+                .disabled(batchTask != nil || batchConversionTask != nil)
+            HStack {
+                ForEach(BatchConversionService.commonFormats(for: files)) { format in
+                    Button("Convert All to \(format.label)") {
+                        pendingBatchAction = .convert(format)
+                        isChoosingBatchActionFolder = true
+                    }
+                }
+                if files.allSatisfy({ !$0.isPDF }) {
+                    Button("Create PDF") {
+                        pendingBatchAction = .createPDF
+                        isChoosingBatchActionFolder = true
+                    }
+                }
+            }
+            .disabled(batchTask != nil || batchConversionTask != nil)
+            if let batchMessage { Text(batchMessage).font(.caption).foregroundStyle(.secondary) }
+            if batchTask != nil, let batchProgress {
                 HStack {
                     ProgressView(batchProgress).controlSize(.small)
-                    if batchTask != nil { Button("Cancel") { batchTask?.cancel() } }
+                    Button("Cancel") { batchTask?.cancel() }
                 }
             }
             if let batchResult {
@@ -159,7 +172,25 @@ struct ContentView: View {
                         NSWorkspace.shared.activateFileViewerSelecting(batchResult.saved.map(\.outputURL))
                     }
                 }
-                ForEach(batchResult.failures, id: \.fileName) { failure in
+                ForEach(Array(batchResult.failures.enumerated()), id: \.offset) { _, failure in
+                    Text("\(failure.fileName): \(failure.message)").foregroundStyle(.red).font(.caption)
+                }
+            }
+            if batchConversionTask != nil, let batchConversionProgress {
+                HStack {
+                    ProgressView(batchConversionProgress).controlSize(.small)
+                    Button("Cancel") { batchConversionTask?.cancel() }
+                }
+            }
+            if let batchConversionResult {
+                Text("\(batchConversionResult.outputURLs.count) output files from \(batchConversionResult.attemptedCount) selected files")
+                    .font(.caption)
+                if !batchConversionResult.outputURLs.isEmpty {
+                    Button("Reveal Results in Finder") {
+                        NSWorkspace.shared.activateFileViewerSelecting(batchConversionResult.outputURLs)
+                    }
+                }
+                ForEach(Array(batchConversionResult.failures.enumerated()), id: \.offset) { _, failure in
                     Text("\(failure.fileName): \(failure.message)").foregroundStyle(.red).font(.caption)
                 }
             }
@@ -171,6 +202,7 @@ struct ContentView: View {
             $0.isPDF || [.jpeg, .png].contains(ConversionFormat.sourceFormat(for: $0.contentTypeIdentifier))
         }
         guard !eligible.isEmpty else { return }
+        batchMessage = nil
         batchResult = nil
         batchProgress = "Preparing..."
         let (updates, continuation) = AsyncStream<String>.makeStream()
@@ -188,6 +220,44 @@ struct ContentView: View {
             batchResult = await job.value
             batchTask = nil
             batchProgress = nil
+        }
+    }
+
+    private func runBatchAction(_ action: BatchPanelAction, in directory: URL) {
+        let chosen = files
+        batchMessage = nil
+        batchConversionResult = nil
+        batchConversionProgress = "Preparing..."
+        let quality = UserDefaults.standard.object(forKey: "jpegExportQuality") as? Double ?? 0.90
+        let options = ConversionOptions(jpegQuality: quality,
+                                        stripMetadata: UserDefaults.standard.bool(forKey: "removeMetadata"))
+        let (updates, continuation) = AsyncStream<String>.makeStream()
+        Task { for await update in updates { batchConversionProgress = update } }
+        let job = Task.detached(priority: .userInitiated) {
+            defer { continuation.finish() }
+            switch action {
+            case .convert(let format):
+                return BatchConversionService().convert(chosen, to: format, in: directory, options: options,
+                    progress: { current, total in continuation.yield("Converting \(current) of \(total)") })
+            case .createPDF:
+                continuation.yield("Creating PDF...")
+                do {
+                    let result = try PDFConversionService().imagesToPDF(chosen, in: directory)
+                    return BatchConversionResult(attemptedCount: chosen.count, outputURLs: result.outputURLs,
+                                                 failures: [], cancelled: false)
+                } catch {
+                    return BatchConversionResult(attemptedCount: chosen.count, outputURLs: [],
+                        failures: [BatchOptimizationFailure(fileName: "Selection",
+                            message: (error as? LocalizedError)?.errorDescription ?? "PDF creation failed.")],
+                        cancelled: Task.isCancelled)
+                }
+            }
+        }
+        batchConversionTask = job
+        Task {
+            batchConversionResult = await job.value
+            batchConversionTask = nil
+            batchConversionProgress = nil
         }
     }
 

@@ -10,7 +10,7 @@ struct FloatingScreen: Sendable {
     }
 }
 
-enum FloatingRadialPlacement {
+enum FloatingPanelPlacement {
     nonisolated static func frame(near pointer: CGPoint, size: CGSize, screens: [FloatingScreen]) -> CGRect? {
         guard size.width > 0, size.height > 0, size.width.isFinite, size.height.isFinite,
               let screen = screens.first(where: { $0.frame.contains(pointer) })

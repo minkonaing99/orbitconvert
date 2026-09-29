@@ -5,7 +5,7 @@ import UniformTypeIdentifiers
 struct ConversionControlsView: View {
     let file: FileItem
     let selection: [FileItem]
-    let autoOpenFloating: Bool
+    let autoOpenPanel: Bool
     let onFloatingOpened: () -> Void
 
     @AppStorage("defaultCompressionPreset") private var defaultPreset = CompressionPreset.balanced.rawValue
@@ -16,14 +16,14 @@ struct ConversionControlsView: View {
     @State private var pageSelection = "all"
     @State private var isConverting = false
     @State private var isChoosingFolder = false
-    @State private var isShowingRadial = false
-    @State private var floatingController: FloatingRadialWindowController?
+    @State private var floatingController: FloatingActionPanelController?
     @State private var pendingAction: FileAction?
     @State private var message: String?
     @State private var isError = false
     @State private var resultURLs: [URL] = []
     @State private var compression: CompressionResult?
     @State private var progressText: String?
+    @State private var lastAction: FileAction?
     @State private var worker: Task<Result<FileActionReport, Error>, Never>?
 
     private var actions: [FileAction] { FileAction.available(for: file, selection: selection) }
@@ -34,29 +34,16 @@ struct ConversionControlsView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 8) {
-                Text("Actions").foregroundStyle(.secondary)
-                ScrollView(.horizontal) {
-                    HStack(spacing: 8) {
-                        ForEach(actions) { action in
-                            Button(action.title) { process(action, in: file.url.deletingLastPathComponent()) }
-                                .disabled(isConverting)
-                                .accessibilityLabel("\(action.title) for \(file.fileName)")
-                        }
-                    }
-                }
-                Button("Radial Menu") { isShowingRadial.toggle() }
-                    .disabled(isConverting || actions.isEmpty)
-                Button("Floating Menu") { showFloatingMenu() }
-                    .disabled(isConverting || actions.isEmpty)
+            FileActionPanelView(file: file, actions: actions, isEnabled: !isConverting,
+                                returnSelectsFirstAction: false) { action in
+                process(action, in: file.url.deletingLastPathComponent())
+            } onDismiss: {} onFocusChanged: { _ in }
+            Button("Open Floating Panel") { showFloatingPanel() }
+                .disabled(isConverting || actions.isEmpty)
+                .accessibilityHint("Opens file actions near the pointer")
+            if !actions.isEmpty {
+                options
             }
-            if isShowingRadial {
-                RadialMenuView(file: file, actions: actions) { action in
-                    isShowingRadial = false
-                    process(action, in: file.url.deletingLastPathComponent())
-                } onDismiss: { isShowingRadial = false }
-            }
-            options
             if isConverting {
                 HStack {
                     ProgressView(progressText ?? "Processing \(file.fileName)...")
@@ -65,21 +52,31 @@ struct ConversionControlsView: View {
                 }
             }
             if let message {
-                HStack(spacing: 8) {
-                    Text(message).foregroundStyle(isError ? .red : .secondary)
+                VStack(alignment: .leading, spacing: 6) {
+                    Label(isError ? "Action Failed" : lastAction?.kind == .compress ? "Optimization Finished" : lastAction?.category == .tool ? "Action Complete" : "Conversion Complete",
+                          systemImage: isError ? "exclamationmark.triangle" : "checkmark.circle")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(isError ? .red : .primary)
+                    Text(message).font(.caption)
+                    if let compression {
+                        resultRow("Original", value: size(compression.originalBytes))
+                        resultRow("Optimized", value: size(compression.outputBytes))
+                        resultRow("Saved", value: size(compression.savingsBytes))
+                        resultRow("Reduction", value: "\(compression.savingsPercentage.formatted(.number.precision(.fractionLength(0))))%")
+                    }
                     if !resultURLs.isEmpty {
                         Button("Reveal in Finder") {
                             NSWorkspace.shared.activateFileViewerSelecting(resultURLs)
                         }
                     }
                 }
+                .padding(12)
+                .frame(maxWidth: 420, alignment: .leading)
+                .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
+            }
+            Text("Output: same folder as source unless another folder is selected")
                 .font(.caption)
-            }
-            if let compression {
-                Text("Original \(size(compression.originalBytes))  Optimized \(size(compression.outputBytes))  Saved \(size(compression.savingsBytes)) (\(compression.savingsPercentage.formatted(.number.precision(.fractionLength(0))))%)")
-                    .font(.caption)
-                    .accessibilityLabel("Saved \(size(compression.savingsBytes)), \(compression.savingsPercentage.formatted(.number.precision(.fractionLength(0)))) percent")
-            }
+                .foregroundStyle(.secondary)
         }
         .fileImporter(isPresented: $isChoosingFolder, allowedContentTypes: [.folder]) { selection in
             guard let action = pendingAction else { return }
@@ -90,9 +87,9 @@ struct ConversionControlsView: View {
             }
         }
         .onDisappear { floatingController?.dismiss() }
-        .task(id: autoOpenFloating) {
-            guard autoOpenFloating else { return }
-            showFloatingMenu()
+        .task(id: autoOpenPanel) {
+            guard autoOpenPanel else { return }
+            showFloatingPanel()
             onFloatingOpened()
         }
     }
@@ -145,24 +142,23 @@ struct ConversionControlsView: View {
         .font(.caption)
     }
 
-    private func showFloatingMenu() {
-        isShowingRadial = false
+    private func showFloatingPanel() {
         floatingController?.dismiss()
-        let controller = FloatingRadialWindowController(
+        let controller = FloatingActionPanelController(
             file: file, actions: actions,
             onSelect: { action in process(action, in: file.url.deletingLastPathComponent()) },
             onClose: { floatingController = nil }
         )
         floatingController = controller
-        if !controller.show() { isShowingRadial = true }
+        if !controller.show() { message = "No screen can display the floating panel." }
     }
 
     private func process(_ action: FileAction, in directory: URL) {
         guard !isConverting else { return }
-        isShowingRadial = false
         floatingController?.dismiss()
         isConverting = true
         isError = false
+        lastAction = action
         message = nil
         compression = nil
         resultURLs = []
@@ -211,5 +207,14 @@ struct ConversionControlsView: View {
 
     private func size(_ bytes: Int64) -> String {
         ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file)
+    }
+
+    private func resultRow(_ label: String, value: String) -> some View {
+        HStack {
+            Text(label).foregroundStyle(.secondary)
+            Spacer()
+            Text(value).monospacedDigit()
+        }
+        .font(.caption)
     }
 }

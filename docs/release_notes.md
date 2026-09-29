@@ -1,8 +1,14 @@
 # Release notes
 
+## Unreleased - rectangular action panels, 2026-09-29
+
+- Replaced former menu UI with a shared rectangular SwiftUI action panel in the main window and a cursor-positioned AppKit panel. Removed obsolete geometry, drawing, and tests.
+- Kept image/PDF conversion, compression, file intake, output safety, settings, and Finder drop target. Added valid Convert and Tools groups plus common batch JPEG/PNG and multi-image PDF actions.
+- 46 tests pass on Apple Silicon; x86_64 build passes. Full app line coverage is 49.5%, below the 80% target. Live panel keyboard, signed sandbox, and macOS 14 checks remain open.
+
 ## Unreleased - PDF conversion and manual compression, 2026-09-29
 
-- Added PDF detection, image-to-PDF, PDF-to-JPEG/PNG, page extraction, and PDF merge through existing action buttons and radial menus.
+- Added PDF detection, image-to-PDF, PDF-to-JPEG/PNG, page extraction, and PDF merge through action buttons.
 - Added ImageIO JPEG/PNG optimization and PDFKit native rewrite/embedded-image optimization. Candidates must reopen, pass validation, and be smaller before collision-safe publication. Originals remain untouched.
 - Added sequential batch optimization with per-file failures, byte savings display, and native Settings for implemented compression/export preferences.
 - No third-party dependencies or external processes. Ghostscript was evaluated but not bundled due AGPL/commercial distribution considerations. PDFKit cannot set an exact compressed-PDF DPI or JPEG quality; Replace Original/Undo and signed sandbox verification remain open.
@@ -11,21 +17,18 @@
 ## Unreleased - supported Finder drop workflow, 2026-09-29
 
 - Compared Finder Sync, Services/Quick Actions, Share extensions, app-owned drop destinations, menu bar entry, and global NSEvent monitoring against public APIs. Documented the limits in [Finder workflow feasibility](finder-integration.md).
-- Added an explicitly opened floating drop target. Finder files dropped there use existing inspection and conversion; the first supported image opens the existing radial menu. Started file-provider loading inside the drop callback.
+- Added an explicitly opened floating drop target. Finder files dropped there use existing inspection and conversion; the first supported file opens the action panel. Started file-provider loading inside the drop callback.
 - Added a panel test. All 29 tests pass on Apple Silicon macOS 27.0, and an x86_64 build passes. Full-app coverage is 53.91%, below the 80% target. Live Finder drag, macOS 14, Intel runtime, and signed sandbox behavior remain unverified.
 
-## Unreleased - Phase 6 floating radial panel, 2026-09-29
+## Superseded - Phase 6 floating interaction, 2026-09-29
 
-- Added a borderless transparent, nonactivating floating NSPanel that hosts the existing SwiftUI menu and forwards selections to the existing converter.
+- Added a borderless transparent, nonactivating floating NSPanel. Its content was replaced by the current rectangular action panel.
 - Added cursor-centered placement clamped to the visible monitor, display-change repositioning, outside-click and Escape dismissal, and reduced-motion-aware fade.
-- Added five placement tests and two AppKit panel tests; all 28 tests pass and an x86_64 build passes. Too-small displays fall back to the in-window menu. Placement coverage measured 100%, panel-controller coverage 78.6%, and full-app coverage 54.9%; live panel focus, appearance, multi-monitor, and signed sandbox behavior still need manual verification.
+- Added placement and AppKit panel tests. Too-small displays use the main-window actions. Live panel focus, appearance, multi-monitor, and signed sandbox behavior still need manual verification.
 
-## Unreleased - Phase 5 in-window radial menu, 2026-09-29
+## Superseded - Phase 5 in-window interaction, 2026-09-29
 
-- Added dynamic SwiftUI radial segments with mathematically matched drawing, hover, and click hit testing.
-- Added thumbnail and filename center, arrow-key selection, Return to convert, Escape to dismiss, reduced-motion-aware highlighting, and accessibility actions.
-- Kept the existing conversion buttons and conversion service path. Five geometry tests bring the suite to 21 passing tests; an x86_64 build passes.
-- Geometry coverage measured 100%; full-app coverage measured 32.7% because radial UI interactions are not yet automated. Manual keyboard, VoiceOver, and signed sandbox checks remain open.
+- Earlier custom interaction was removed. Current panel uses standard SwiftUI buttons and preserves the conversion service path.
 
 ## Unreleased - Phase 4 image conversion, 2026-09-29
 

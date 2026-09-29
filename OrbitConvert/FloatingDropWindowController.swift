@@ -31,7 +31,7 @@ final class FloatingDropWindowController {
     func show() -> Bool {
         guard let panel else { return false }
         let screens = NSScreen.screens.map { FloatingScreen(frame: $0.frame, visibleFrame: $0.visibleFrame) }
-        guard let frame = FloatingRadialPlacement.frame(near: NSEvent.mouseLocation,
+        guard let frame = FloatingPanelPlacement.frame(near: NSEvent.mouseLocation,
                                                        size: panel.frame.size, screens: screens) else { return false }
         panel.setFrame(frame, display: false)
         panel.orderFrontRegardless()
@@ -65,7 +65,7 @@ private struct FloatingDropTargetView: View {
             Image(systemName: "square.and.arrow.down")
                 .font(.title)
                 .accessibilityHidden(true)
-            Text("Drop images here")
+            Text("Drop files here")
                 .font(.headline)
             Text("Then choose a conversion")
                 .font(.caption)

@@ -1,10 +1,21 @@
 struct FileAction: Identifiable, Hashable, Sendable {
+    nonisolated enum Category: Sendable {
+        case conversion, tool
+    }
+
     enum Kind: Hashable, Sendable {
         case convert(ConversionFormat)
         case imagePDF, pdfJPEG, pdfPNG, extractPages, mergePDFs, compress
     }
 
     let kind: Kind
+
+    nonisolated var category: Category {
+        switch kind {
+        case .convert, .imagePDF, .pdfJPEG, .pdfPNG: .conversion
+        case .compress, .extractPages, .mergePDFs: .tool
+        }
+    }
 
     nonisolated init(format: ConversionFormat) { kind = .convert(format) }
     nonisolated init(_ kind: Kind) { self.kind = kind }
@@ -27,7 +38,7 @@ struct FileAction: Identifiable, Hashable, Sendable {
         case .imagePDF: "PDF"
         case .pdfJPEG: "JPG"
         case .pdfPNG: "PNG"
-        case .extractPages: "Extract"
+        case .extractPages: "Extract Pages"
         case .mergePDFs: "Merge"
         case .compress: "Compress"
         }

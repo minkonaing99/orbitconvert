@@ -2,7 +2,7 @@
 
 Status: planned. No database is needed or implemented.
 
-Use @AppStorage/UserDefaults for small preferences as the corresponding features ship: output mode, filename suffix, JPEG quality, preservation options, radial appearance, modifiers, and feedback preferences. Validate loaded values and fall back to documented defaults when invalid.
+Use @AppStorage/UserDefaults for small preferences as the corresponding features ship: output mode, filename suffix, JPEG quality, preservation options, panel appearance, modifiers, and feedback preferences. Validate loaded values and fall back to documented defaults when invalid.
 
 Store user-selected persistent folder access as security-scoped bookmark data in the app container. Resolve and renew stale bookmarks; ask for selection when access cannot be restored. Do not treat stored paths as permission grants or log bookmark bytes.
 

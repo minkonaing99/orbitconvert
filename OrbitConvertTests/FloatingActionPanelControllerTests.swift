@@ -2,7 +2,7 @@ import AppKit
 import XCTest
 @testable import OrbitConvert
 
-final class FloatingRadialWindowControllerTests: XCTestCase {
+final class FloatingActionPanelControllerTests: XCTestCase {
     @MainActor
     func testPanelOpensWithoutTitleBarAndDismisses() throws {
         let file = FileItem(
@@ -13,7 +13,7 @@ final class FloatingRadialWindowControllerTests: XCTestCase {
         )
         var didClose = false
         let existing = Set(NSApp.windows.map(ObjectIdentifier.init))
-        let controller = FloatingRadialWindowController(
+        let controller = FloatingActionPanelController(
             file: file, actions: [FileAction(format: .jpeg)],
             onSelect: { _ in XCTFail("The test did not select an action") },
             onClose: { didClose = true }
@@ -46,7 +46,7 @@ final class FloatingRadialWindowControllerTests: XCTestCase {
         )
         var didClose = false
         let existing = Set(NSApp.windows.map(ObjectIdentifier.init))
-        let controller = FloatingRadialWindowController(
+        let controller = FloatingActionPanelController(
             file: file, actions: [FileAction(format: .jpeg)], onSelect: { _ in XCTFail() },
             onClose: { didClose = true }
         )
@@ -61,4 +61,32 @@ final class FloatingRadialWindowControllerTests: XCTestCase {
 
         XCTAssertTrue(didClose)
     }
+
+    @MainActor
+    func testReturnInvokesFocusedAction() throws {
+        let file = FileItem(
+            url: URL(fileURLWithPath: "/tmp/sample.png"), fileName: "sample.png", fileExtension: "png",
+            contentTypeIdentifier: "public.png", contentTypeName: "PNG image", fileSize: 100,
+            creationDate: nil, pixelWidth: 10, pixelHeight: 10, pageCount: nil, thumbnailData: Data(),
+            supportedConversions: [.jpeg]
+        )
+        var selected: FileAction.Kind?
+        let existing = Set(NSApp.windows.map(ObjectIdentifier.init))
+        let controller = FloatingActionPanelController(
+            file: file, actions: [FileAction(format: .jpeg)],
+            onSelect: { selected = $0.kind }, onClose: {}
+        )
+        XCTAssertTrue(controller.show())
+        let panel = try XCTUnwrap(NSApp.windows.first { !existing.contains(ObjectIdentifier($0)) } as? NSPanel)
+        RunLoop.main.run(until: Date().addingTimeInterval(0.1))
+        let key = try XCTUnwrap(NSEvent.keyEvent(
+            with: .keyDown, location: .zero, modifierFlags: [], timestamp: 0,
+            windowNumber: panel.windowNumber, context: nil, characters: "\r",
+            charactersIgnoringModifiers: "\r", isARepeat: false, keyCode: 36
+        ))
+        NSApp.sendEvent(key)
+        XCTAssertEqual(selected, .convert(.jpeg))
+        controller.dismiss()
+    }
+
 }
