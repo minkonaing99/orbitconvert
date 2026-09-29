@@ -1,5 +1,11 @@
 # Release notes
 
+## Unreleased - Phase 6 floating radial panel, 2026-09-29
+
+- Added a borderless transparent, nonactivating floating NSPanel that hosts the existing SwiftUI menu and forwards selections to the existing converter.
+- Added cursor-centered placement clamped to the visible monitor, display-change repositioning, outside-click and Escape dismissal, and reduced-motion-aware fade.
+- Added five placement tests and two AppKit panel tests; all 28 tests pass and an x86_64 build passes. Too-small displays fall back to the in-window menu. Placement coverage measured 100%, panel-controller coverage 78.6%, and full-app coverage 54.9%; live panel focus, appearance, multi-monitor, and signed sandbox behavior still need manual verification.
+
 ## Unreleased - Phase 5 in-window radial menu, 2026-09-29
 
 - Added dynamic SwiftUI radial segments with mathematically matched drawing, hover, and click hit testing.
@@ -44,6 +50,6 @@
 - Recorded configuration gaps: macOS deployment target 27.0, multiplatform target, Swift language mode 5.0, and read-only user-selected access.
 - Observed local Xcode 27.0 (27A266a) and Swift compiler 6.4. No build or tests were performed during this documentation-only task.
 
-No application feature is released. The next milestone is the floating AppKit panel; Finder workflows remain deferred.
+No application feature is released. The next milestone is modifier-based action modes; Finder workflows remain deferred.
 
 Related: [product plan](product-plan.md), [testing](testing.md), [README](../README.md).

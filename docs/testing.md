@@ -1,8 +1,8 @@
 # Testing and validation
 
-Status: Phase 5 adds five radial geometry tests for zero, one, and many items, exact boundaries, radii, and wraparound. The full 21-test suite passes on Apple Silicon macOS 27.0; an x86_64 build passes. Signed sandbox and manual keyboard/VoiceOver verification remain open.
+Status: Phase 6 adds five placement tests and two AppKit panel tests for window style, Escape, and transparent-corner dismissal. All 28 tests pass on Apple Silicon macOS 27.0, and an x86_64 build passes. Signed sandbox and manual floating-panel checks remain open.
 
-The 2026-09-29 Phase 5 coverage report measured 100% of `RadialMenuGeometry.swift`, 90.3% of `ImageConversionService.swift`, and 32.7% of the full app target. `RadialMenuView.swift` has no automated UI coverage. The full-app result remains below the 80% target because file-picker/drop and populated SwiftUI callbacks lack automated coverage. Do not treat service coverage as whole-app coverage.
+The 2026-09-29 Phase 6 coverage report measured 100% of `FloatingRadialPlacement.swift`, 78.6% of `FloatingRadialWindowController.swift`, and 54.9% of the full app target. The full-app result remains below the 80% target because other AppKit/SwiftUI interaction paths lack automated coverage. Do not treat geometry coverage as whole-app coverage.
 
 ## Workflow
 
@@ -49,7 +49,7 @@ Use controlled service failures for deterministic permission tests; chmod alone 
 
 Phase 5 adds radial zero/one/many item geometry, inner/outer bounds, exact segment boundaries, wraparound, and rendering/hit-test agreement. Test keyboard, VoiceOver, and reduced motion.
 
-Phase 6 adds multiple monitors, negative screen origins, visible-frame edges, display removal, focus, Return/Escape, and panel dismissal.
+Phase 6 placement tests cover multiple monitors, negative origins, and visible-frame edges. Manually check display removal/repositioning, focus, Return/Escape, outside clicks, dark/light appearance, and panel dismissal before claiming the live UI is verified.
 
 Phase 8 adds resize aspect ratio, compression arithmetic including larger outputs, GPS removal, ordered PDF pages and page size, and optional Vision capability checks.
 

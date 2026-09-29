@@ -4,7 +4,7 @@ OrbitConvert is a native macOS utility for local image conversion. It uses Swift
 
 ## Current status
 
-Phases 1-5 are implemented: native SwiftUI window, file selection and drag/drop, image inspection, safe conversion, and an in-window radial conversion menu. Floating menu, tools, and Finder integration come later.
+Phases 1-6 are implemented: native SwiftUI window, file selection and drag/drop, image inspection, safe conversion, in-window radial selection, and a floating radial panel. Tools and Finder integration come later.
 
 ## Requirements
 
@@ -27,7 +27,7 @@ Unsigned compilation does not verify sandbox permissions or distribution readine
 
 ## Architecture
 
-SwiftUI owns presentation; focused services own file access, inspection, thumbnails, conversion, and safe output. The radial menu receives action descriptors and returns the selected action to the existing conversion controls. No external dependencies are used. See [architecture](docs/architecture.md) and [internal contracts](docs/api.md).
+SwiftUI owns presentation; AppKit owns only the floating panel and its lifecycle. Focused services own file access, inspection, conversion, and safe output. Both radial presentations return the selected action to the existing conversion controls. No external dependencies are used. See [architecture](docs/architecture.md) and [internal contracts](docs/api.md).
 
 ## Supported conversions and tools
 
@@ -39,7 +39,7 @@ The project enables App Sandbox and read/write user-selected files. A dropped so
 
 ## Known limitations
 
-Current UI handles one still image per file; each selected file has conversion buttons and an in-window radial menu. Animated or multi-image files are rejected; BMP, GIF, WebP, AVIF, and PDF remain unsupported. Full-size conversions can use substantial memory. Progress and cancellation are per-file. macOS 14 runtime, Intel runtime, signing, signed sandbox behavior, and manual radial accessibility remain unverified. Finder-wide drag detection is not promised.
+Current UI handles one still image per file; each selected file has conversion buttons, an in-window menu, and a Floating Menu button. Displays smaller than the menu use the in-window menu. Animated or multi-image files are rejected; BMP, GIF, WebP, AVIF, and PDF remain unsupported. Full-size conversions can use substantial memory. Progress and cancellation are per-file. macOS 14 runtime, Intel runtime, signing, signed sandbox behavior, and manual panel/focus/accessibility behavior remain unverified. Finder-wide drag detection is not promised.
 
 ## Documentation and roadmap
 
@@ -54,4 +54,4 @@ Current UI handles one still image per file; each selected file has conversion b
 
 ## Testing
 
-The `OrbitConvertTests` target covers shell, intake, detection, conversion, collision-safe output, and radial geometry. Run `xcodebuild test -project OrbitConvert.xcodeproj -scheme OrbitConvert -destination 'platform=macOS' -derivedDataPath /tmp/OrbitConvert-tests CODE_SIGNING_ALLOWED=NO`. Planned cases and commands are in [testing](docs/testing.md).
+The `OrbitConvertTests` target covers shell, intake, detection, conversion, collision-safe output, radial geometry, and floating placement. Run `xcodebuild test -project OrbitConvert.xcodeproj -scheme OrbitConvert -destination 'platform=macOS' -derivedDataPath /tmp/OrbitConvert-tests CODE_SIGNING_ALLOWED=NO`. Planned cases and commands are in [testing](docs/testing.md).

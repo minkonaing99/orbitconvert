@@ -10,6 +10,7 @@ struct ConversionControlsView: View {
     @State private var isConverting = false
     @State private var isChoosingFolder = false
     @State private var isShowingRadial = false
+    @State private var floatingController: FloatingRadialWindowController?
     @State private var pendingFormat: ConversionFormat?
     @State private var message: String?
     @State private var resultURL: URL?
@@ -26,6 +27,8 @@ struct ConversionControlsView: View {
                         .accessibilityLabel("Convert \(file.fileName) to \(format.label)")
                 }
                 Button("Radial Menu") { isShowingRadial.toggle() }
+                    .disabled(isConverting || file.supportedConversions.isEmpty)
+                Button("Floating Menu") { showFloatingMenu() }
                     .disabled(isConverting || file.supportedConversions.isEmpty)
             }
             if isShowingRadial {
@@ -78,11 +81,25 @@ struct ConversionControlsView: View {
             case .failure: message = "No output folder was selected."
             }
         }
+        .onDisappear { floatingController?.dismiss() }
+    }
+
+    private func showFloatingMenu() {
+        isShowingRadial = false
+        floatingController?.dismiss()
+        let controller = FloatingRadialWindowController(
+            file: file, actions: file.supportedConversions.map { FileAction(format: $0) },
+            onSelect: { action in convert(to: action.format, in: file.url.deletingLastPathComponent()) },
+            onClose: { floatingController = nil }
+        )
+        floatingController = controller
+        if !controller.show() { isShowingRadial = true }
     }
 
     private func convert(to format: ConversionFormat, in directory: URL) {
         guard !isConverting else { return }
         isShowingRadial = false
+        floatingController?.dismiss()
         isConverting = true
         message = nil
         resultURL = nil

@@ -1,6 +1,6 @@
 # Product plan
 
-Status: Phases 1-5 implemented; later phases planned. This document translates the supplied product brief into delivery gates.
+Status: Phases 1-6 implemented in code; live Phase 6 interaction checks remain open. Later phases are planned. This document translates the supplied product brief into delivery gates.
 
 ## Product
 

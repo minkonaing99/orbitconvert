@@ -1,6 +1,6 @@
 # Architecture
 
-Status: Phases 1-5 implemented. The app has in-window radial selection alongside the existing converter.
+Status: Phases 1-6 implemented. The app has in-window and floating radial selection alongside the existing converter.
 
 ## Small native application
 
@@ -43,9 +43,9 @@ Hover highlights a segment; click or Return invokes selection. Arrows move selec
 
 ## Floating NSPanel, Phase 6
 
-AppKit is needed for window level, transparent chrome, activation/focus behavior, and screen coordinates. Host the existing SwiftUI radial content in an app-owned panel. Keep placement and lifecycle in FloatingRadialWindowController; use an AppDelegate only if lifecycle integration requires it.
+SwiftUI's regular window scene does not expose the panel's nonactivating style, transparent chrome, floating level, or global screen placement. `FloatingRadialWindowController` hosts the unchanged `RadialMenuView` in `NSHostingView` inside a borderless [nonactivating NSPanel](https://developer.apple.com/documentation/appkit/nswindow/stylemask-swift.struct/nonactivatingpanel). It returns actions to `ConversionControlsView`; no conversion or file access runs in the controller. The panel can become key for keyboard input without explicitly activating the application.
 
-Use the screen containing the cursor and its visibleFrame, including negative display origins. Clamp the complete panel bounds. Reposition on display changes. Avoid stealing focus on presentation, while allowing key-window behavior when keyboard interaction is requested. Explicitly test Escape delivery and Return. Remove event monitors and release the panel on close.
+`FloatingRadialPlacement` chooses the display whose full frame contains the cursor, then clamps the fixed-size panel to its [visibleFrame](https://developer.apple.com/documentation/appkit/nsscreen/visibleframe), including negative monitor origins. It falls back to the nearest display if needed. If no display can fit the menu, the row opens the in-window menu. The controller repositions on display changes, uses local and global mouse-down monitors for outside clicks, intercepts Escape in its own panel, and removes observers when closing. Global keyboard monitoring is not used. Opening and closing fade for 180 ms unless Reduce Motion is enabled. Live panel focus, Escape, appearance, and monitor changes still need manual verification.
 
 ## Finder integration, Phase 9
 
