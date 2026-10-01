@@ -1,5 +1,32 @@
 # Release notes
 
+## Unreleased - clipboard optimization and live menu status, 2026-10-01
+
+- Added local clipboard image optimization with 600 ms monitoring, generation-checked writes, SHA256 duplicate protection, ignored applications, and independent pause.
+- Reused the sequential background queue and existing image engines. TIFF uses PNG conversion; copied image files produce temporary exports without modifying sources.
+- Added rectangular result cards, Copy/Save/Reveal, and bounded in-memory collection with Copy All/Save All/Clear.
+- Expanded MenuBarExtra with live jobs, outstanding count, session statistics, recent results, and a full activity window. Fixed collapsed popup sizing.
+- Final signed build and signature verification pass. All 87 tests pass with no skips. Full-app coverage is 62.30%, below the 80% target; two existing runtime responsiveness warnings remain.
+- Live installed-app screenshot/browser/Finder paste and sandbox permission checks remain manual. NSPasteboard has no atomic conditional replacement; the final cross-process race is documented.
+
+## Unreleased - dedicated PNG optimization, 2026-09-30
+
+- Bundled universal Oxipng 10.2.1 with license notices and sandbox-inheriting signing. PNG manual/batch/watched-folder optimization now uses the dedicated lossless engine.
+- Added bounded execution, metadata retention, Apple encoder-cache handling, content-credential protection, and decode/dimension validation.
+- 69 tests pass. Signed helper tests and Intel compilation pass. A supplied screenshot measured 42.3% smaller with identical rendered pixels in Balanced mode; this is one sample, not general parity with Clop.
+
+## Unreleased - compact main window, 2026-09-30
+
+- Replaced repeated per-file action cards with compact selectable rows and one shared action area. The large drop zone appears only in the empty state.
+- Added a primary Compress button, conversion picker, tools menu, collapsed contextual options, and shared output controls. Floating-window commands and Settings live in the toolbar.
+- Batch actions process only checked files, preserve per-file failures and compression totals, and keep combined PDF creation/merge as a single operation.
+
+## Unreleased - watched folders, 2026-09-30
+
+- Added user-selected watched folders with app-scoped bookmarks, FSEvents, per-folder type/preset/original handling, global pause, menu bar status, optional Launch at Login, and local activity history.
+- Added sequential automatic JPEG/PNG/HEIC/PDF optimization with temporary-file filtering, stability checks, bounded retries, validation, size checks, same-volume replacement backup/rollback, and Keep Both loop prevention. Existing manual conversion/compression paths remain.
+- 61 tests pass on Apple Silicon macOS 27.0.1; x86_64 build passes. Full-app line coverage is 49.36%, below the 80% target. Ad-hoc signed build contains required entitlements. Live signed sandbox, long paused writers, external/cloud volumes, and macOS 14/Intel runtime remain to be checked.
+
 ## Unreleased - rectangular action panels, 2026-09-29
 
 - Replaced former menu UI with a shared rectangular SwiftUI action panel in the main window and a cursor-positioned AppKit panel. Removed obsolete geometry, drawing, and tests.

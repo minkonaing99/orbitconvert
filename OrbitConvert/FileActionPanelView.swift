@@ -11,7 +11,7 @@ struct FileActionPanelView: View {
     let onFocusChanged: (String?) -> Void
     @FocusState private var focusedActionID: String?
 
-    private let columns = [GridItem(.adaptive(minimum: 88), spacing: 8)]
+    private let columns = [GridItem(.adaptive(minimum: 128), spacing: 8)]
     private var conversions: [FileAction] { actions.filter { $0.category == .conversion } }
     private var tools: [FileAction] { actions.filter { $0.category == .tool } }
     private var primaryActionID: String? { (conversions.first ?? tools.first)?.id }

@@ -58,6 +58,8 @@ struct FileTypeResult: Sendable {
 }
 
 struct FileTypeService: Sendable {
+    nonisolated init() {}
+
     nonisolated func inspect(_ urls: [URL]) -> FileTypeResult {
         let outcomes = urls.map(inspectOne)
         return FileTypeResult(

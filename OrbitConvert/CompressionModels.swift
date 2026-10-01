@@ -1,6 +1,6 @@
 import Foundation
 
-enum CompressionPreset: String, CaseIterable, Identifiable, Sendable {
+nonisolated enum CompressionPreset: String, CaseIterable, Identifiable, Codable, Sendable {
     case lossless, balanced, aggressive, custom
 
     nonisolated var id: String { rawValue }
@@ -36,16 +36,17 @@ enum OptimizationOutcome: Sendable {
     case noReduction(originalBytes: Int64, candidateBytes: Int64)
 }
 
-enum OptimizationError: Error, LocalizedError, Sendable {
-    case unsupportedInput, unsupportedPreset, invalidQuality, cannotEncode, cannotWrite
+enum OptimizationError: Error, LocalizedError, Equatable, Sendable {
+    case unsupportedInput, unsupportedPreset, invalidQuality, cannotEncode, cannotWrite, protectedMetadata
 
     var errorDescription: String? {
         switch self {
-        case .unsupportedInput: "Only JPEG and PNG images can be optimized."
+        case .unsupportedInput: "This image format cannot be optimized on this Mac."
         case .unsupportedPreset: "This compression mode is unavailable for this file type."
         case .invalidQuality: "JPEG quality must be between 0 and 1."
         case .cannotEncode: "The optimized file could not be created or validated."
         case .cannotWrite: "The optimized file could not be saved."
+        case .protectedMetadata: "This PNG contains content credentials that optimization would invalidate. Keep the original, or explicitly enable Remove metadata."
         }
     }
 }

@@ -3,7 +3,7 @@ struct FileAction: Identifiable, Hashable, Sendable {
         case conversion, tool
     }
 
-    enum Kind: Hashable, Sendable {
+    nonisolated enum Kind: Hashable, Sendable {
         case convert(ConversionFormat)
         case imagePDF, pdfJPEG, pdfPNG, extractPages, mergePDFs, compress
     }
@@ -57,6 +57,14 @@ struct FileAction: Identifiable, Hashable, Sendable {
         case .pdfJPEG, .pdfPNG: "photo"
         case .extractPages: "doc.on.doc"
         case .compress: "arrow.down.right.and.arrow.up.left"
+        }
+    }
+
+    nonisolated static func common(for files: [FileItem]) -> [FileAction] {
+        guard let first = files.first else { return [] }
+        return available(for: first, selection: files).filter { action in
+            (files.count == 1 || action.kind != .extractPages) &&
+                files.allSatisfy { available(for: $0, selection: files).contains(action) }
         }
     }
 

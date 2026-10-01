@@ -7,6 +7,7 @@ struct ConversionControlsView: View {
     let selection: [FileItem]
     let autoOpenPanel: Bool
     let onFloatingOpened: () -> Void
+    let onBusyChanged: (Bool) -> Void
 
     @AppStorage("defaultCompressionPreset") private var defaultPreset = CompressionPreset.balanced.rawValue
     @AppStorage("jpegExportQuality") private var jpegQuality = 0.90
@@ -24,9 +25,15 @@ struct ConversionControlsView: View {
     @State private var compression: CompressionResult?
     @State private var progressText: String?
     @State private var lastAction: FileAction?
-    @State private var worker: Task<Result<FileActionReport, Error>, Never>?
+    @State private var worker: Task<Result<[SelectionActionEntry], Error>, Never>?
+    @State private var entries: [SelectionActionEntry] = []
+    @State private var selectedActionID = ""
+    @State private var optionsExpanded = false
+    @State private var customDirectory: URL?
+    @State private var isSelectingOutput = false
+    @State private var wasCancelled = false
 
-    private var actions: [FileAction] { FileAction.available(for: file, selection: selection) }
+    private var actions: [FileAction] { FileAction.common(for: selection) }
     private var preset: CompressionPreset {
         get { CompressionPreset(rawValue: defaultPreset) ?? .balanced }
         nonmutating set { defaultPreset = newValue.rawValue }
@@ -34,15 +41,11 @@ struct ConversionControlsView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            FileActionPanelView(file: file, actions: actions, isEnabled: !isConverting,
-                                returnSelectsFirstAction: false) { action in
-                process(action, in: file.url.deletingLastPathComponent())
-            } onDismiss: {} onFocusChanged: { _ in }
-            Button("Open Floating Panel") { showFloatingPanel() }
-                .disabled(isConverting || actions.isEmpty)
-                .accessibilityHint("Opens file actions near the pointer")
+            actionBar
+                .disabled(isConverting)
             if !actions.isEmpty {
-                options
+                DisclosureGroup("Options", isExpanded: $optionsExpanded) { options.padding(.top, 8) }
+                    .disabled(isConverting)
             }
             if isConverting {
                 HStack {
@@ -53,11 +56,30 @@ struct ConversionControlsView: View {
             }
             if let message {
                 VStack(alignment: .leading, spacing: 6) {
-                    Label(isError ? "Action Failed" : lastAction?.kind == .compress ? "Optimization Finished" : lastAction?.category == .tool ? "Action Complete" : "Conversion Complete",
+                    Label(wasCancelled ? "Operation Cancelled" : isError ? "Some Files Could Not Be Processed" : lastAction?.kind == .compress ? "Optimization Finished" : lastAction?.category == .tool ? "Action Complete" : "Conversion Complete",
                           systemImage: isError ? "exclamationmark.triangle" : "checkmark.circle")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(isError ? .red : .primary)
                     Text(message).font(.caption)
+                    if entries.count > 1 {
+                        if lastAction?.kind == .compress {
+                            let completed = entries.filter { $0.report != nil }
+                            let original = completed.reduce(Int64(0)) { $0 + $1.originalBytes }
+                            let optimized = completed.reduce(Int64(0)) { $0 + ($1.report?.compression?.outputBytes ?? $1.originalBytes) }
+                            let reduction = original > 0 ? Double(original - optimized) / Double(original) * 100 : 0
+                            resultRow("Original", value: size(original))
+                            resultRow("Optimized", value: size(optimized))
+                            resultRow("Saved", value: size(original - optimized))
+                            resultRow("Reduction", value: "\(reduction.formatted(.number.precision(.fractionLength(0))))%")
+                        }
+                        ForEach(entries) { entry in
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(entry.fileName).lineLimit(1).truncationMode(.middle)
+                                Text(entry.errorMessage ?? entry.report?.message ?? "")
+                                    .foregroundStyle(entry.errorMessage == nil ? Color.secondary : .red)
+                            }.font(.caption)
+                        }
+                    }
                     if let compression {
                         resultRow("Original", value: size(compression.originalBytes))
                         resultRow("Optimized", value: size(compression.outputBytes))
@@ -71,22 +93,35 @@ struct ConversionControlsView: View {
                     }
                 }
                 .padding(12)
-                .frame(maxWidth: 420, alignment: .leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
             }
-            Text("Output: same folder as source unless another folder is selected")
+            HStack {
+                Text(customDirectory.map { "Output: " + $0.lastPathComponent } ??
+                     (selection.count > 1 ? "Output: Choose a folder when prompted" : "Output: Beside original"))
+                    .lineLimit(1).truncationMode(.middle)
+                Button("Change...") { isSelectingOutput = true }
+                if customDirectory != nil { Button("Reset") { customDirectory = nil } }
+            }
+            .disabled(isConverting)
+            Text("Original files are kept.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
         .fileImporter(isPresented: $isChoosingFolder, allowedContentTypes: [.folder]) { selection in
             guard let action = pendingAction else { return }
             pendingAction = nil
+            onBusyChanged(false)
             switch selection {
-            case .success(let folder): process(action, in: folder)
+            case .success(let folder): customDirectory = folder; process(action, in: folder)
             case .failure: message = "No output folder was selected."
             }
         }
-        .onDisappear { floatingController?.dismiss() }
+        .fileImporter(isPresented: $isSelectingOutput, allowedContentTypes: [.folder]) { result in
+            if case .success(let folder) = result { customDirectory = folder }
+        }
+        .onDisappear { floatingController?.dismiss(); worker?.cancel() }
+        .onChange(of: selection.map(\.url)) { _, _ in floatingController?.dismiss() }
         .task(id: autoOpenPanel) {
             guard autoOpenPanel else { return }
             showFloatingPanel()
@@ -94,107 +129,165 @@ struct ConversionControlsView: View {
         }
     }
 
-    private var options: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 16) {
-                if actions.contains(where: { $0.kind == .pdfJPEG || $0.kind == .convert(.jpeg) }) {
-                    HStack {
-                        Text("JPEG quality")
-                        Slider(value: $jpegQuality, in: 0...1).frame(width: 120)
-                        Text(jpegQuality.formatted(.percent.precision(.fractionLength(0)))).monospacedDigit()
-                    }
+    private var conversionActions: [FileAction] { actions.filter { $0.category == .conversion } }
+    private var chosenConversion: FileAction? {
+        conversionActions.first { $0.id == selectedActionID } ?? conversionActions.first
+    }
+
+    private var actionBar: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if actions.contains(FileAction(.compress)) {
+                Button(selection.count > 1 ? "Compress Selected" : "Compress") {
+                    process(FileAction(.compress), in: customDirectory)
                 }
-                Toggle("Remove metadata", isOn: $stripMetadata)
+                .buttonStyle(.borderedProminent).controlSize(.large)
             }
-            if actions.contains(where: { $0.kind == .compress }), file.contentTypeIdentifier == UTType.png.identifier {
-                Text("PNG optimization preserves exact pixels and transparency.")
-                    .foregroundStyle(.secondary)
-            } else if actions.contains(where: { $0.kind == .compress }) {
-                Picker("Compression", selection: Binding(get: { preset }, set: { preset = $0 })) {
-                    ForEach(CompressionPreset.allCases.filter { $0 != .custom }) { mode in
-                        Text(mode.label).tag(mode)
+            if let chosenConversion {
+                HStack {
+                    Picker("Convert to", selection: Binding(
+                        get: { self.chosenConversion?.id ?? "" }, set: { selectedActionID = $0 })) {
+                        ForEach(conversionActions) { action in Text(action.title).tag(action.id) }
+                    }
+                    .frame(maxWidth: 230)
+                    Button(chosenConversion.kind == .imagePDF && selection.count > 1 ? "Create PDF" : "Convert") {
+                        process(chosenConversion, in: customDirectory)
                     }
                 }
-                .pickerStyle(.segmented)
-                .frame(maxWidth: 330)
-                if preset == .lossless && ConversionFormat.sourceFormat(for: file.contentTypeIdentifier) == .jpeg {
+            }
+            let tools = actions.filter { $0.category == .tool && $0.kind != .compress }
+            if !tools.isEmpty {
+                Menu("Tools") {
+                    ForEach(tools) { action in
+                        Button(action.title) {
+                            if action.kind == .extractPages { optionsExpanded = true }
+                            else { process(action, in: customDirectory) }
+                        }
+                    }
+                    if actions.contains(FileAction(.extractPages)) {
+                        Button("Extract All Pages") {
+                            pageSelection = "all"
+                            process(FileAction(.extractPages), in: customDirectory)
+                        }
+                    }
+                }
+                .fixedSize()
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var options: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if chosenConversion?.kind == .pdfJPEG || chosenConversion?.kind == .convert(.jpeg) {
+                HStack {
+                    Text("JPEG export quality")
+                    Slider(value: $jpegQuality, in: 0...1).frame(maxWidth: 180)
+                    Text(jpegQuality.formatted(.percent.precision(.fractionLength(0)))).monospacedDigit()
+                }
+            }
+            Toggle("Remove metadata", isOn: $stripMetadata)
+            if actions.contains(FileAction(.compress)) {
+                Picker("Compression", selection: Binding(get: { preset }, set: { preset = $0 })) {
+                    ForEach(CompressionPreset.allCases.filter { $0 != .custom }) { Text($0.label).tag($0) }
+                }.frame(maxWidth: 280)
+                if selection.allSatisfy({ $0.contentTypeIdentifier == UTType.png.identifier }) {
+                    Text("PNG optimization is lossless. Maximum spends more time finding a smaller file.").foregroundStyle(.secondary)
+                }
+                if preset == .lossless && selection.contains(where: {
+                    ConversionFormat.sourceFormat(for: $0.contentTypeIdentifier) == .jpeg
+                }) {
                     Text("Lossless JPEG optimization is unavailable. Choose Balanced or Maximum.")
                         .foregroundStyle(.secondary)
                 }
             }
-            if file.isPDF {
-                HStack {
-                    Picker("Resolution", selection: $pdfDPI) {
-                        ForEach([72, 100, 150, 200, 300], id: \.self) { dpi in Text("\(dpi) DPI").tag(dpi) }
-                    }
-                    .frame(width: 180)
-                    TextField("Pages: all, 4, or 4-7", text: $pageSelection)
-                        .frame(width: 170)
-                        .accessibilityLabel("Pages to extract")
-                }
-            } else {
-                Picker("PDF page size", selection: $pdfLayout) {
-                    ForEach(PDFPageLayout.allCases) { layout in Text(layout.label).tag(layout) }
-                }
-                .frame(width: 220)
+            if file.isPDF && (chosenConversion?.kind == .pdfJPEG || chosenConversion?.kind == .pdfPNG) {
+                Picker("Resolution", selection: $pdfDPI) {
+                    ForEach([72, 100, 150, 200, 300], id: \.self) { Text("\($0) DPI").tag($0) }
+                }.frame(maxWidth: 240)
             }
-        }
-        .font(.caption)
+            if actions.contains(FileAction(.extractPages)) {
+                HStack {
+                    TextField("Pages: all, 4, or 4-7", text: $pageSelection)
+                        .frame(maxWidth: 190).accessibilityLabel("Pages to extract")
+                    Button("Extract Pages") { process(FileAction(.extractPages), in: customDirectory) }
+                }
+            }
+            if chosenConversion?.kind == .imagePDF {
+                Picker("PDF page size", selection: $pdfLayout) {
+                    ForEach(PDFPageLayout.allCases) { Text($0.label).tag($0) }
+                }.frame(maxWidth: 280)
+            }
+        }.font(.callout)
     }
 
     private func showFloatingPanel() {
         floatingController?.dismiss()
         let controller = FloatingActionPanelController(
             file: file, actions: actions,
-            onSelect: { action in process(action, in: file.url.deletingLastPathComponent()) },
+            onSelect: { action in process(action, in: customDirectory) },
             onClose: { floatingController = nil }
         )
         floatingController = controller
         if !controller.show() { message = "No screen can display the floating panel." }
     }
 
-    private func process(_ action: FileAction, in directory: URL) {
+    private func process(_ action: FileAction, in directory: URL?) {
         guard !isConverting else { return }
         floatingController?.dismiss()
+        if selection.count > 1 && directory == nil {
+            pendingAction = action
+            onBusyChanged(true)
+            isChoosingFolder = true
+            return
+        }
         isConverting = true
+        onBusyChanged(true)
+        entries = []
         isError = false
+        wasCancelled = false
         lastAction = action
         message = nil
         compression = nil
         resultURLs = []
         progressText = "Preparing..."
-        let item = file
         let files = selection
         let settings = FileActionSettings(jpegQuality: jpegQuality, stripMetadata: stripMetadata,
-                                          compressionPreset: file.contentTypeIdentifier == UTType.png.identifier ? .lossless : preset, pdfDPI: pdfDPI,
+                                          compressionPreset: preset, pdfDPI: pdfDPI,
                                           pdfLayout: pdfLayout, pageSelection: pageSelection)
         let (updates, continuation) = AsyncStream<String>.makeStream()
         Task { for await update in updates { progressText = update } }
         let job = Task.detached(priority: .userInitiated) {
             defer { continuation.finish() }
             return Result {
-                try FileActionService().execute(action, for: item, selection: files,
-                                                in: directory, settings: settings,
+                try SelectionActionService().execute(action, files: files,
+                                                directory: directory, settings: settings,
                                                 progress: { continuation.yield($0) })
             }
         }
         worker = job
         Task {
             let outcome = await job.value
+            wasCancelled = job.isCancelled
             worker = nil
             isConverting = false
+            onBusyChanged(false)
             progressText = nil
             switch outcome {
-            case .success(let report):
-                resultURLs = report.outputURLs
-                compression = report.compression
-                message = report.message
+            case .success(let results):
+                entries = results
+                resultURLs = results.flatMap { $0.report?.outputURLs ?? [] }
+                compression = results.count == 1 ? results.first?.report?.compression : nil
+                isError = results.contains { $0.errorMessage != nil }
+                message = results.count == 1 ? (results.first?.report?.message ?? results.first?.errorMessage)
+                    : "\(results.count) of \(files.count) files processed."
+                if results.isEmpty { message = "Operation cancelled." }
+                if wasCancelled { message = "Cancelled after processing \(results.count) of \(files.count) files. Completed outputs were kept." }
             case .failure(let error):
                 if error is CancellationError {
                     message = "Operation cancelled."
                 } else if let conversionError = error as? ConversionError,
                           [.permissionDenied, .invalidDestination].contains(conversionError),
-                          directory.standardizedFileURL == item.url.deletingLastPathComponent().standardizedFileURL {
+                          directory == nil {
                     pendingAction = action
                     isChoosingFolder = true
                 } else {

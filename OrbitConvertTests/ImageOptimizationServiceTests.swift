@@ -70,6 +70,27 @@ final class ImageOptimizationServiceTests: XCTestCase {
                                                                     preset: .custom, jpegQuality: 0.5))
     }
 
+    func testHEICOptimizationUsesInstalledImageIOEncoder() throws {
+        guard (CGImageDestinationCopyTypeIdentifiers() as? [String])?.contains(UTType.heic.identifier) == true else {
+            throw XCTSkip("HEIC encoder unavailable on this Mac")
+        }
+        let folder = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let source = folder.appendingPathComponent("photo.heic")
+        try makeImage(at: source, type: .heic, quality: 1.0)
+        let before = try Data(contentsOf: source)
+        let item = try XCTUnwrap(FileTypeService().inspect([source]).files.first)
+
+        let outcome = try ImageOptimizationService().optimize(item, in: folder, preset: .aggressive)
+
+        XCTAssertEqual(try Data(contentsOf: source), before)
+        if case .saved(let result) = outcome {
+            XCTAssertLessThan(result.outputBytes, result.originalBytes)
+            let output = try XCTUnwrap(CGImageSourceCreateWithURL(result.outputURL as CFURL, nil))
+            XCTAssertEqual(CGImageSourceGetType(output) as String?, UTType.heic.identifier)
+        }
+    }
+
     private func temporaryDirectory() throws -> URL {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)

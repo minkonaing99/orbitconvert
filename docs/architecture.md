@@ -1,6 +1,6 @@
 # Architecture
 
-Status: Main-window and floating rectangular action panels, PDF conversion, manual compression, and the supported Finder drop-target workflow are implemented.
+Status: Main-window and floating rectangular action panels, PDF conversion, manual compression, a supported Finder drop target, and watched folders are implemented.
 
 ## Small native application
 
@@ -17,7 +17,7 @@ The project has one application target and one test target. Create files when th
 
 Current intake flow: user selects or drops file URLs; FileIntakeService checks local, regular, readable files. FileTypeService then inspects actual bytes with ImageIO, creates bounded oriented thumbnails, reads file metadata, and intersects output formats with installed encoders. Both checks run in a serial background job. Each service balances its security-scoped access around its own read. The UI stores FileItem values and individual issues. Conversion must reacquire scope for its full operation.
 
-Action flow: each file row presents actions valid for its detected ImageIO or PDFKit content. `FileActionPanelView` renders the same descriptors in the main window and floating panel, grouped as Convert and Tools. Selection returns to `ConversionControlsView`; a detached worker calls `FileActionService`, which routes to ImageIO conversion, PDFKit/Core Graphics PDF operations, or native optimization. Services reacquire source and destination scope, validate temporary output, and use `FileOutputService` for no-overwrite publication. Batch conversion and optimization process selected files sequentially and report per-file failures without discarding prior results.
+Action flow: the main window displays compact checkbox rows and one shared action area for the selected files. `FileAction.common` intersects supported actions. `ConversionControlsView` shows primary compression, a format picker, a tools menu, and collapsed options. `SelectionActionService` snapshots and processes the selection sequentially through the existing `FileActionService`; combined PDF creation and merging execute once. Selection/removal is disabled during processing. Batch jobs request a shared output folder when none has been chosen; single files retain the permission-recovery folder picker. Individual failures do not discard successful batch outputs. Floating panels remain single-file views and dismiss when selection changes.
 
 PDFKit owns document/page structure for image-to-PDF, extraction, merge, and optimization. Core Graphics renders individual PDF pages for JPEG/PNG export; ImageIO encodes the bitmap. PDFKit optimization write options may reduce embedded image size without flattening every page. Apple does not expose exact PDF compression DPI or JPEG quality through these options; precise controls require a separate vetted backend. See [PDF and compression](pdf-compression.md).
 
@@ -41,7 +41,7 @@ Use os.Logger categories FileAccess, Conversion, UI, Permissions, and Errors whe
 
 `FileActionPanelView` receives `[FileAction]`, thumbnail data, and select/dismiss closures; it contains no conversion logic. `FileAction.category` separates valid conversion actions from tools. Adaptive grid buttons use standard SwiftUI hit testing, keyboard focus, and accessibility labels. The main-window panel remains available if a display cannot fit the floating panel.
 
-Tab navigates controls, Return invokes the first action, and Escape dismisses the floating panel. Native buttons provide pointer and VoiceOver access. For mixed file types, actions remain per-file; batch JPEG/PNG buttons appear only when every selected file supports the format.
+Tab navigates controls, Return invokes the first action, and Escape dismisses the floating panel. Native buttons provide pointer and VoiceOver access. For mixed file types, the shared panel offers only common actions. Image batches can use every mutually supported output format; PDF batches can export pages or merge.
 
 ## Floating NSPanel, Phase 6
 
@@ -56,3 +56,7 @@ SwiftUI's regular window scene does not expose the panel's nonactivating style, 
 This does not detect arbitrary Finder drag starts. No Accessibility permission or Finder extension is used. Details and official API sources: [Finder feasibility](finder-integration.md). Signed sandbox, inactive-app drop delivery, and multi-display behavior still require manual tests; App Store acceptance remains subject to review.
 
 Related: [product plan](product-plan.md), [conversion](image-conversion.md), [sandbox](sandbox-and-output.md).
+
+Watched folders use an app-lifetime controller shared by Settings and MenuBarExtra. FSEvents reports file paths; the controller deduplicates and queues them. `AutoOptimizationService` runs one job off the main actor, reuses ImageIO/PDFKit optimizers, and delegates replacement to `SafeFileReplacementService`. See [watched folders](watched-folders.md).
+
+Automatic clipboard optimization shares that background queue and menu state. It uses generation-guarded pasteboard writes, bounded in-memory results, and the existing image conversion/optimization services. Details, retention policy, and public API limitations: [clipboard optimization](clipboard-optimization.md).

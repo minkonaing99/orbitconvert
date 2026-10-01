@@ -11,7 +11,10 @@ struct ImageOptimizationService: Sendable {
                               jpegQuality: Double? = nil,
                               removeMetadata: Bool = false) throws -> OptimizationOutcome {
         guard let format = ConversionFormat.sourceFormat(for: file.contentTypeIdentifier),
-              format == .jpeg || format == .png else { throw OptimizationError.unsupportedInput }
+              [.jpeg, .png, .heic].contains(format) else { throw OptimizationError.unsupportedInput }
+        guard Set(CGImageDestinationCopyTypeIdentifiers() as? [String] ?? []).contains(format.typeIdentifier) else {
+            throw OptimizationError.unsupportedInput
+        }
         let quality = try resolvedQuality(for: format, preset: preset, custom: jpegQuality)
         let sourceScoped = file.url.startAccessingSecurityScopedResource()
         defer { if sourceScoped { file.url.stopAccessingSecurityScopedResource() } }
@@ -19,7 +22,7 @@ struct ImageOptimizationService: Sendable {
         defer { if destinationScoped { directory.stopAccessingSecurityScopedResource() } }
         try Task.checkCancellation()
         guard let source = CGImageSourceCreateWithURL(file.url as CFURL, [kCGImageSourceShouldCache: false] as CFDictionary),
-              CGImageSourceGetType(source) as String? == format.typeIdentifier,
+              CGImageSourceGetType(source) as String? == file.contentTypeIdentifier,
               CGImageSourceGetCount(source) == 1,
               CGImageSourceGetStatusAtIndex(source, 0) == .statusComplete,
               let originalSize = try? file.url.resourceValues(forKeys: [.fileSizeKey]).fileSize else {
@@ -27,12 +30,25 @@ struct ImageOptimizationService: Sendable {
         }
         let temporary = try output.makeTemporaryFile(in: directory)
         defer { output.removeTemporaryFile(temporary) }
-        try encode(source, to: temporary, format: format, quality: quality, removeMetadata: removeMetadata)
+        if format == .png {
+            if removeMetadata {
+                let stripped = temporary.deletingLastPathComponent().appendingPathComponent("stripped.png")
+                try encode(source, to: stripped, format: format, quality: nil, removeMetadata: true)
+                try OxipngService().optimize(source: stripped, destination: temporary, preset: preset)
+            } else {
+                try OxipngService().optimize(source: file.url, destination: temporary, preset: preset)
+            }
+        } else {
+            try encode(source, to: temporary, format: format, quality: quality, removeMetadata: removeMetadata)
+        }
         try Task.checkCancellation()
         guard let candidate = CGImageSourceCreateWithURL(temporary as CFURL, nil),
               CGImageSourceGetType(candidate) as String? == format.typeIdentifier,
               CGImageSourceGetCount(candidate) == 1,
               CGImageSourceGetStatusAtIndex(candidate, 0) == .statusComplete,
+              let originalImage = CGImageSourceCreateImageAtIndex(source, 0, nil),
+              let candidateImage = CGImageSourceCreateImageAtIndex(candidate, 0, nil),
+              originalImage.width == candidateImage.width, originalImage.height == candidateImage.height,
               let candidateSize = try? temporary.resourceValues(forKeys: [.fileSizeKey]).fileSize else {
             throw OptimizationError.cannotEncode
         }
@@ -47,7 +63,7 @@ struct ImageOptimizationService: Sendable {
 
     nonisolated private func resolvedQuality(for format: ConversionFormat,
                                              preset: CompressionPreset, custom: Double?) throws -> Double? {
-        guard format == .jpeg else {
+        guard format == .jpeg || format == .heic else {
             if preset == .custom { throw OptimizationError.unsupportedPreset }
             return nil
         }

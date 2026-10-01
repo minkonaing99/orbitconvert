@@ -1,111 +1,101 @@
+import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
 
 struct ContentView: View {
-    private enum BatchPanelAction: Sendable {
-        case convert(ConversionFormat), createPDF
-    }
-
     @State private var isImporting = false
     @State private var isDropTargeted = false
     @State private var files: [FileItem] = []
+    @State private var selectedURLs: Set<URL> = []
     @State private var issues: [FileIntakeIssue] = []
     @State private var inspectionTask: Task<Void, Never>?
     @State private var pendingInspections = 0
     @State private var dropWindow: FloatingDropWindowController?
     @State private var pendingFloatingFileURL: URL?
-    @State private var isChoosingBatchFolder = false
-    @State private var batchTask: Task<BatchOptimizationResult, Never>?
-    @State private var batchProgress: String?
-    @State private var batchResult: BatchOptimizationResult?
-    @State private var batchMessage: String?
-    @State private var isChoosingBatchActionFolder = false
-    @State private var pendingBatchAction: BatchPanelAction?
-    @State private var batchConversionTask: Task<BatchConversionResult, Never>?
-    @State private var batchConversionProgress: String?
-    @State private var batchConversionResult: BatchConversionResult?
+    @State private var isProcessing = false
+
+    init(files: [FileItem] = []) {
+        _files = State(initialValue: files)
+        _selectedURLs = State(initialValue: Set(files.map(\.url)))
+    }
+
+    private var selectedFiles: [FileItem] { files.filter { selectedURLs.contains($0.url) } }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(AppIdentity.name)
-                    .font(.largeTitle.weight(.semibold))
-                Text("Local file conversion starts here")
-                    .foregroundStyle(.secondary)
-            }
-
-            VStack(spacing: 16) {
-                Image(systemName: "square.and.arrow.down")
-                    .font(.system(size: 42, weight: .ultraLight))
-                    .accessibilityHidden(true)
-                Text("Drop files here")
-                    .font(.title2.weight(.medium))
-                Button("Choose Files") { isImporting = true }
-                    .buttonStyle(.borderedProminent)
-                Button("Open Floating Drop Target") { toggleDropWindow() }
-                    .accessibilityHint("Opens a small window that accepts files dragged from Finder")
-            }
-            .frame(maxWidth: .infinity, minHeight: 220)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18))
-            .overlay {
-                RoundedRectangle(cornerRadius: 18)
-                    .strokeBorder(isDropTargeted ? Color.accentColor : Color.secondary.opacity(0.35),
-                                  style: StrokeStyle(lineWidth: 2, dash: [8, 6]))
-            }
-            .onDrop(of: [.fileURL], isTargeted: $isDropTargeted) { importDrop($0) }
-
-            if pendingInspections > 0 {
-                ProgressView("Inspecting files...")
-            }
-
-            if files.count > 1 { batchControls }
-
-            if !files.isEmpty || !issues.isEmpty {
-                ScrollViewReader { scroll in
-                    ScrollView {
-                        LazyVStack(alignment: .leading, spacing: 8) {
-                            if !files.isEmpty {
-                                Text("Selected files")
-                                    .font(.headline)
-                                ForEach(files) { file in
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        ConversionControlsView(
-                                            file: file,
-                                            selection: files,
-                                            autoOpenPanel: pendingFloatingFileURL == file.url,
-                                            onFloatingOpened: { pendingFloatingFileURL = nil }
-                                        )
-                                        if file.isPDF, files.filter(\.isPDF).count > 1 {
-                                            HStack {
-                                                Button("Move Up") { reorderPDF(file.url, by: -1) }
-                                                Button("Move Down") { reorderPDF(file.url, by: 1) }
-                                            }
-                                            .font(.caption)
-                                        }
-                                    }
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding(.vertical, 4)
-                                    .id(file.url)
-                                }
-                            }
-                            if !issues.isEmpty {
-                                Text("Could not import")
-                                    .font(.headline)
-                                ForEach(issues) { issue in
-                                    Label("\(issue.name): \(issue.message)", systemImage: "exclamationmark.triangle")
-                                        .foregroundStyle(.red)
-                                }
-                            }
+        VStack(alignment: .leading, spacing: 16) {
+            if files.isEmpty {
+                emptyState
+            } else {
+                HStack {
+                    Text("Files").font(.title2.weight(.semibold))
+                    Spacer()
+                    Button(selectedURLs.count == files.count ? "Deselect All" : "Select All") {
+                        selectedURLs = selectedURLs.count == files.count ? [] : Set(files.map(\.url))
+                    }
+                    .buttonStyle(.borderless)
+                    .disabled(isProcessing)
+                }
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(files) { file in
+                            fileRow(file)
+                            Divider().padding(.leading, 44)
                         }
                     }
-                    .onChange(of: pendingFloatingFileURL) { _, url in
-                        if let url { scroll.scrollTo(url, anchor: .top) }
+                }
+                .frame(height: min(CGFloat(files.count) * 61, 240))
+                .background(.background, in: RoundedRectangle(cornerRadius: 10))
+                HStack {
+                    Text("\(selectedFiles.count) selected · \(ByteCountFormatter.string(fromByteCount: selectedFiles.reduce(0) { $0 + $1.fileSize }, countStyle: .file))")
+                    Spacer()
+                    Text("Drop more files anywhere").foregroundStyle(.tertiary)
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                Divider()
+                ScrollView {
+                    if let first = selectedFiles.first {
+                        ConversionControlsView(file: first, selection: selectedFiles,
+                            autoOpenPanel: pendingFloatingFileURL == first.url,
+                            onFloatingOpened: { pendingFloatingFileURL = nil },
+                            onBusyChanged: { isProcessing = $0 })
+                    } else {
+                        Text("Select files to see available actions.")
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, minHeight: 120)
+                    }
+                }
+            }
+            if pendingInspections > 0 { ProgressView("Inspecting files...").controlSize(.small) }
+            if !issues.isEmpty {
+                DisclosureGroup("Could not import \(issues.count) item(s)") {
+                    ForEach(issues) { issue in
+                        Text("\(issue.name): \(issue.message)").font(.caption).foregroundStyle(.red)
                     }
                 }
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .padding(28)
+        .padding(24)
+        .frame(minWidth: 620, minHeight: 460, maxHeight: .infinity, alignment: .topLeading)
+        .onDrop(of: [.fileURL], isTargeted: $isDropTargeted) { importDrop($0) }
+        .overlay {
+            if isDropTargeted {
+                RoundedRectangle(cornerRadius: 12).stroke(Color.accentColor, lineWidth: 2)
+                    .padding(8).allowsHitTesting(false)
+            }
+        }
+        .toolbar {
+            ToolbarItemGroup {
+                Button { isImporting = true } label: { Label("Add Files", systemImage: "plus") }
+                    .keyboardShortcut("o")
+                Menu {
+                    Button("Floating Drop Target") { toggleDropWindow() }
+                    Button("Floating Actions") { pendingFloatingFileURL = selectedFiles.first?.url }
+                        .disabled(selectedFiles.count != 1 || isProcessing)
+                } label: { Label("Windows", systemImage: "macwindow.on.rectangle") }
+                SettingsLink { Label("Settings", systemImage: "gearshape") }
+            }
+        }
         .fileImporter(isPresented: $isImporting, allowedContentTypes: [.item], allowsMultipleSelection: true) { result in
             switch result {
             case .success(let urls):
@@ -115,149 +105,54 @@ struct ContentView: View {
                 issues = issues + [FileIntakeIssue(name: "Selection", message: "The selected files could not be opened.")]
             }
         }
-        .fileImporter(isPresented: $isChoosingBatchFolder, allowedContentTypes: [.folder]) { result in
-            switch result {
-            case .success(let folder): optimizeBatch(in: folder)
-            case .failure: batchMessage = "No output folder was selected."
-            }
-        }
-        .fileImporter(isPresented: $isChoosingBatchActionFolder, allowedContentTypes: [.folder]) { result in
-            guard let action = pendingBatchAction else { return }
-            pendingBatchAction = nil
-            switch result {
-            case .success(let folder): runBatchAction(action, in: folder)
-            case .failure: batchMessage = "No output folder was selected."
-            }
-        }
-        .onDisappear {
-            dropWindow?.dismiss()
-            batchTask?.cancel()
-            batchConversionTask?.cancel()
-        }
+        .onDisappear { dropWindow?.dismiss() }
     }
 
-    private var batchControls: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("\(files.count) files · \(ByteCountFormatter.string(fromByteCount: files.reduce(0) { $0 + $1.fileSize }, countStyle: .file))")
-                .font(.headline)
-            Button("Compress All Supported Files") { isChoosingBatchFolder = true }
-                .disabled(batchTask != nil || batchConversionTask != nil)
-            HStack {
-                ForEach(BatchConversionService.commonFormats(for: files)) { format in
-                    Button("Convert All to \(format.label)") {
-                        pendingBatchAction = .convert(format)
-                        isChoosingBatchActionFolder = true
-                    }
-                }
-                if files.allSatisfy({ !$0.isPDF }) {
-                    Button("Create PDF") {
-                        pendingBatchAction = .createPDF
-                        isChoosingBatchActionFolder = true
-                    }
-                }
-            }
-            .disabled(batchTask != nil || batchConversionTask != nil)
-            if let batchMessage { Text(batchMessage).font(.caption).foregroundStyle(.secondary) }
-            if batchTask != nil, let batchProgress {
-                HStack {
-                    ProgressView(batchProgress).controlSize(.small)
-                    Button("Cancel") { batchTask?.cancel() }
-                }
-            }
-            if let batchResult {
-                Text("\(batchResult.successCount) of \(batchResult.attemptedCount) processed · \(ByteCountFormatter.string(fromByteCount: batchResult.originalBytes, countStyle: .file)) to \(ByteCountFormatter.string(fromByteCount: batchResult.outputBytes, countStyle: .file)) · \(ByteCountFormatter.string(fromByteCount: batchResult.savingsBytes, countStyle: .file)) saved (\(batchResult.savingsPercentage.formatted(.number.precision(.fractionLength(0))))%)")
-                    .font(.caption)
-                if !batchResult.saved.isEmpty {
-                    Button("Reveal Results in Finder") {
-                        NSWorkspace.shared.activateFileViewerSelecting(batchResult.saved.map(\.outputURL))
-                    }
-                }
-                ForEach(Array(batchResult.failures.enumerated()), id: \.offset) { _, failure in
-                    Text("\(failure.fileName): \(failure.message)").foregroundStyle(.red).font(.caption)
-                }
-            }
-            if batchConversionTask != nil, let batchConversionProgress {
-                HStack {
-                    ProgressView(batchConversionProgress).controlSize(.small)
-                    Button("Cancel") { batchConversionTask?.cancel() }
-                }
-            }
-            if let batchConversionResult {
-                Text("\(batchConversionResult.outputURLs.count) output files from \(batchConversionResult.attemptedCount) selected files")
-                    .font(.caption)
-                if !batchConversionResult.outputURLs.isEmpty {
-                    Button("Reveal Results in Finder") {
-                        NSWorkspace.shared.activateFileViewerSelecting(batchConversionResult.outputURLs)
-                    }
-                }
-                ForEach(Array(batchConversionResult.failures.enumerated()), id: \.offset) { _, failure in
-                    Text("\(failure.fileName): \(failure.message)").foregroundStyle(.red).font(.caption)
-                }
-            }
+    private var emptyState: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "square.and.arrow.down")
+                .font(.system(size: 42, weight: .ultraLight)).accessibilityHidden(true)
+            Text("Drop files here").font(.title2.weight(.semibold))
+            Text("Convert images and PDFs, or reduce their file size.")
+                .foregroundStyle(.secondary)
+            Button("Choose Files") { isImporting = true }.buttonStyle(.borderedProminent)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
     }
 
-    private func optimizeBatch(in directory: URL) {
-        let eligible = files.filter {
-            $0.isPDF || [.jpeg, .png].contains(ConversionFormat.sourceFormat(for: $0.contentTypeIdentifier))
-        }
-        guard !eligible.isEmpty else { return }
-        batchMessage = nil
-        batchResult = nil
-        batchProgress = "Preparing..."
-        let (updates, continuation) = AsyncStream<String>.makeStream()
-        Task { for await update in updates { batchProgress = update } }
-        let preset = CompressionPreset(rawValue: UserDefaults.standard.string(forKey: "defaultCompressionPreset") ?? "") ?? .balanced
-        let removeMetadata = UserDefaults.standard.bool(forKey: "removeMetadata")
-        let job = Task.detached(priority: .userInitiated) {
-            defer { continuation.finish() }
-            return BatchOptimizationService().optimize(eligible, in: directory, preset: preset,
-                removeMetadata: removeMetadata,
-                progress: { current, total in continuation.yield("Optimizing \(current) of \(total)") })
-        }
-        batchTask = job
-        Task {
-            batchResult = await job.value
-            batchTask = nil
-            batchProgress = nil
-        }
-    }
-
-    private func runBatchAction(_ action: BatchPanelAction, in directory: URL) {
-        let chosen = files
-        batchMessage = nil
-        batchConversionResult = nil
-        batchConversionProgress = "Preparing..."
-        let quality = UserDefaults.standard.object(forKey: "jpegExportQuality") as? Double ?? 0.90
-        let options = ConversionOptions(jpegQuality: quality,
-                                        stripMetadata: UserDefaults.standard.bool(forKey: "removeMetadata"))
-        let (updates, continuation) = AsyncStream<String>.makeStream()
-        Task { for await update in updates { batchConversionProgress = update } }
-        let job = Task.detached(priority: .userInitiated) {
-            defer { continuation.finish() }
-            switch action {
-            case .convert(let format):
-                return BatchConversionService().convert(chosen, to: format, in: directory, options: options,
-                    progress: { current, total in continuation.yield("Converting \(current) of \(total)") })
-            case .createPDF:
-                continuation.yield("Creating PDF...")
-                do {
-                    let result = try PDFConversionService().imagesToPDF(chosen, in: directory)
-                    return BatchConversionResult(attemptedCount: chosen.count, outputURLs: result.outputURLs,
-                                                 failures: [], cancelled: false)
-                } catch {
-                    return BatchConversionResult(attemptedCount: chosen.count, outputURLs: [],
-                        failures: [BatchOptimizationFailure(fileName: "Selection",
-                            message: (error as? LocalizedError)?.errorDescription ?? "PDF creation failed.")],
-                        cancelled: Task.isCancelled)
-                }
+    private func fileRow(_ file: FileItem) -> some View {
+        HStack(spacing: 12) {
+            Toggle("Select \(file.fileName)", isOn: Binding(
+                get: { selectedURLs.contains(file.url) },
+                set: { value in
+                    selectedURLs = value ? selectedURLs.union([file.url]) : selectedURLs.subtracting([file.url])
+                }))
+                .labelsHidden().toggleStyle(.checkbox)
+            if let image = NSImage(data: file.thumbnailData) {
+                Image(nsImage: image).resizable().scaledToFit()
+                    .frame(width: 40, height: 40).accessibilityHidden(true)
             }
+            VStack(alignment: .leading, spacing: 3) {
+                Text(file.fileName).lineLimit(1).truncationMode(.middle)
+                Text(file.contentTypeName).font(.caption).foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 8)
+            Text(ByteCountFormatter.string(fromByteCount: file.fileSize, countStyle: .file))
+                .font(.caption).foregroundStyle(.secondary).fixedSize()
+            Button {
+                files = files.filter { $0.url != file.url }
+                selectedURLs = selectedURLs.subtracting([file.url])
+            } label: { Image(systemName: "xmark") }
+                .buttonStyle(.borderless).help("Remove from list")
+                .accessibilityLabel("Remove \(file.fileName) from list")
         }
-        batchConversionTask = job
-        Task {
-            batchConversionResult = await job.value
-            batchConversionTask = nil
-            batchConversionProgress = nil
+        .frame(minHeight: 40)
+        .padding(10)
+        .disabled(isProcessing)
+        .contextMenu {
+            Button("Move Up") { reorderPDF(file.url, by: -1) }.disabled(isProcessing || !file.isPDF)
+            Button("Move Down") { reorderPDF(file.url, by: 1) }.disabled(isProcessing || !file.isPDF)
         }
     }
 
@@ -325,11 +220,15 @@ struct ContentView: View {
             files = (inspected.files + files).reduce(into: [FileItem]()) { unique, file in
                 if !unique.contains(where: { $0.url == file.url }) { unique.append(file) }
             }
+            if !isProcessing { selectedURLs = selectedURLs.union(inspected.files.map(\.url)) }
             issues = issues + intake.issues + inspected.issues
             pendingInspections -= 1
             if openFloatingOnImport,
                let first = inspected.files.first(where: { !FileAction.available(for: $0, selection: inspected.files).isEmpty }) {
-                pendingFloatingFileURL = first.url
+                if !isProcessing {
+                    selectedURLs = [first.url]
+                    pendingFloatingFileURL = first.url
+                }
             } else if openFloatingOnImport, !issues.isEmpty {
                 NSApp.activate(ignoringOtherApps: true)
             }
@@ -337,6 +236,4 @@ struct ContentView: View {
     }
 }
 
-#Preview {
-    ContentView()
-}
+#Preview { ContentView() }

@@ -7,6 +7,33 @@ import XCTest
 @testable import OrbitConvert
 
 final class PDFConversionServiceTests: XCTestCase {
+    func testSharedSelectionExecutesMergeOnceAndConvertsOnlyChosenFiles() throws {
+        let folder = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let first = try makeTextPDF(at: folder.appendingPathComponent("first.pdf"), text: "First")
+        let second = try makeTextPDF(at: folder.appendingPathComponent("second.pdf"), text: "Second")
+        let settings = FileActionSettings(jpegQuality: 0.9, stripMetadata: false,
+            compressionPreset: .balanced, pdfDPI: 72, pdfLayout: .fit, pageSelection: "all")
+        let service = SelectionActionService()
+        let merged = try service.execute(FileAction(.mergePDFs), files: [second, first],
+                                         directory: folder, settings: settings, progress: { _ in })
+        XCTAssertEqual(merged.count, 1)
+        let output = try XCTUnwrap(merged.first?.report?.outputURLs.first)
+        let document = try XCTUnwrap(PDFDocument(url: output))
+        XCTAssertEqual(document.pageCount, 2)
+        XCTAssertTrue(document.page(at: 0)?.string?.contains("Second") == true)
+        let converted = try service.execute(FileAction(.pdfPNG), files: [second],
+                                            directory: folder, settings: settings, progress: { _ in })
+        XCTAssertEqual(converted.count, 1)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: folder.appendingPathComponent("second.png").path))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: folder.appendingPathComponent("first.png").path))
+        try FileManager.default.removeItem(at: first.url)
+        let partial = try service.execute(FileAction(.pdfPNG), files: [first, second],
+                                          directory: folder, settings: settings, progress: { _ in })
+        XCTAssertNotNil(partial.first?.errorMessage)
+        XCTAssertEqual(partial.last?.report?.outputURLs.count, 1)
+    }
+
     func testImagesToPDFPreservesOrderAndPageCount() throws {
         let folder = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: folder) }

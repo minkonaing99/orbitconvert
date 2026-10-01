@@ -1,10 +1,10 @@
 # Sandbox and safe output
 
-Status: Phase 4 enables sandboxing and read/write user-selected access. Signed sandbox behavior needs manual verification.
+Status: App Sandbox, read/write user-selected access, and app-scoped bookmarks are configured. Signed sandbox behavior needs manual verification.
 
 ## Permission model
 
-Enable `com.apple.security.app-sandbox` and `com.apple.security.files.user-selected.read-write` for conversion. Add `com.apple.security.files.bookmarks.app-scope` only when persistent user-chosen folder access ships. Do not add broad filesystem, network, automation, or Accessibility permissions for initial conversion. Apple documents these in its [sandbox entitlement reference](https://developer.apple.com/library/archive/documentation/Miscellaneous/Reference/EntitlementKeyReference/Chapters/EnablingAppSandbox.html).
+Enable `com.apple.security.app-sandbox` and `com.apple.security.files.user-selected.read-write` for conversion. Watched folders use `com.apple.security.files.bookmarks.app-scope` for persistent user-chosen folder access. No broad filesystem, network, automation, or Accessibility permission is needed. Apple documents these in its [sandbox entitlement reference](https://developer.apple.com/library/archive/documentation/Miscellaneous/Reference/EntitlementKeyReference/Chapters/EnablingAppSandbox.html).
 
 Accept URLs from explicit selection or drag/drop. A file grant does not authorize arbitrary sibling creation. For the default same-folder policy, use an existing authorized directory grant or prompt the user to choose that parent folder. If they decline, let them choose another output or cancel. Never silently save somewhere else.
 

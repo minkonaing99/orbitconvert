@@ -66,6 +66,7 @@
 				000000000000000120000000 /* Sources */,
 				000000000000000130000000 /* Frameworks */,
 				000000000000000140000000 /* Resources */,
+				000000000000000160000000 /* Embed PNG optimizer */,
 			);
 			buildRules = (
 			);
@@ -167,6 +168,20 @@
 			);
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+        000000000000000160000000 /* Embed PNG optimizer */ = {
+            isa = PBXShellScriptBuildPhase;
+            buildActionMask = 2147483647;
+            files = ();
+            inputPaths = ("$(SRCROOT)/ThirdParty/oxipng/oxipng", "$(SRCROOT)/ThirdParty/oxipng/LICENSE", "$(SRCROOT)/ThirdParty/oxipng/THIRD-PARTY-NOTICES.txt", "$(SRCROOT)/ThirdParty/oxipng/helper.entitlements", "$(SRCROOT)/scripts/embed-oxipng.sh");
+            name = "Embed PNG optimizer";
+            outputPaths = ("$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Helpers/oxipng.cstemp", "$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Helpers/oxipng", "$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/Oxipng-LICENSE.txt", "$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/Oxipng-THIRD-PARTY-NOTICES.txt");
+            runOnlyForDeploymentPostprocessing = 0;
+            shellPath = /bin/sh;
+            shellScript = "/bin/sh \"$SRCROOT/scripts/embed-oxipng.sh\"";
+        };
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		000000000000000120000000 /* Sources */ = {
@@ -317,6 +332,7 @@
 		000000000000000111000000 /* Debug configuration for PBXNativeTarget "OrbitConvert" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = OrbitConvert/OrbitConvert.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_APP_SANDBOX = YES;
@@ -354,6 +370,7 @@
 		000000000000000112000000 /* Release configuration for PBXNativeTarget "OrbitConvert" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = OrbitConvert/OrbitConvert.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_APP_SANDBOX = YES;

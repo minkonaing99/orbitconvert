@@ -4,7 +4,7 @@ OrbitConvert is a native macOS utility for local image conversion. It uses Swift
 
 ## Current status
 
-The app has a native SwiftUI window, file drag/drop, compact rectangular action panels in the main and floating windows, and an app-owned Finder drop target. Image/PDF conversion and manual compression remain available.
+The app has a native SwiftUI window, file drag/drop, compact rectangular action panels, an app-owned Finder drop target, watched folders, and automatic clipboard image optimization. A persistent menu bar popup shows background jobs, session savings, and recent activity. Image/PDF conversion and manual compression remain available.
 
 ## Requirements
 
@@ -27,19 +27,21 @@ Unsigned compilation does not verify sandbox permissions or distribution readine
 
 ## Architecture
 
-SwiftUI owns presentation; AppKit owns floating windows and their lifecycle. Both action panels use the same `FileAction` descriptors and dispatch through existing services. Focused services own file access, inspection, conversion, and safe output. No external dependencies are used. See [architecture](docs/architecture.md) and [internal contracts](docs/api.md).
+SwiftUI owns presentation; AppKit owns floating windows and their lifecycle. Both action panels use the same `FileAction` descriptors and dispatch through existing services. Focused services own file access, inspection, conversion, and safe output. PNG optimization bundles the MIT-licensed Oxipng helper; other conversion engines use Apple frameworks. See [architecture](docs/architecture.md) and [internal contracts](docs/api.md).
 
 ## Supported conversions and tools
 
-Single-image PNG, JPEG, HEIC/HEIF, and TIFF inputs can convert to a different format among PNG, JPEG, HEIC, and TIFF when the Apple encoder is available. Images can also become PDF pages. PDFs can be rendered as JPEG/PNG, extracted by page or range, and merged in selection order. JPEG, PNG, and PDF files have a manual Compress action; batch optimization is available for multiple selected files. Settings control compression mode, JPEG export quality, PDF image resolution, and metadata removal. [PDF and compression details](docs/pdf-compression.md) describe each native backend and its limits.
+Single-image PNG, JPEG, HEIC/HEIF, and TIFF inputs can convert to a different format among PNG, JPEG, HEIC, and TIFF when the Apple encoder is available. Images can also become PDF pages. PDFs can be rendered as JPEG/PNG, extracted by page or range, and merged in selection order. JPEG, PNG, and PDF files have a manual Compress action; batch optimization is available for multiple selected files. Watched folders automatically optimize new JPEG, PNG, HEIC, and PDF files and replace originals only after validation and a size reduction. Settings control compression mode, JPEG export quality, PDF image resolution, metadata removal, and watched-folder policies. [PDF and compression details](docs/pdf-compression.md) and [watched folders](docs/watched-folders.md) describe the backends and their limits. See [PNG optimization](docs/png-optimization.md) for the bundled optimizer, provenance, and measured sample.
+
+Clipboard optimization supports single PNG/JPEG/TIFF/HEIC images and copied image files, reuses the background queue, and preserves source files. Settings include independent pause, ignored apps, result cards, and an optional in-memory collection. See [clipboard optimization](docs/clipboard-optimization.md) for generation safety, temporary-file lifetime, and cross-application limitations.
 
 ## Sandbox permissions
 
-The project enables App Sandbox and read/write user-selected files. A dropped source file does not establish permission to create sibling files; the app asks for an output folder if saving beside the source is denied. Signed sandbox behavior still needs manual verification. See [sandbox and output design](docs/sandbox-and-output.md).
+The project enables App Sandbox, read/write user-selected files, and app-scoped bookmarks for watched folders. A dropped source file does not establish permission to create sibling files; the app asks for an output folder if saving beside the source is denied. Signed sandbox behavior still needs manual verification. See [sandbox and output design](docs/sandbox-and-output.md).
 
 ## Known limitations
 
-Each selected file has a rectangular action panel and an Open Floating Panel button. Open Floating Drop Target from the main window before dragging Finder files to it. On small displays, actions remain available in the main window. Resize, standalone Metadata, Remove Metadata, and Split are not shown because handlers do not exist yet. Animated or multi-image inputs are rejected; BMP, GIF, WebP, and AVIF remain unsupported. PDF optimization uses PDFKit write options, so exact compression DPI and JPEG quality are unavailable. Replace Original and Undo are not offered; originals are always kept. Full-size conversions can use substantial memory. macOS 14 runtime, Intel runtime, signing, signed sandbox behavior, and manual panel/focus/accessibility behavior remain unverified. Finder-wide drag detection is not available through the APIs used here.
+The main window uses compact selectable rows and one shared action area. Floating Actions and Floating Drop Target are available from the toolbar Windows menu. On small displays, actions remain available in the main window. Resize, standalone Metadata, Remove Metadata, and Split are not shown because handlers do not exist yet. Animated or multi-image inputs are rejected; BMP, GIF, WebP, and AVIF remain unsupported. PDF optimization uses PDFKit write options, so exact compression DPI and JPEG quality are unavailable. Manual actions keep originals; watched folders default to validated replacement with a temporary recovery backup. Undo is not offered. A paused writer can resume after the watched-folder quiet period; signed sandbox and real downloads need manual testing. Full-size conversions can use substantial memory. macOS 14 runtime, Intel runtime, signing, signed sandbox behavior, and manual panel/focus/accessibility behavior remain unverified. Finder-wide drag detection is not available through the APIs used here.
 
 ## Documentation and roadmap
 
@@ -52,6 +54,8 @@ Each selected file has a rectangular action panel and an Open Floating Panel but
 - [Testing and validation](docs/testing.md)
 - [Finder workflow feasibility](docs/finder-integration.md)
 - [PDF and compression implementation](docs/pdf-compression.md)
+- [Watched folders and replacement safety](docs/watched-folders.md)
+- [Automatic clipboard optimization](docs/clipboard-optimization.md)
 - [Release notes](docs/release_notes.md)
 
 ## Testing
