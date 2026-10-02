@@ -174,9 +174,9 @@
             isa = PBXShellScriptBuildPhase;
             buildActionMask = 2147483647;
             files = ();
-            inputPaths = ("$(SRCROOT)/ThirdParty/oxipng/oxipng", "$(SRCROOT)/ThirdParty/oxipng/LICENSE", "$(SRCROOT)/ThirdParty/oxipng/THIRD-PARTY-NOTICES.txt", "$(SRCROOT)/ThirdParty/oxipng/helper.entitlements", "$(SRCROOT)/scripts/embed-oxipng.sh");
+            inputPaths = ("$(SRCROOT)/ThirdParty/oxipng/oxipng", "$(SRCROOT)/ThirdParty/oxipng/LICENSE", "$(SRCROOT)/ThirdParty/oxipng/THIRD-PARTY-NOTICES.txt", "$(SRCROOT)/ThirdParty/oxipng/helper.entitlements", "$(SRCROOT)/scripts/embed-oxipng.sh", "$(SRCROOT)/ThirdParty/pandoc/pandoc.gz", "$(SRCROOT)/ThirdParty/pandoc/LICENSE", "$(SRCROOT)/ThirdParty/ghostscript/gs.gz", "$(SRCROOT)/ThirdParty/ghostscript/LICENSE", "$(SRCROOT)/ThirdParty/ghostscript/THIRD-PARTY-NOTICES.txt");
             name = "Embed PNG optimizer";
-            outputPaths = ("$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Helpers/oxipng.cstemp", "$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Helpers/oxipng", "$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/Oxipng-LICENSE.txt", "$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/Oxipng-THIRD-PARTY-NOTICES.txt");
+            outputPaths = ("$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Helpers/oxipng.cstemp", "$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Helpers/oxipng", "$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/Oxipng-LICENSE.txt", "$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/Oxipng-THIRD-PARTY-NOTICES.txt", "$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Helpers/pandoc", "$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Helpers/pandoc.cstemp", "$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Helpers/gs", "$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Helpers/gs.cstemp", "$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/pandoc-LICENSE.txt", "$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/ghostscript-LICENSE.txt", "$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/ghostscript-THIRD-PARTY-NOTICES.txt");
             runOnlyForDeploymentPostprocessing = 0;
             shellPath = /bin/sh;
             shellScript = "/bin/sh \"$SRCROOT/scripts/embed-oxipng.sh\"";
@@ -332,6 +332,7 @@
 		000000000000000111000000 /* Debug configuration for PBXNativeTarget "OrbitConvert" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = OrbitConvert/OrbitConvert.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -370,6 +371,7 @@
 		000000000000000112000000 /* Release configuration for PBXNativeTarget "OrbitConvert" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = OrbitConvert/OrbitConvert.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;

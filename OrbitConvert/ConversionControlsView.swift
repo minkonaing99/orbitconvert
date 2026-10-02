@@ -13,6 +13,7 @@ struct ConversionControlsView: View {
     @AppStorage("jpegExportQuality") private var jpegQuality = 0.90
     @AppStorage("removeMetadata") private var stripMetadata = false
     @AppStorage("pdfImageDPI") private var pdfDPI = 150
+    @State private var strongerPDFCompression = false
     @State private var pdfLayout = PDFPageLayout.fit
     @State private var pageSelection = "all"
     @State private var isConverting = false
@@ -32,6 +33,9 @@ struct ConversionControlsView: View {
     @State private var customDirectory: URL?
     @State private var isSelectingOutput = false
     @State private var wasCancelled = false
+    @State private var markdownImageFolder: URL?
+    @State private var isSelectingImages = false
+    @State private var markdownPDFStyle = MarkdownPDFStyle()
 
     private var actions: [FileAction] { FileAction.common(for: selection) }
     private var preset: CompressionPreset {
@@ -120,6 +124,9 @@ struct ConversionControlsView: View {
         .fileImporter(isPresented: $isSelectingOutput, allowedContentTypes: [.folder]) { result in
             if case .success(let folder) = result { customDirectory = folder }
         }
+        .fileImporter(isPresented: $isSelectingImages, allowedContentTypes: [.folder]) { result in
+            if case .success(let folder) = result { markdownImageFolder = folder }
+        }
         .onDisappear { floatingController?.dismiss(); worker?.cancel() }
         .onChange(of: selection.map(\.url)) { _, _ in floatingController?.dismiss() }
         .task(id: autoOpenPanel) {
@@ -178,6 +185,22 @@ struct ConversionControlsView: View {
 
     private var options: some View {
         VStack(alignment: .leading, spacing: 12) {
+            if selection.allSatisfy(\.isMarkdown) {
+                HStack {
+                    Text(markdownImageFolder.map { "Image folder: " + $0.lastPathComponent } ?? "Images: Alt text only")
+                        .lineLimit(1).truncationMode(.middle)
+                    Button("Allow Local Images...") { isSelectingImages = true }
+                    if markdownImageFolder != nil { Button("Reset") { markdownImageFolder = nil } }
+                }
+                Text("Choose the folder containing your notes and images. Only relative image paths inside that folder are read; remote images and symlinks are skipped.")
+                    .font(.caption).foregroundStyle(.secondary)
+                if chosenConversion?.kind == .markdownPDF {
+                    Toggle("US Letter page", isOn: $markdownPDFStyle.useLetter)
+                    Toggle("Serif body font", isOn: $markdownPDFStyle.useSerif)
+                    Stepper("Body size: \(Int(markdownPDFStyle.bodySize)) pt", value: $markdownPDFStyle.bodySize, in: 8...24)
+                    Stepper("Page margins: \(Int(markdownPDFStyle.margin)) pt", value: $markdownPDFStyle.margin, in: 20...90, step: 5)
+                }
+            }
             if chosenConversion?.kind == .pdfJPEG || chosenConversion?.kind == .convert(.jpeg) {
                 HStack {
                     Text("JPEG export quality")
@@ -190,6 +213,11 @@ struct ConversionControlsView: View {
                 Picker("Compression", selection: Binding(get: { preset }, set: { preset = $0 })) {
                     ForEach(CompressionPreset.allCases.filter { $0 != .custom }) { Text($0.label).tag($0) }
                 }.frame(maxWidth: 280)
+                if selection.allSatisfy(\.isPDF) {
+                    Toggle("Stronger PDF compression", isOn: $strongerPDFCompression)
+                    Text("Downsamples embedded images and preserves supported web links and bookmarks. Forms, other annotations, signed/encrypted and tagged PDFs are excluded. Balanced: 150 DPI; Maximum: 100 DPI. Lossless uses the native backend.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
                 if selection.allSatisfy({ $0.contentTypeIdentifier == UTType.png.identifier }) {
                     Text("PNG optimization is lossless. Maximum spends more time finding a smaller file.").foregroundStyle(.secondary)
                 }
@@ -251,18 +279,21 @@ struct ConversionControlsView: View {
         resultURLs = []
         progressText = "Preparing..."
         let files = selection
-        let settings = FileActionSettings(jpegQuality: jpegQuality, stripMetadata: stripMetadata,
+        let settings = FileActionSettings(markdownImageFolder: markdownImageFolder,
+                                          markdownPDFStyle: markdownPDFStyle,
+                                          strongerPDFCompression: strongerPDFCompression && preset != .lossless, jpegQuality: jpegQuality, stripMetadata: stripMetadata,
                                           compressionPreset: preset, pdfDPI: pdfDPI,
                                           pdfLayout: pdfLayout, pageSelection: pageSelection)
         let (updates, continuation) = AsyncStream<String>.makeStream()
         Task { for await update in updates { progressText = update } }
         let job = Task.detached(priority: .userInitiated) {
             defer { continuation.finish() }
-            return Result {
-                try SelectionActionService().execute(action, files: files,
+            do {
+                let results = try await SelectionActionService().execute(action, files: files,
                                                 directory: directory, settings: settings,
                                                 progress: { continuation.yield($0) })
-            }
+                return Result<[SelectionActionEntry], Error>.success(results)
+            } catch { return Result<[SelectionActionEntry], Error>.failure(error) }
         }
         worker = job
         Task {

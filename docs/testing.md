@@ -68,3 +68,24 @@ PNG backend: bundled helper, metadata and alpha preservation, actual size reduct
 Menu-bar validation: signed build and strict deep signature verification pass. The 73-test run includes session outcomes/savings, zero-byte inputs, unavailable/paused presentation, three-file active-plus-waiting counts, paused queue preservation, resume, and completion. Test snapshots remain in xcresult attachments rather than a fixed shared /tmp file. Two existing main-thread responsiveness warnings remain. Live computer-use inspection timed out; verify menu appearance, main-window close/reopen, Settings, Quit, light/dark mode, and VoiceOver manually. The latest result bundle is `/tmp/OrbitConvert-menu-verified.xcresult`. Coverage was not remeasured in this run.
 
 Clipboard tests use private NSPasteboards and isolated preferences. Safety cases include valid-image stale-generation rejection, delayed optimization followed by a newer text copy, failure/no-reduction preservation, type/ignored-app filtering, SHA256 loop prevention, PNG alpha/pixel equivalence, TIFF/JPEG processing, source-file preservation, temporary cleanup, independent folder pause, and repeated NSURL export reuse. A cleanup test caught inconsistent directory URL keys; the implementation now constructs canonical directory URLs. See [clipboard verification](clipboard-optimization.md). The full passing result bundle is `/tmp/OrbitConvert-clipboard-final.xcresult`.
+
+
+## Markdown and stronger PDF validation (2026-10-01)
+
+The ad-hoc signed arm64 full suite passes: **98 tests, 0 failures, 0 skipped**, in `/tmp/OrbitConvert-documents-verified.xcresult`. Release build and strict deep signature verification also pass for `/tmp/OrbitConvert-icon/Build/Products/Release/OrbitConvert.app`. Existing two main-thread responsiveness warnings remain.
+
+New behavior tests cover UTF-8 Markdown identification, document-only actions, binary rejection, sanitized resources/unsafe links, real Pandoc DOCX round-trip, native AppKit multipage PDF, Unicode/code content, table-header column positions, no-overwrite collisions, cancellation, output cleanup and unchanged sources. Stronger PDF tests cover image-heavy size reduction while retaining selectable text, requested Author/Title metadata removal, annotated-document rejection and encrypted-PDF rejection. Existing image, PDF, watcher, clipboard and output regression tests pass.
+
+Coverage: the five new document services have **312/373 executable lines covered (83.65%)**. Full application coverage is **58.86% (3492/5933)**, below the repository's 80% target; no files were excluded to conceal that gap. Native UI coverage remains limited. Installed-app sandbox behavior outside Xcode test exceptions, macOS 14, Intel helper execution, visual PDF/DOCX comparison in Preview and Pages/Word, long tables, hyperlinks and large-document responsiveness remain manual gates. Native printing has a soft timeout and finishes safely before cancelling publication.
+
+See [actual implementation](markdown-pdf-implementation.md) for helper provenance and backend limitations.
+
+## Document improvements, stages 1 and 2 (2026-10-03)
+
+The full Apple Silicon regression suite passed: **104 tests, 0 failures, 0 skipped**. Result bundle: `/tmp/OrbitConvert-stage2-verified.xcresult`. Release build and strict deep code-signature verification passed. Existing two main-thread responsiveness warnings remain; they are not new test failures.
+
+New checks cover authorized local image embedding into DOCX and PDF, transparency-bearing PNG normalization, traversal/absolute/remote/symlink exclusion, aggregate decoded-pixel limits, image-only DOCX, native clickable external PDF links, custom US Letter sizing and style bounds. Stronger PDF tests use a real image-heavy document with a URL annotation and nested bookmark destinations, require useful reduction, compare navigation after reopening and verify unchanged source bytes.
+
+Full-app line coverage is **60.60% (3,810 / 6,287)**, still below the requested 80%. Current document service coverage: Markdown conversion 96.88%, PDF renderer 94.52%, image resources 100%, navigation service 85.57%. Coverage does not substitute for manual visual checks.
+
+Not yet verified: installed-app resource-folder permission behavior, Preview/Word/Pages visual fidelity, complex fonts/long tables, large-document profiling, macOS 14 runtime and Intel helper execution. Internal annotation links remain rejected after a native PDF destination-remapping probe produced invalid page references. Signed/encrypted PDFs and unsupported interactive structures remain protected.

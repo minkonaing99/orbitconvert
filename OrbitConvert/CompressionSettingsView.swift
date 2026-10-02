@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct CompressionSettingsView: View {
+    @AppStorage("hideDockIcon") private var hideDockIcon = false
     @AppStorage("defaultCompressionPreset") private var preset = CompressionPreset.balanced.rawValue
     @AppStorage("jpegExportQuality") private var jpegExportQuality = 0.90
     @AppStorage("pdfImageDPI") private var pdfImageDPI = 150
@@ -9,6 +10,12 @@ struct CompressionSettingsView: View {
     var body: some View {
         TabView {
             Form {
+            Toggle("Hide Dock icon", isOn: $hideDockIcon)
+                .onChange(of: hideDockIcon) { _, hidden in
+                    OrbitConvertAppDelegate.updateDockVisibility(hidden: hidden)
+                }
+            Text("Keep OrbitConvert in the menu bar when windows are closed. Choose Quit from the menu bar to exit.")
+                .font(.caption).foregroundStyle(.secondary)
             Picker("Default compression", selection: $preset) {
                 ForEach(CompressionPreset.allCases.filter { $0 != .custom }) { mode in
                     Text(mode.label).tag(mode.rawValue)

@@ -1,0 +1,5 @@
+AGENTS.md
+**/xcuserdata/
+.DS_Store
+/ThirdParty/pandoc/pandoc.gz
+/ThirdParty/ghostscript/gs.gz

@@ -49,6 +49,8 @@ struct FileItem: Identifiable, Sendable {
     let supportedConversions: [ConversionFormat]
 
     var id: URL { url }
+    nonisolated var isMarkdown: Bool { contentTypeIdentifier == "net.daringfireball.markdown" }
+    nonisolated var isImage: Bool { ConversionFormat.sourceFormat(for: contentTypeIdentifier) != nil }
     nonisolated var isPDF: Bool { contentTypeIdentifier == UTType.pdf.identifier }
 }
 
@@ -81,6 +83,14 @@ struct FileTypeService: Sendable {
             guard values.isRegularFile == true, FileManager.default.isReadableFile(atPath: url.path) else {
                 return .failure(FileIntakeIssue(name: name, message: "This file is unavailable or cannot be read."))
             }
+            if ["md", "markdown"].contains(url.pathExtension.lowercased()) {
+                guard let size = values.fileSize, size <= 10_000_000 else { throw DocumentConversionError.invalidMarkdown }
+                _ = try MarkdownConversionService.validate(Data(contentsOf: url))
+                return .success(FileItem(url: url, fileName: name, fileExtension: url.pathExtension,
+                    contentTypeIdentifier: "net.daringfireball.markdown", contentTypeName: "Markdown document",
+                    fileSize: Int64(size), creationDate: values.creationDate, pixelWidth: 0, pixelHeight: 0,
+                    pageCount: nil, thumbnailData: Data(), supportedConversions: []))
+            }
             if let document = PDFDocument(url: url) {
                 return inspectPDF(document, url: url, fileSize: values.fileSize,
                                   creationDate: values.creationDate)
@@ -92,7 +102,7 @@ struct FileTypeService: Sendable {
                   let type = CGImageSourceGetType(source) else {
                 let message = values.contentType?.conforms(to: .image) == true
                     ? "This image could not be opened; it may be damaged."
-                    : "Only PNG, JPEG, HEIC, and TIFF images are supported."
+                    : "Choose a supported image, PDF, or Markdown document."
                 return .failure(FileIntakeIssue(name: name, message: message))
             }
             let identifier = type as String

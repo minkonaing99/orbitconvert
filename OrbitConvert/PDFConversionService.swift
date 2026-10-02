@@ -53,7 +53,7 @@ struct PDFConversionService: Sendable {
 
     nonisolated func imagesToPDF(_ files: [FileItem], in directory: URL,
                                  layout: PDFPageLayout = .fit) throws -> PDFOperationResult {
-        guard !files.isEmpty, files.allSatisfy({ !$0.isPDF }) else { throw PDFOperationError.invalidInput }
+        guard !files.isEmpty, files.allSatisfy({ $0.isImage }) else { throw PDFOperationError.invalidInput }
         let scopes = files.map { ($0.url, $0.url.startAccessingSecurityScopedResource()) }
         defer { scopes.forEach { if $0.1 { $0.0.stopAccessingSecurityScopedResource() } } }
         let destinationScoped = directory.startAccessingSecurityScopedResource()

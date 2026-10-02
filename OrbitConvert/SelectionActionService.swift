@@ -13,7 +13,7 @@ struct SelectionActionService: Sendable {
 
     nonisolated func execute(_ action: FileAction, files: [FileItem], directory: URL?,
                              settings: FileActionSettings,
-                             progress: @Sendable (String) -> Void) throws -> [SelectionActionEntry] {
+                             progress: @Sendable (String) -> Void) async throws -> [SelectionActionEntry] {
         guard FileAction.common(for: files).contains(action), let first = files.first else {
             throw ConversionError.unsupportedInput
         }
@@ -24,7 +24,7 @@ struct SelectionActionService: Sendable {
             if Task.isCancelled { break }
             progress("\(index + 1) of \(jobs.count): \(file.fileName)")
             do {
-                let report = try FileActionService().execute(action, for: file, selection: files,
+                let report = try await FileActionService().execute(action, for: file, selection: files,
                     in: directory ?? file.url.deletingLastPathComponent(), settings: settings,
                     progress: { detail in progress("\(index + 1) of \(jobs.count): \(file.fileName) - \(detail)") })
                 entries.append(SelectionActionEntry(fileName: grouped ? "\(files.count) files" : file.fileName,

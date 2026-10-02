@@ -15,6 +15,8 @@ The app has a native SwiftUI window, file drag/drop, compact rectangular action 
 
 ## How to build
 
+For a fresh clone, first [prepare the local document helpers](docs/document-helper-setup.md). Their executables are deliberately excluded from Git; licenses, provenance and build instructions are included. Existing local helper caches remain usable.
+
 Open `OrbitConvert.xcodeproj`, select OrbitConvert and My Mac, then choose Product > Build. Configure a signing team for signed sandbox testing.
 
 Command-line build for the existing shell:
@@ -34,6 +36,10 @@ SwiftUI owns presentation; AppKit owns floating windows and their lifecycle. Bot
 Single-image PNG, JPEG, HEIC/HEIF, and TIFF inputs can convert to a different format among PNG, JPEG, HEIC, and TIFF when the Apple encoder is available. Images can also become PDF pages. PDFs can be rendered as JPEG/PNG, extracted by page or range, and merged in selection order. JPEG, PNG, and PDF files have a manual Compress action; batch optimization is available for multiple selected files. Watched folders automatically optimize new JPEG, PNG, HEIC, and PDF files and replace originals only after validation and a size reduction. Settings control compression mode, JPEG export quality, PDF image resolution, metadata removal, and watched-folder policies. [PDF and compression details](docs/pdf-compression.md) and [watched folders](docs/watched-folders.md) describe the backends and their limits. See [PNG optimization](docs/png-optimization.md) for the bundled optimizer, provenance, and measured sample.
 
 Clipboard optimization supports single PNG/JPEG/TIFF/HEIC images and copied image files, reuses the background queue, and preserves source files. Settings include independent pause, ignored apps, result cards, and an optional in-memory collection. See [clipboard optimization](docs/clipboard-optimization.md) for generation safety, temporary-file lifetime, and cross-application limitations.
+
+## Markdown and stronger PDF compression
+
+Markdown (`.md`, `.markdown`) exports locally to editable DOCX or paginated PDF through existing actions. Bundled Pandoc parses documents; native AppKit printing lays out PDFs with optional font, page and margin controls. Local images require an explicitly selected resource folder and are validated, orientation-normalized and bounded before embedding. Remote images are never fetched. Native PDF web links remain clickable. Stronger manual PDF compression uses bundled Ghostscript and preserves supported web links and nested bookmarks; unsupported protected/interactive documents remain excluded and originals stay intact. Current document helpers support Apple Silicon. See [document conversion and tool details](docs/markdown-pdf-implementation.md).
 
 ## Sandbox permissions
 

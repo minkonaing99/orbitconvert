@@ -2,6 +2,7 @@ import SwiftUI
 
 @main
 struct OrbitConvertApp: App {
+    @NSApplicationDelegateAdaptor(OrbitConvertAppDelegate.self) private var appDelegate
     @State private var watchedFolders: WatchedFoldersController = {
         let testing = NSClassFromString("XCTestCase") != nil ||
             ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
@@ -33,5 +34,22 @@ struct OrbitConvertApp: App {
                 .help(watchedFolders.accessibilityStatus)
         }
         .menuBarExtraStyle(.window)
+    }
+}
+
+@MainActor
+final class OrbitConvertAppDelegate: NSObject, NSApplicationDelegate {
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        Self.updateDockVisibility(hidden: UserDefaults.standard.bool(forKey: "hideDockIcon"))
+    }
+
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        false
+    }
+
+    static func updateDockVisibility(hidden: Bool) {
+        guard NSClassFromString("XCTestCase") == nil,
+              ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return }
+        NSApp.setActivationPolicy(hidden ? .accessory : .regular)
     }
 }

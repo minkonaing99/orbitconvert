@@ -1,6 +1,9 @@
 import Foundation
 
 struct FileActionSettings: Sendable {
+    var markdownImageFolder: URL? = nil
+    var markdownPDFStyle = MarkdownPDFStyle()
+    var strongerPDFCompression = false
     let jpegQuality: Double
     let stripMetadata: Bool
     let compressionPreset: CompressionPreset
@@ -20,8 +23,12 @@ struct FileActionService: Sendable {
 
     nonisolated func execute(_ action: FileAction, for file: FileItem, selection: [FileItem],
                              in directory: URL, settings: FileActionSettings,
-                             progress: @Sendable (String) -> Void = { _ in }) throws -> FileActionReport {
+                             progress: @Sendable (String) -> Void = { _ in }) async throws -> FileActionReport {
         switch action.kind {
+        case .markdownPDF, .markdownDOCX:
+            return try await MarkdownConversionService().convert(file, toDOCX: action.kind == .markdownDOCX,
+                                                                 in: directory, imageFolder: settings.markdownImageFolder,
+                                                                 pdfStyle: settings.markdownPDFStyle)
         case .convert(let format):
             let result = try ImageConversionService().convert(
                 file, to: format, in: directory,
@@ -30,7 +37,7 @@ struct FileActionService: Sendable {
             return FileActionReport(outputURLs: [result.outputURL],
                                     message: "Saved \(result.outputURL.lastPathComponent)", compression: nil)
         case .imagePDF:
-            let images = selection.filter { !$0.isPDF }
+            let images = selection.filter { $0.isImage }
             let result = try PDFConversionService().imagesToPDF(images, in: directory, layout: settings.pdfLayout)
             return pdfReport(result)
         case .pdfJPEG, .pdfPNG:
@@ -57,7 +64,8 @@ struct FileActionService: Sendable {
                 outcome = try PDFOptimizationService().optimize(
                     file, in: directory,
                     options: PDFOptimizationOptions(preset: settings.compressionPreset,
-                                                    removeMetadata: settings.stripMetadata)
+                                                    removeMetadata: settings.stripMetadata,
+                                                    strongerCompression: settings.strongerPDFCompression)
                 )
             } else {
                 outcome = try ImageOptimizationService().optimize(

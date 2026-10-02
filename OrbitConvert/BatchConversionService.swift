@@ -11,7 +11,7 @@ struct BatchConversionService: Sendable {
     nonisolated init() {}
 
     nonisolated static func commonFormats(for files: [FileItem]) -> [ConversionFormat] {
-        guard files.count > 1, files.allSatisfy({ !$0.isPDF }) else { return [] }
+        guard files.count > 1, files.allSatisfy({ $0.isImage }) else { return [] }
         return [ConversionFormat.jpeg, .png].filter { format in
             files.allSatisfy { $0.supportedConversions.contains(format) }
         }

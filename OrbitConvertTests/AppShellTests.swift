@@ -6,6 +6,20 @@ import UniformTypeIdentifiers
 
 final class AppShellTests: XCTestCase {
     @MainActor
+    func testClosingWindowKeepsMenuBarAppRunning() {
+        XCTAssertFalse(OrbitConvertAppDelegate().applicationShouldTerminateAfterLastWindowClosed(NSApplication.shared))
+    }
+
+    @MainActor
+    func testDockPreferenceDoesNotChangeTestHostActivationPolicy() {
+        let original = NSApplication.shared.activationPolicy()
+        OrbitConvertAppDelegate.updateDockVisibility(hidden: true)
+        XCTAssertEqual(NSApplication.shared.activationPolicy(), original)
+        OrbitConvertAppDelegate.updateDockVisibility(hidden: false)
+        XCTAssertEqual(NSApplication.shared.activationPolicy(), original)
+    }
+
+    @MainActor
     func testSelectedFilesFitCompactWindow() throws {
         let files = ["Screenshot with a long filename.png", "certifications.png"].map { name in
             FileItem(url: URL(fileURLWithPath: "/tmp/" + name), fileName: name,

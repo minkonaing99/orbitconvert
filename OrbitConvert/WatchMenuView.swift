@@ -4,6 +4,8 @@ import SwiftUI
 struct WatchMenuView: View {
     @Environment(WatchedFoldersController.self) private var watcher
     @Environment(\.openWindow) private var openWindow
+    @State private var contentHeight: CGFloat = 340
+    @State private var jobsHeight: CGFloat = 44
 
     var body: some View {
         ScrollView {
@@ -25,33 +27,18 @@ struct WatchMenuView: View {
                             Text("\(watcher.queuedJobs.count - 10) more waiting").foregroundStyle(.secondary)
                         }
                     }
-                }.frame(height: 190)
+                    .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { jobsHeight = $0 }
+                }.frame(height: min(jobsHeight, 190))
             }
             session
             if !watcher.activity.isEmpty {
                 Divider()
                 Text("Recent Activity").font(.subheadline.bold())
-                ForEach(watcher.activity.prefix(5)) { event in
-                    WatchResultRow(event: event)
+                ForEach(watcher.activity.prefix(3)) { event in
+                    WatchResultRow(event: event, compact: true)
                 }
-                Button("View All Activity") { openWindow(id: "activity") }
             }
             Divider()
-            Button(watcher.paused ? "Resume Watching" : "Pause Watching") {
-                watcher.setPaused(!watcher.paused)
-            }
-            Button(watcher.clipboard.enabled ? "Pause Clipboard Optimization" : "Enable Clipboard Optimization") {
-                watcher.clipboard.enabled.toggle()
-            }
-            if !watcher.clipboard.results.isEmpty {
-                Text("Clipboard Results: \(watcher.clipboard.results.count)")
-                HStack {
-                    Button("Copy All") { watcher.clipboard.copy(watcher.clipboard.results) }
-                    Button("Save All") { watcher.clipboard.save(watcher.clipboard.results) }
-                    Button("Clear") { watcher.clipboard.clearResults() }
-                }
-            }
-            if let message = watcher.clipboard.message { Text(message).font(.caption) }
             Button("Open OrbitConvert") {
                 openWindow(id: "main")
                 NSApp.activate(ignoringOtherApps: true)
@@ -60,14 +47,10 @@ struct WatchMenuView: View {
             Button("Quit OrbitConvert") { NSApp.terminate(nil) }.keyboardShortcut("q")
         }
         .padding(16)
+        .frame(width: 350, alignment: .leading)
+        .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { contentHeight = $0 }
         }
-        .frame(width: 350, height: popupHeight)
-    }
-
-    // MenuBarExtra needs a definite height; a ScrollView has no intrinsic height.
-    private var popupHeight: CGFloat {
-        watcher.outstandingJobCount == 0 && watcher.activity.isEmpty &&
-        watcher.sessionStatistics.totalProcessed == 0 ? 340 : 560
+        .frame(width: 350, height: min(contentHeight, 560))
     }
 
     @ViewBuilder private var session: some View {
@@ -76,13 +59,13 @@ struct WatchMenuView: View {
             Divider()
             Text(watcher.outstandingJobCount == 0 && stats.failed == 0 && stats.skipped == 0
                  ? "All files optimized" : "This Session").font(.subheadline.bold())
-            Text("\(stats.totalProcessed) processed · \(stats.successful) optimized")
+            HStack {
+                Text("\(stats.totalProcessed) processed")
+                Spacer()
+                Text("Saved \(size(stats.bytesSaved))").fontWeight(.medium)
+            }.font(.subheadline)
             if stats.skipped > 0 || stats.failed > 0 {
                 Text("\(stats.skipped) skipped · \(stats.failed) failed").foregroundStyle(.secondary)
-            }
-            if stats.successful > 0 {
-                Text("\(size(stats.originalBytes)) to \(size(stats.optimizedBytes))")
-                Text("Saved \(size(stats.bytesSaved))").fontWeight(.medium)
             }
         }
     }
@@ -111,7 +94,29 @@ struct OptimizationJobRow: View {
 
 struct WatchResultRow: View {
     let event: WatchActivity
+    var compact = false
+
     var body: some View {
+        if compact {
+            HStack(spacing: 8) {
+                Image(systemName: symbol).frame(width: 14)
+                    .accessibilityLabel(event.outcome.rawValue.capitalized)
+                Text(event.fileName).lineLimit(1).truncationMode(.middle)
+                Spacer(minLength: 4)
+                Text(event.outcome == .optimized
+                     ? "Saved \(size(max(event.originalBytes - event.outputBytes, 0)))"
+                     : event.outcome.rawValue.capitalized)
+                    .foregroundStyle(.secondary).fixedSize()
+            }
+            .font(.caption)
+            .help(event.message.isEmpty ? event.fileName : "\(event.fileName): \(event.message)")
+            .accessibilityElement(children: .combine)
+        } else {
+            detailedRow
+        }
+    }
+
+    private var detailedRow: some View {
         VStack(alignment: .leading, spacing: 2) {
             Label(event.fileName, systemImage: symbol)
                 .lineLimit(1).truncationMode(.middle)

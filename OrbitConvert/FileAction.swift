@@ -5,6 +5,7 @@ struct FileAction: Identifiable, Hashable, Sendable {
 
     nonisolated enum Kind: Hashable, Sendable {
         case convert(ConversionFormat)
+        case markdownPDF, markdownDOCX
         case imagePDF, pdfJPEG, pdfPNG, extractPages, mergePDFs, compress
     }
 
@@ -12,7 +13,7 @@ struct FileAction: Identifiable, Hashable, Sendable {
 
     nonisolated var category: Category {
         switch kind {
-        case .convert, .imagePDF, .pdfJPEG, .pdfPNG: .conversion
+        case .convert, .imagePDF, .pdfJPEG, .pdfPNG, .markdownPDF, .markdownDOCX: .conversion
         case .compress, .extractPages, .mergePDFs: .tool
         }
     }
@@ -23,6 +24,8 @@ struct FileAction: Identifiable, Hashable, Sendable {
     nonisolated var id: String {
         switch kind {
         case .convert(let format): "convert-\(format.rawValue)"
+        case .markdownPDF: "markdown-pdf"
+        case .markdownDOCX: "markdown-docx"
         case .imagePDF: "image-pdf"
         case .pdfJPEG: "pdf-jpeg"
         case .pdfPNG: "pdf-png"
@@ -35,6 +38,8 @@ struct FileAction: Identifiable, Hashable, Sendable {
     nonisolated var title: String {
         switch kind {
         case .convert(let format): format.label
+        case .markdownPDF: "PDF"
+        case .markdownDOCX: "DOCX"
         case .imagePDF: "PDF"
         case .pdfJPEG: "JPG"
         case .pdfPNG: "PNG"
@@ -53,7 +58,7 @@ struct FileAction: Identifiable, Hashable, Sendable {
             case .heic: "sparkles.rectangle.stack"
             case .tiff: "square.stack.3d.up"
             }
-        case .imagePDF, .mergePDFs: "doc.richtext"
+        case .imagePDF, .mergePDFs, .markdownPDF, .markdownDOCX: "doc.richtext"
         case .pdfJPEG, .pdfPNG: "photo"
         case .extractPages: "doc.on.doc"
         case .compress: "arrow.down.right.and.arrow.up.left"
@@ -69,6 +74,7 @@ struct FileAction: Identifiable, Hashable, Sendable {
     }
 
     nonisolated static func available(for file: FileItem, selection: [FileItem]) -> [FileAction] {
+        if file.isMarkdown { return [FileAction(.markdownPDF), FileAction(.markdownDOCX)] }
         if file.isPDF {
             var actions = [FileAction(.compress), FileAction(.pdfJPEG), FileAction(.pdfPNG),
                            FileAction(.extractPages)]
