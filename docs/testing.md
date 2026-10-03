@@ -1,5 +1,28 @@
 # Testing and validation
 
+## Manual Resize + Optimize (2026-10-03)
+
+The full ad-hoc signed Release test suite passes: **115 tests, 0 failures, 0 skips**, in `/tmp/OrbitConvert-resize-final.xcresult`. A normal Release build also passes at `/tmp/OrbitConvert-resize-release/Build/Products/Release/OrbitConvert.app`.
+
+Strict deep signature verification passes for the normal Release application and bundled helpers. Two existing HEIC-test main-thread responsiveness warnings remain; new async tests explicitly respect MainActor isolation.
+
+After fixing test-only actor annotations, all 11 focused resize/action tests pass again with no actor-isolation compiler warnings. Result bundle: `/tmp/OrbitConvert-resize-focused-final.xcresult`. Production code is unchanged from the full passing suite and normal Release build.
+
+Commands used:
+
+```sh
+xcodebuild test -project OrbitConvert.xcodeproj -scheme OrbitConvert -configuration Release -destination 'platform=macOS' -derivedDataPath /tmp/OrbitConvert-resize-verified ENABLE_TESTABILITY=YES -enableCodeCoverage YES -resultBundlePath /tmp/OrbitConvert-resize-final.xcresult
+xcodebuild build -project OrbitConvert.xcodeproj -scheme OrbitConvert -configuration Release -derivedDataPath /tmp/OrbitConvert-resize-release
+```
+
+An initial Release test run failed because the app module was built without testability. The successful command explicitly enables it; the separate normal Release build uses the unchanged production configuration.
+
+New tests cover resize presets/custom fit, bounds, all eight EXIF orientations with corner-pixel checks, sampled PNG alpha, DPI and metadata policy, HEIC, unchanged originals, existing output collisions, corrupt/unsupported inputs, cancellation, larger-candidate skipping, action availability and two-file selection execution. The action-availability test failed before Resize was implemented. Focused backend tests were written first, although their initial build stopped on concurrent incomplete action switches rather than reaching a test assertion.
+
+Resize service coverage is **84.97% (164/193 lines)**. Whole-app coverage is **59.97% (4,042/6,740)**, below the requested 80% goal; the new options sheet has no automated interaction coverage. No files were excluded. Code and security reviews have no unresolved findings.
+
+Manual installed-app checks remain: options-sheet keyboard behavior, floating-panel invocation, Preview visual comparison, revoked destination permission, large-image memory profiling, macOS 14 and physical Intel runtime. Existing image/PDF conversion, compression, folder watching and clipboard regression tests pass. See [resize behavior](resize-optimization.md).
+
 Status: 87 tests pass on Apple Silicon macOS 27.0.1 with no failures or skips (clipboard milestone, ad-hoc signed). Full-app line coverage is 62.30% (3,429/5,504), below the 80% target. The earlier x86_64 build passed; this milestone was tested on arm64 only. Two existing main-thread responsiveness warnings remain. Signed cross-application clipboard and installed-folder workflows still require manual checks.
 
 The 2026-09-29 Finder drop-target coverage report measured 53.91% (965/1790) of the full app target, below the 80% target. Most SwiftUI/AppKit interaction paths lack automated coverage. Do not treat passing service and panel tests as live Finder drag verification.

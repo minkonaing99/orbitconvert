@@ -1,6 +1,7 @@
 import Foundation
 
 struct FileActionSettings: Sendable {
+    var resizeOptions = ResizeOptions()
     var markdownImageFolder: URL? = nil
     var markdownPDFStyle = MarkdownPDFStyle()
     var strongerPDFCompression = false
@@ -25,6 +26,22 @@ struct FileActionService: Sendable {
                              in directory: URL, settings: FileActionSettings,
                              progress: @Sendable (String) -> Void = { _ in }) async throws -> FileActionReport {
         switch action.kind {
+        case .resize:
+            progress("Resizing and optimizing...")
+            let outcome = try ImageResizeService().resize(
+                file, in: directory, options: settings.resizeOptions,
+                preset: settings.compressionPreset, jpegQuality: settings.jpegQuality,
+                removeMetadata: settings.stripMetadata)
+            switch outcome {
+            case .saved(let result):
+                let inspected = FileTypeService().inspect([result.outputURL]).files.first
+                let dimensions = inspected.map { "\($0.pixelWidth) x \($0.pixelHeight) px. " } ?? ""
+                return FileActionReport(outputURLs: [result.outputURL],
+                    message: dimensions + "Saved \(result.outputURL.lastPathComponent)", compression: result)
+            case .noReduction:
+                return FileActionReport(outputURLs: [],
+                    message: "No useful size reduction. Original kept.", compression: nil)
+            }
         case .markdownPDF, .markdownDOCX:
             return try await MarkdownConversionService().convert(file, toDOCX: action.kind == .markdownDOCX,
                                                                  in: directory, imageFolder: settings.markdownImageFolder,

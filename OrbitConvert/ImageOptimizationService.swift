@@ -6,6 +6,17 @@ struct ImageOptimizationService: Sendable {
 
     nonisolated init() {}
 
+    nonisolated func encodeResized(_ image: CGImage, properties: [String: Any], format: ConversionFormat,
+                                   preset: CompressionPreset, jpegQuality: Double?, to url: URL) throws {
+        let quality = try resolvedQuality(for: format, preset: preset, custom: jpegQuality)
+        guard let destination = CGImageDestinationCreateWithURL(url as CFURL,
+            format.typeIdentifier as CFString, 1, nil) else { throw OptimizationError.cannotEncode }
+        var resolvedProperties = properties
+        if let quality { resolvedProperties[kCGImageDestinationLossyCompressionQuality as String] = quality }
+        CGImageDestinationAddImage(destination, image, resolvedProperties as CFDictionary)
+        guard CGImageDestinationFinalize(destination) else { throw OptimizationError.cannotEncode }
+    }
+
     nonisolated func optimize(_ file: FileItem, in directory: URL,
                               preset: CompressionPreset = .balanced,
                               jpegQuality: Double? = nil,

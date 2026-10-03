@@ -36,6 +36,9 @@ struct ConversionControlsView: View {
     @State private var markdownImageFolder: URL?
     @State private var isSelectingImages = false
     @State private var markdownPDFStyle = MarkdownPDFStyle()
+    @State private var resizeOptions = ResizeOptions()
+    @State private var resizeCompression = CompressionPreset.balanced
+    @State private var isShowingResize = false
 
     private var actions: [FileAction] { FileAction.common(for: selection) }
     private var preset: CompressionPreset {
@@ -66,7 +69,7 @@ struct ConversionControlsView: View {
                         .foregroundStyle(isError ? .red : .primary)
                     Text(message).font(.caption)
                     if entries.count > 1 {
-                        if lastAction?.kind == .compress {
+                        if lastAction?.kind == .compress || lastAction?.kind == .resize {
                             let completed = entries.filter { $0.report != nil }
                             let original = completed.reduce(Int64(0)) { $0 + $1.originalBytes }
                             let optimized = completed.reduce(Int64(0)) { $0 + ($1.report?.compression?.outputBytes ?? $1.originalBytes) }
@@ -117,7 +120,9 @@ struct ConversionControlsView: View {
             pendingAction = nil
             onBusyChanged(false)
             switch selection {
-            case .success(let folder): customDirectory = folder; process(action, in: folder)
+            case .success(let folder):
+                customDirectory = folder
+                process(action, in: folder, resizeConfirmed: action.kind == .resize)
             case .failure: message = "No output folder was selected."
             }
         }
@@ -126,6 +131,15 @@ struct ConversionControlsView: View {
         }
         .fileImporter(isPresented: $isSelectingImages, allowedContentTypes: [.folder]) { result in
             if case .success(let folder) = result { markdownImageFolder = folder }
+        }
+        .sheet(isPresented: $isShowingResize) {
+            ResizeOptionsView(files: selection, options: $resizeOptions,
+                              compressionPreset: $resizeCompression,
+                              onCancel: { isShowingResize = false },
+                              onRun: {
+                                  isShowingResize = false
+                                  process(FileAction(.resize), in: customDirectory, resizeConfirmed: true)
+                              })
         }
         .onDisappear { floatingController?.dismiss(); worker?.cancel() }
         .onChange(of: selection.map(\.url)) { _, _ in floatingController?.dismiss() }
@@ -259,9 +273,13 @@ struct ConversionControlsView: View {
         if !controller.show() { message = "No screen can display the floating panel." }
     }
 
-    private func process(_ action: FileAction, in directory: URL?) {
+    private func process(_ action: FileAction, in directory: URL?, resizeConfirmed: Bool = false) {
         guard !isConverting else { return }
         floatingController?.dismiss()
+        if action.kind == .resize && !resizeConfirmed {
+            isShowingResize = true
+            return
+        }
         if selection.count > 1 && directory == nil {
             pendingAction = action
             onBusyChanged(true)
@@ -279,10 +297,10 @@ struct ConversionControlsView: View {
         resultURLs = []
         progressText = "Preparing..."
         let files = selection
-        let settings = FileActionSettings(markdownImageFolder: markdownImageFolder,
+        let settings = FileActionSettings(resizeOptions: resizeOptions, markdownImageFolder: markdownImageFolder,
                                           markdownPDFStyle: markdownPDFStyle,
                                           strongerPDFCompression: strongerPDFCompression && preset != .lossless, jpegQuality: jpegQuality, stripMetadata: stripMetadata,
-                                          compressionPreset: preset, pdfDPI: pdfDPI,
+                                          compressionPreset: action.kind == .resize ? resizeCompression : preset, pdfDPI: pdfDPI,
                                           pdfLayout: pdfLayout, pageSelection: pageSelection)
         let (updates, continuation) = AsyncStream<String>.makeStream()
         Task { for await update in updates { progressText = update } }

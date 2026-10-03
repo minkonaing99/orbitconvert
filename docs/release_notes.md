@@ -1,5 +1,13 @@
 # Release notes
 
+## Unreleased - manual Resize + Optimize, 2026-10-03
+
+- Added 25%, 50%, 75%, longest-edge 1080/1920 px and custom aspect-fit bounds for JPEG/PNG/HEIC.
+- Added a compact options sheet with oriented dimension previews, Balanced/Maximum compression and separate collision-safe `-resized` outputs.
+- Preserved originals, PNG alpha and metadata policy; only smaller validated candidates are published. JPEG/HEIC use a single lossy encode through existing encoding facilities.
+- Release build and all 115 tests pass. Resize service coverage is 84.97%; whole-app coverage remains below 80%. Installed UI/permission checks and macOS 14/Intel runtime remain manual.
+- Automatic watched-folder and clipboard resizing are outside this milestone.
+
 ## Unreleased - clipboard optimization and live menu status, 2026-10-01
 
 - Added local clipboard image optimization with 600 ms monitoring, generation-checked writes, SHA256 duplicate protection, ignored applications, and independent pause.

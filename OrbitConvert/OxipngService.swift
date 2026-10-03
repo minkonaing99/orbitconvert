@@ -8,6 +8,10 @@ struct OxipngService: Sendable {
 
     nonisolated init() {}
 
+    nonisolated func validateRewrite(of url: URL) throws {
+        _ = try metadataChunks(in: url)
+    }
+
     nonisolated func optimize(source: URL, destination: URL, preset: CompressionPreset,
                               timeout: Duration = .seconds(60)) throws {
         guard source.isFileURL, destination.isFileURL, source.standardizedFileURL != destination.standardizedFileURL,

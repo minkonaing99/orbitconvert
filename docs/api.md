@@ -47,6 +47,8 @@ Cancellation is a separate expected terminal state, not a failure alert. Keep un
 
 ## Future actions
 
+`FileAction.resize` is a manual tool for single-frame JPEG/PNG/HEIC with an available encoder. `FileActionSettings.resizeOptions` defaults to 50%. `ResizeOptions.dimensions` computes aspect-fit output without enlargement. `ImageResizeService.resize` returns the existing `OptimizationOutcome`, preserving the original and publishing only a smaller validated separate output. See [resize contracts](resize-optimization.md).
+
 Action descriptors drive UI; services own work. A dynamic code-loading plugin system is not needed. See [PDF and compression](pdf-compression.md) for native backend limits.
 
 Related: [architecture](architecture.md), [output](sandbox-and-output.md).

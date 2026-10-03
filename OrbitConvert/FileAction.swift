@@ -6,7 +6,7 @@ struct FileAction: Identifiable, Hashable, Sendable {
     nonisolated enum Kind: Hashable, Sendable {
         case convert(ConversionFormat)
         case markdownPDF, markdownDOCX
-        case imagePDF, pdfJPEG, pdfPNG, extractPages, mergePDFs, compress
+        case imagePDF, pdfJPEG, pdfPNG, extractPages, mergePDFs, compress, resize
     }
 
     let kind: Kind
@@ -14,7 +14,7 @@ struct FileAction: Identifiable, Hashable, Sendable {
     nonisolated var category: Category {
         switch kind {
         case .convert, .imagePDF, .pdfJPEG, .pdfPNG, .markdownPDF, .markdownDOCX: .conversion
-        case .compress, .extractPages, .mergePDFs: .tool
+        case .compress, .resize, .extractPages, .mergePDFs: .tool
         }
     }
 
@@ -32,6 +32,7 @@ struct FileAction: Identifiable, Hashable, Sendable {
         case .extractPages: "extract-pages"
         case .mergePDFs: "merge-pdfs"
         case .compress: "compress"
+        case .resize: "resize"
         }
     }
 
@@ -46,6 +47,7 @@ struct FileAction: Identifiable, Hashable, Sendable {
         case .extractPages: "Extract Pages"
         case .mergePDFs: "Merge"
         case .compress: "Compress"
+        case .resize: "Resize + Optimize"
         }
     }
 
@@ -62,6 +64,7 @@ struct FileAction: Identifiable, Hashable, Sendable {
         case .pdfJPEG, .pdfPNG: "photo"
         case .extractPages: "doc.on.doc"
         case .compress: "arrow.down.right.and.arrow.up.left"
+        case .resize: "arrow.up.left.and.arrow.down.right"
         }
     }
 
@@ -86,6 +89,7 @@ struct FileAction: Identifiable, Hashable, Sendable {
         if [.jpeg, .png].contains(ConversionFormat.sourceFormat(for: file.contentTypeIdentifier)) {
             actions.append(FileAction(.compress))
         }
+        if ImageResizeService.supports(file) { actions.append(FileAction(.resize)) }
         return actions
     }
 }
