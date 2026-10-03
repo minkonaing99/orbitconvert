@@ -59,7 +59,7 @@ Every measured row is reproducible from the recorded fixture and policy. Invalid
 
 Initial scope is successful watched-folder **Replace Original** jobs. Manual actions already keep sources; Keep Both and Move Original to Trash retain their current meanings. Trash is operating-system recovery, not indexed Undo. Clipboard Undo and multiple redo generations are outside this stage.
 
-Add Restore Original to eligible detailed activity rows and a recovery list in Settings. The recovery list must remain available when its activity row ages out of the 200-entry history. Display Restorable, Needs Access, Conflict, Recovery Required and Expired states with a useful action. Removing a watched folder must not silently delete its recoveries.
+Add Restore Original to eligible detailed activity rows and a recovery list in Settings. The recovery list must remain available when its activity row ages out of the 50-entry history. Display Restorable, Needs Access, Conflict, Recovery Required and Expired states with a useful action. Removing a watched folder must not silently delete its recoveries.
 
 Provisional limits: **seven days, 100 restorable entries, 1,000,000,000 bytes of original payload**, whichever limit is reached first. Explain that count/storage pressure can expire originals earlier. Show retained bytes separately from optimization savings. Never purge an unresolved transaction to satisfy a quota. If safe capacity cannot be reserved, skip replacement and leave the original intact; never silently replace without Undo.
 
