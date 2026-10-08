@@ -1,5 +1,12 @@
 # Release notes
 
+## Unreleased - JPEG target size, 2026-10-09
+
+- Added Tools > Compress to Size for single JPEGs and JPEG batches, including the floating panel. Targets use decimal KB/MB and default to 2 MB per file.
+- Tries quality reduction first, then aspect-preserving resizing with a 1080-pixel short-edge minimum. Smaller originals keep their dimensions.
+- Reports unreachable limits, skips already-small files, and publishes only validated results within the byte limit as separate collision-safe files. No backup or recovery feature is added.
+- See [image conversion](image-conversion.md) for limits and [testing](testing.md) for verification.
+
 ## Unreleased - manual Resize + Optimize, 2026-10-03
 
 - Added 25%, 50%, 75%, longest-edge 1080/1920 px and custom aspect-fit bounds for JPEG/PNG/HEIC.

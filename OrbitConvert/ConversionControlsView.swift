@@ -36,6 +36,8 @@ struct ConversionControlsView: View {
     @State private var markdownImageFolder: URL?
     @State private var isSelectingImages = false
     @State private var markdownPDFStyle = MarkdownPDFStyle()
+    @State private var targetBytes: Int64 = 2_000_000
+    @State private var isShowingTargetSize = false
     @State private var resizeOptions = ResizeOptions()
     @State private var resizeCompression = CompressionPreset.balanced
     @State private var isShowingResize = false
@@ -69,7 +71,7 @@ struct ConversionControlsView: View {
                         .foregroundStyle(isError ? .red : .primary)
                     Text(message).font(.caption)
                     if entries.count > 1 {
-                        if lastAction?.kind == .compress || lastAction?.kind == .resize {
+                        if lastAction?.kind == .compress || lastAction?.kind == .resize || lastAction?.kind == .compressToSize {
                             let completed = entries.filter { $0.report != nil }
                             let original = completed.reduce(Int64(0)) { $0 + $1.originalBytes }
                             let optimized = completed.reduce(Int64(0)) { $0 + ($1.report?.compression?.outputBytes ?? $1.originalBytes) }
@@ -122,7 +124,7 @@ struct ConversionControlsView: View {
             switch selection {
             case .success(let folder):
                 customDirectory = folder
-                process(action, in: folder, resizeConfirmed: action.kind == .resize)
+                process(action, in: folder, resizeConfirmed: action.kind == .resize, targetConfirmed: action.kind == .compressToSize)
             case .failure: message = "No output folder was selected."
             }
         }
@@ -131,6 +133,15 @@ struct ConversionControlsView: View {
         }
         .fileImporter(isPresented: $isSelectingImages, allowedContentTypes: [.folder]) { result in
             if case .success(let folder) = result { markdownImageFolder = folder }
+        }
+        .sheet(isPresented: $isShowingTargetSize) {
+            TargetSizeOptionsView(count: selection.count,
+                onCancel: { isShowingTargetSize = false },
+                onRun: { bytes in
+                    targetBytes = bytes
+                    isShowingTargetSize = false
+                    process(FileAction(.compressToSize), in: customDirectory, targetConfirmed: true)
+                })
         }
         .sheet(isPresented: $isShowingResize) {
             ResizeOptionsView(files: selection, options: $resizeOptions,
@@ -273,9 +284,13 @@ struct ConversionControlsView: View {
         if !controller.show() { message = "No screen can display the floating panel." }
     }
 
-    private func process(_ action: FileAction, in directory: URL?, resizeConfirmed: Bool = false) {
+    private func process(_ action: FileAction, in directory: URL?, resizeConfirmed: Bool = false, targetConfirmed: Bool = false) {
         guard !isConverting else { return }
         floatingController?.dismiss()
+        if action.kind == .compressToSize && !targetConfirmed {
+            isShowingTargetSize = true
+            return
+        }
         if action.kind == .resize && !resizeConfirmed {
             isShowingResize = true
             return
@@ -297,7 +312,7 @@ struct ConversionControlsView: View {
         resultURLs = []
         progressText = "Preparing..."
         let files = selection
-        let settings = FileActionSettings(resizeOptions: resizeOptions, markdownImageFolder: markdownImageFolder,
+        let settings = FileActionSettings(targetBytes: targetBytes, resizeOptions: resizeOptions, markdownImageFolder: markdownImageFolder,
                                           markdownPDFStyle: markdownPDFStyle,
                                           strongerPDFCompression: strongerPDFCompression && preset != .lossless, jpegQuality: jpegQuality, stripMetadata: stripMetadata,
                                           compressionPreset: action.kind == .resize ? resizeCompression : preset, pdfDPI: pdfDPI,

@@ -6,7 +6,7 @@ struct FileAction: Identifiable, Hashable, Sendable {
     nonisolated enum Kind: Hashable, Sendable {
         case convert(ConversionFormat)
         case markdownPDF, markdownDOCX
-        case imagePDF, pdfJPEG, pdfPNG, extractPages, mergePDFs, compress, resize
+        case imagePDF, pdfJPEG, pdfPNG, extractPages, mergePDFs, compress, resize, compressToSize
     }
 
     let kind: Kind
@@ -14,7 +14,7 @@ struct FileAction: Identifiable, Hashable, Sendable {
     nonisolated var category: Category {
         switch kind {
         case .convert, .imagePDF, .pdfJPEG, .pdfPNG, .markdownPDF, .markdownDOCX: .conversion
-        case .compress, .resize, .extractPages, .mergePDFs: .tool
+        case .compress, .resize, .compressToSize, .extractPages, .mergePDFs: .tool
         }
     }
 
@@ -32,6 +32,7 @@ struct FileAction: Identifiable, Hashable, Sendable {
         case .extractPages: "extract-pages"
         case .mergePDFs: "merge-pdfs"
         case .compress: "compress"
+        case .compressToSize: "compress-to-size"
         case .resize: "resize"
         }
     }
@@ -47,6 +48,7 @@ struct FileAction: Identifiable, Hashable, Sendable {
         case .extractPages: "Extract Pages"
         case .mergePDFs: "Merge"
         case .compress: "Compress"
+        case .compressToSize: "Compress to Size"
         case .resize: "Resize + Optimize"
         }
     }
@@ -64,6 +66,7 @@ struct FileAction: Identifiable, Hashable, Sendable {
         case .pdfJPEG, .pdfPNG: "photo"
         case .extractPages: "doc.on.doc"
         case .compress: "arrow.down.right.and.arrow.up.left"
+        case .compressToSize: "arrow.down.to.line"
         case .resize: "arrow.up.left.and.arrow.down.right"
         }
     }
@@ -88,6 +91,9 @@ struct FileAction: Identifiable, Hashable, Sendable {
         actions.append(FileAction(.imagePDF))
         if [.jpeg, .png].contains(ConversionFormat.sourceFormat(for: file.contentTypeIdentifier)) {
             actions.append(FileAction(.compress))
+        }
+        if ConversionFormat.sourceFormat(for: file.contentTypeIdentifier) == .jpeg {
+            actions.append(FileAction(.compressToSize))
         }
         if ImageResizeService.supports(file) { actions.append(FileAction(.resize)) }
         return actions

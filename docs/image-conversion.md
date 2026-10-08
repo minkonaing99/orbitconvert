@@ -34,6 +34,16 @@ Thumbnails use [CGImageSourceCreateThumbnailAtIndex](https://developer.apple.com
 
 A future stripping tool must disclose when re-encoding changes quality. Compression reports actual original and result sizes; percentage saved is `(original - result) / original * 100` for a positive original size. If output grows, report the increase rather than negative savings presented as success.
 
+## Compress to Size
+
+For JPEG files, Tools > Compress to Size accepts a maximum size per file in decimal KB or MB (1 MB = 1,000,000 bytes). The default is 2 MB. The same action is available from the floating panel and processes selected JPEGs sequentially.
+
+The encoder tries quality values from 100% to 0% in 5-point steps at the original dimensions. If none meets the measured byte limit, it progressively reduces dimensions while preserving aspect ratio, never below a 1080-pixel short edge. A 16:9 landscape image therefore stops at 1920 x 1080; portrait images stop at 1080 x 1920. Originals whose short edge is already 1080 pixels or less retain their dimensions and are never enlarged. Quality is an encoder setting, not a measured visual-fidelity percentage.
+
+Each resized candidate comes from the original image, with orientation and dimension metadata normalized through the existing resize service. The existing Remove metadata preference applies to generated files. Files already within the limit are left unchanged, including their metadata. Unsupported high-bit-depth and HDR gain-map inputs are rejected.
+
+Only a decoded, validated JPEG within the requested byte limit is published, with a collision-safe `-target-size.jpg` suffix. Originals remain untouched. Unreachable targets report a useful error without publishing oversized results. Cancellation is checked between synchronous codec operations and before publication; temporary attempts are removed on every exit. Results report quality and whether dimensions changed. No backup, recovery, watched-folder or clipboard policy is added.
+
 ## Dependencies
 
 Use Apple ImageIO/Core Graphics first; Core Image only where transforms need it. No package or executable is needed for the initial scope. Research checked [Swift Package Index's ImageIO listings](https://swiftpackageindex.com/keywords/imageio) and [SDWebImage's ImageIO coder source](https://github.com/SDWebImage/SDWebImage/blob/master/SDWebImage/Core/SDImageIOAnimatedCoder.m); neither is adopted or copied.

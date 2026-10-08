@@ -1,5 +1,19 @@
 # Testing and validation
 
+## JPEG target size (2026-10-09)
+
+The ad-hoc signed Release suite passes on Apple Silicon: **126 tests, 0 failures, 0 skips**, including 11 new target-size tests. Result bundle: `/tmp/OrbitConvert-target-final.xcresult`. The focused target-size and shared-resize run also passed all 22 tests. Code and pre-commit security review found no blocking issues.
+
+```sh
+xcodebuild test -project OrbitConvert.xcodeproj -scheme OrbitConvert -configuration Release -destination 'platform=macOS,arch=arm64' -derivedDataPath /tmp/OrbitConvert-target-tests ENABLE_TESTABILITY=YES -enableCodeCoverage YES -resultBundlePath /tmp/OrbitConvert-target-final.xcresult
+```
+
+Target-size backend coverage is **93.39% (113/121 executable lines)**; shared resize coverage is **86.29% (170/197)**. Whole-app coverage is **64.33% (4498/6992)**, below the repository's 80% target. The new SwiftUI options sheet is not covered by these service tests.
+
+Tests cover measured byte ceilings, repeated filename collisions, unchanged originals and dimensions, already-small inputs, impossible and malformed limits, nonfinite/overflow input, unsupported/corrupt files, invalid destinations, cancellation, metadata removal/preservation, EXIF orientation, action availability and selection dispatch. Real resized JPEG output respects the 1080-pixel short-edge floor; landscape, portrait, square and smaller-source arithmetic is checked. A regression caught cached URL file sizes across repeated encodes; candidate measurements now use fresh filesystem attributes.
+
+An initial sandboxed Xcode invocation failed to launch compiler macro plugins; the successful runs used the normal host environment. Existing runtime service/IOSurface warnings remain. Live options-sheet/floating-panel interaction, installed sandbox permission behavior, large-image memory profiling, macOS 14 and Intel runtime remain unverified. No original replacement, backup or recovery feature is introduced.
+
 ## Manual Resize + Optimize (2026-10-03)
 
 The full ad-hoc signed Release test suite passes: **115 tests, 0 failures, 0 skips**, in `/tmp/OrbitConvert-resize-final.xcresult`. A normal Release build also passes at `/tmp/OrbitConvert-resize-release/Build/Products/Release/OrbitConvert.app`.

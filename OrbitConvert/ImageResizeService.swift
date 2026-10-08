@@ -168,15 +168,21 @@ struct ImageResizeService: Sendable {
     nonisolated private func createResized(_ source: CGImageSource, properties: [String: Any],
         dimensions: ResizeDimensions, format: ConversionFormat, removeMetadata: Bool,
         preset: CompressionPreset, jpegQuality: Double?, destination url: URL) throws {
+        let prepared = try preparedImage(source, properties: properties, dimensions: dimensions,
+                                         removeMetadata: removeMetadata)
+        try ImageOptimizationService().encodeResized(prepared.image, properties: prepared.properties,
+            format: format, preset: preset, jpegQuality: jpegQuality, to: url)
+    }
+
+    nonisolated func preparedImage(_ source: CGImageSource, properties: [String: Any],
+        dimensions: ResizeDimensions, removeMetadata: Bool) throws -> (image: CGImage, properties: [String: Any]) {
         let options = [kCGImageSourceCreateThumbnailFromImageAlways: true,
                        kCGImageSourceCreateThumbnailWithTransform: true,
                        kCGImageSourceThumbnailMaxPixelSize: max(dimensions.width, dimensions.height)] as CFDictionary
         guard let thumbnail = CGImageSourceCreateThumbnailAtIndex(source, 0, options),
               thumbnail.bitsPerComponent <= 8 else { throw OptimizationError.unsupportedInput }
-        let image = try exactImage(thumbnail, dimensions: dimensions)
-        let outputProperties = normalized(properties, dimensions: dimensions, removeMetadata: removeMetadata)
-        try ImageOptimizationService().encodeResized(image, properties: outputProperties,
-            format: format, preset: preset, jpegQuality: jpegQuality, to: url)
+        return (try exactImage(thumbnail, dimensions: dimensions),
+                normalized(properties, dimensions: dimensions, removeMetadata: removeMetadata))
     }
 
     nonisolated private func exactImage(_ image: CGImage, dimensions: ResizeDimensions) throws -> CGImage {

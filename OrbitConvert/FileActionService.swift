@@ -1,6 +1,7 @@
 import Foundation
 
 struct FileActionSettings: Sendable {
+    var targetBytes: Int64 = 2_000_000
     var resizeOptions = ResizeOptions()
     var markdownImageFolder: URL? = nil
     var markdownPDFStyle = MarkdownPDFStyle()
@@ -26,6 +27,10 @@ struct FileActionService: Sendable {
                              in directory: URL, settings: FileActionSettings,
                              progress: @Sendable (String) -> Void = { _ in }) async throws -> FileActionReport {
         switch action.kind {
+        case .compressToSize:
+            progress("Finding JPEG quality for target size...")
+            return try TargetSizeCompressionService().compress(file, in: directory,
+                targetBytes: settings.targetBytes, removeMetadata: settings.stripMetadata)
         case .resize:
             progress("Resizing and optimizing...")
             let outcome = try ImageResizeService().resize(
