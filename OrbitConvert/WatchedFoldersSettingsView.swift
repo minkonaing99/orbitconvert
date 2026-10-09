@@ -4,48 +4,73 @@ import SwiftUI
 
 struct WatchedFoldersSettingsView: View {
     @Environment(WatchedFoldersController.self) private var watcher
+    @Environment(\.openWindow) private var openWindow
     @State private var issue: String?
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 16) {
             HStack {
                 Text("Watched Folders").font(.title3.weight(.semibold))
                 Spacer()
                 Button("Add Folder", systemImage: "plus") { chooseFolders() }
             }
-            Text("OrbitConvert watches new files while it is running. Files stay local. Optimized files replace originals only after validation.")
+            Text("Optimize new images and PDFs while OrbitConvert is running. Files stay on your Mac.")
                 .font(.caption).foregroundStyle(.secondary)
             Toggle("Pause Watching", isOn: Binding(
                 get: { watcher.paused }, set: { watcher.setPaused($0) }
             ))
+            .toggleStyle(.switch).controlSize(.small)
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 12) {
-                    ForEach(watcher.folders) { folder in folderRow(folder) }
-                }
-            }
-            if watcher.folders.isEmpty {
-                ContentUnavailableView("No Watched Folders", systemImage: "folder",
-                                       description: Text("Add a folder to optimize new images and PDFs automatically."))
+                LazyVStack(alignment: .leading, spacing: 20) {
+                    if watcher.folders.isEmpty {
+                        HStack(alignment: .top, spacing: 12) {
+                            Image(systemName: "folder.badge.plus")
+                                .font(.title2).foregroundStyle(.secondary).accessibilityHidden(true)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("No watched folders yet").font(.headline)
+                                Text("Add a folder to get started. You can include existing files when adding it.")
+                                    .font(.caption).foregroundStyle(.secondary)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 12)
+                    } else {
+                        LazyVStack(alignment: .leading, spacing: 12) {
+                            ForEach(watcher.folders) { folder in folderRow(folder) }
+                        }
+                    }
+                    recentActivity
+                }.frame(maxWidth: .infinity, alignment: .leading)
             }
             Divider()
             Toggle("Launch OrbitConvert at Login", isOn: Binding(
                 get: { launchAtLogin }, set: { setLaunchAtLogin($0) }
             ))
             if let issue { Text(issue).font(.caption).foregroundStyle(.red) }
-            if !watcher.activity.isEmpty {
+        }
+        .padding(.top, 8)
+    }
+
+    private var recentActivity: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Divider()
+            HStack {
                 Text("Recent Activity").font(.headline)
+                Spacer()
+                Button("View All Activity") { openWindow(id: "activity") }
+                    .disabled(watcher.activity.isEmpty)
+            }
+            Text("Last 200 watched-folder and clipboard results, saved on this Mac.")
+                .font(.caption).foregroundStyle(.secondary)
+            if watcher.activity.isEmpty {
+                Text("Completed optimizations will appear here with original size, final size, and savings.")
+                    .font(.caption).foregroundStyle(.secondary)
+            } else {
                 ForEach(watcher.activity.prefix(5)) { event in
-                    HStack {
-                        Text(event.fileName).lineLimit(1)
-                        Spacer()
-                        Text(activityLabel(event)).foregroundStyle(.secondary)
-                    }
-                    .font(.caption)
+                    WatchResultRow(event: event)
                 }
             }
         }
-        .padding(.top, 8)
     }
 
     private func folderRow(_ folder: WatchedFolder) -> some View {
@@ -180,13 +205,4 @@ struct WatchedFoldersSettingsView: View {
         } catch { issue = "Launch at Login could not be changed: \(error.localizedDescription)" }
     }
 
-    private func activityLabel(_ event: WatchActivity) -> String {
-        switch event.outcome {
-        case .optimized:
-            let saved = event.originalBytes - event.outputBytes
-            return "Saved \(ByteCountFormatter.string(fromByteCount: saved, countStyle: .file))"
-        case .skipped: return "No useful reduction"
-        case .failed: return event.message
-        }
-    }
 }

@@ -15,6 +15,43 @@ final class MenuStatusTests: XCTestCase {
         XCTAssertEqual(stats.originalBytes, 100)
     }
 
+    func testActivitySavingsIncludesBytesAndPercentage() {
+        let event = WatchActivity(fileName: "photo.jpg", outcome: .optimized,
+                                  originalBytes: 8_000_000, outputBytes: 2_000_000)
+        XCTAssertEqual(event.savingsBytes, 6_000_000)
+        XCTAssertEqual(event.savingsPercentage, 75)
+        for outcome in [WatchActivityOutcome.skipped, .failed] {
+            let skipped = WatchActivity(fileName: "photo.jpg", outcome: outcome,
+                                        originalBytes: 8_000_000, outputBytes: 0)
+            XCTAssertEqual(skipped.savingsBytes, 0)
+            XCTAssertEqual(skipped.savingsPercentage, 0)
+        }
+        let empty = WatchActivity(fileName: "empty", outcome: .optimized)
+        XCTAssertEqual(empty.savingsPercentage, 0)
+        let larger = WatchActivity(fileName: "larger", outcome: .optimized,
+                                    originalBytes: 10, outputBytes: 20)
+        XCTAssertEqual(larger.savingsBytes, 0)
+        XCTAssertEqual(larger.savingsPercentage, 0)
+    }
+
+    @MainActor func testPreviousActivityRestoresSizesAndDateWithoutChangingSession() throws {
+        let suite = "ActivityHistoryTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let prior = WatchActivity(fileName: "previous.jpg", outcome: .optimized,
+                                  originalBytes: 8_000_000, outputBytes: 2_000_000)
+        defaults.set(try JSONEncoder().encode([prior]), forKey: "watchedActivity")
+        let restored = WatchedFoldersController(defaults: defaults)
+        let event = try XCTUnwrap(restored.activity.first)
+        XCTAssertEqual(event.id, prior.id)
+        XCTAssertEqual(event.fileName, prior.fileName)
+        XCTAssertEqual(event.date, prior.date)
+        XCTAssertEqual(event.originalBytes, 8_000_000)
+        XCTAssertEqual(event.outputBytes, 2_000_000)
+        XCTAssertEqual(event.savingsPercentage, 75)
+        XCTAssertEqual(restored.sessionStatistics.totalProcessed, 0)
+    }
+
     func testZeroAndLargerOutputsHaveNoSavings() {
         let result = SessionStatistics().recording(WatchActivity(
             fileName: "empty", outcome: .optimized, originalBytes: 0, outputBytes: 10))

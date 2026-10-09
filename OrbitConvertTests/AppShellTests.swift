@@ -48,6 +48,59 @@ final class AppShellTests: XCTestCase {
         add(attachment)
     }
 
+    @MainActor
+    func testWatchedSettingsEmptyAndPopulatedLayouts() throws {
+        let suite = "WatchedSettingsLayout.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let watcher = WatchedFoldersController(defaults: defaults)
+        for populated in [false, true] {
+            if populated {
+                watcher.folders = [WatchedFolder(displayName: "Screenshots and exported images",
+                    bookmarkData: Data(), isEnabled: false)]
+                watcher.activity = [
+                    WatchActivity(fileName: "A very long screenshot filename from the previous session.jpg",
+                        outcome: .optimized, originalBytes: 8_000_000, outputBytes: 2_000_000),
+                    WatchActivity(fileName: "document.pdf", outcome: .skipped, message: "No useful reduction"),
+                    WatchActivity(fileName: "unavailable.png", outcome: .failed,
+                        message: "Folder access expired. Grant access again in Settings.")
+                ]
+            }
+            for dark in [false, true] {
+                try capture(WatchedFoldersSettingsView().environment(watcher),
+                    width: 550, height: 390, dark: dark,
+                    name: "Watched settings \(populated ? "populated" : "empty") \(dark ? "dark" : "light")")
+            }
+        }
+        try capture(WatchActivityView().environment(watcher), width: 460, height: 500,
+                    dark: true, name: "Previous file activity")
+    }
+
+    @MainActor
+    private func capture<V: View>(_ root: V, width: CGFloat, height: CGFloat,
+                                 dark: Bool, name: String) throws {
+        let view = NSHostingView(rootView: root
+            .frame(width: width, height: height)
+            .background(Color(nsColor: .windowBackgroundColor)))
+        let window = NSWindow(contentRect: CGRect(x: 0, y: 0, width: width, height: height),
+                              styleMask: [.titled, .closable], backing: .buffered, defer: false)
+        window.contentView = view
+        window.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
+        window.orderFront(nil)
+        defer { window.orderOut(nil) }
+        view.layoutSubtreeIfNeeded()
+        RunLoop.main.run(until: Date().addingTimeInterval(0.2))
+        XCTAssertLessThanOrEqual(view.fittingSize.width, width)
+        XCTAssertLessThanOrEqual(view.fittingSize.height, height)
+        let bitmap = try XCTUnwrap(view.bitmapImageRepForCachingDisplay(in: view.bounds))
+        view.cacheDisplay(in: view.bounds, to: bitmap)
+        let data = try XCTUnwrap(bitmap.representation(using: .png, properties: [:]))
+        let attachment = XCTAttachment(data: data, uniformTypeIdentifier: UTType.png.identifier)
+        attachment.name = name
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+
     func testAppIdentityMatchesBundleConfiguration() {
         XCTAssertEqual(AppIdentity.name, Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String)
         XCTAssertEqual(Bundle.main.bundleIdentifier, "com.example.OrbitConvert")

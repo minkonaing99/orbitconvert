@@ -1,5 +1,19 @@
 # Testing and validation
 
+## Watched-folder settings and saved history (2026-10-09)
+
+The ad-hoc signed Apple Silicon Release suite passes: **129 tests, 0 failures, 0 skips**. Result bundle: `/tmp/OrbitConvert-history-verified.xcresult`. Code review found no blocking issues.
+
+```sh
+xcodebuild test -project OrbitConvert.xcodeproj -scheme OrbitConvert -configuration Release -destination 'platform=macOS,arch=arm64' -derivedDataPath /tmp/OrbitConvert-target-tests ENABLE_TESTABILITY=YES -enableCodeCoverage YES -resultBundlePath /tmp/OrbitConvert-history-verified.xcresult
+```
+
+New checks cover savings bytes/percent for successful, skipped, failed, empty and larger-output records; restoration of previous filenames, dates and original/final sizes from isolated UserDefaults; and unchanged session counters after loading history. Rendering fixtures cover empty and populated Watched Folders settings in light/dark appearance plus the full history view with long filenames and failure messages. Final captures were inspected under fixed Settings-sized constraints. They confirm the compact empty section, visible controls and footer, and scrollable populated content. The initial unconstrained fitting-size assertion measured ideal content height; the final test models the actual fixed parent window.
+
+Snapshots are xcresult attachments, exported for inspection to `/tmp/orbit-history-verified-snapshots`. These render checks do not prove live keyboard, VoiceOver, scrolling gestures, window-opening actions, Launch at Login permissions or installed-app sandbox behavior. Those checks remain manual.
+
+Whole-app coverage is **66.01% (4709/7134 executable lines)**, still below the repository's 80% target. Existing runtime service warnings remain. History storage and original-file policies were not changed; manual foreground conversions and operations never recorded are outside the saved automatic-activity history.
+
 ## JPEG target size (2026-10-09)
 
 The ad-hoc signed Release suite passes on Apple Silicon: **126 tests, 0 failures, 0 skips**, including 11 new target-size tests. Result bundle: `/tmp/OrbitConvert-target-final.xcresult`. The focused target-size and shared-resize run also passed all 22 tests. Code and pre-commit security review found no blocking issues.

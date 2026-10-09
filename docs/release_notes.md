@@ -1,5 +1,11 @@
 # Release notes
 
+## Unreleased - watched-folder layout and activity history, 2026-10-09
+
+- Replaced the split empty layout with a compact, top-aligned folder section and scrollable recent activity. Folder controls and Launch at Login remain available.
+- Added View All Activity from Settings and the menu bar. Existing saved watched-folder and clipboard results show date/time, original and final sizes, amount saved, and percentage reduction.
+- Reused the existing 200-record local history without changing stored data or original-file handling. Previously unrecorded operations cannot be reconstructed.
+
 ## Unreleased - JPEG target size, 2026-10-09
 
 - Added Tools > Compress to Size for single JPEGs and JPEG batches, including the floating panel. Targets use decimal KB/MB and default to 2 MB per file.

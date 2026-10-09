@@ -13,6 +13,16 @@ nonisolated struct WatchActivity: Identifiable, Codable, Sendable {
     let outputBytes: Int64
     let message: String
 
+    var savingsBytes: Int64 {
+        guard outcome == .optimized, originalBytes > 0, outputBytes >= 0 else { return 0 }
+        return max(originalBytes - outputBytes, 0)
+    }
+
+    var savingsPercentage: Double {
+        guard originalBytes > 0 else { return 0 }
+        return Double(savingsBytes) / Double(originalBytes) * 100
+    }
+
     nonisolated init(fileName: String, outcome: WatchActivityOutcome,
                      originalBytes: Int64 = 0, outputBytes: Int64 = 0,
                      message: String = "") {

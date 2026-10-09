@@ -39,6 +39,10 @@ struct WatchMenuView: View {
                 }
             }
             Divider()
+            Button("View All Activity") {
+                openWindow(id: "activity")
+                NSApp.activate(ignoringOtherApps: true)
+            }
             Button("Open OrbitConvert") {
                 openWindow(id: "main")
                 NSApp.activate(ignoringOtherApps: true)
@@ -104,7 +108,7 @@ struct WatchResultRow: View {
                 Text(event.fileName).lineLimit(1).truncationMode(.middle)
                 Spacer(minLength: 4)
                 Text(event.outcome == .optimized
-                     ? "Saved \(size(max(event.originalBytes - event.outputBytes, 0)))"
+                     ? "Saved \(size(event.savingsBytes))"
                      : event.outcome.rawValue.capitalized)
                     .foregroundStyle(.secondary).fixedSize()
             }
@@ -117,20 +121,23 @@ struct WatchResultRow: View {
     }
 
     private var detailedRow: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Label(event.fileName, systemImage: symbol)
-                .lineLimit(1).truncationMode(.middle)
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(alignment: .firstTextBaseline) {
+                Label(event.fileName, systemImage: symbol)
+                    .fontWeight(.medium).lineLimit(1).truncationMode(.middle)
+                    .help(event.fileName)
+                Spacer(minLength: 8)
+                Text(event.date, format: .dateTime.month(.abbreviated).day().hour().minute())
+                    .font(.caption).foregroundStyle(.secondary).fixedSize()
+            }
             if event.outcome == .optimized {
-                Text("\(size(event.originalBytes)) to \(size(event.outputBytes))")
-                    .font(.caption).foregroundStyle(.secondary)
-                if event.originalBytes > 0 {
-                    let saved = max(event.originalBytes - event.outputBytes, 0)
-                    Text("Saved \(size(saved)) (\(Int(Double(saved) / Double(event.originalBytes) * 100))%)")
-                        .font(.caption).foregroundStyle(.secondary)
-                }
+                Text("Original \(size(event.originalBytes))  /  Final \(size(event.outputBytes))")
+                    .font(.caption).foregroundStyle(.secondary).monospacedDigit()
+                Text("Saved \(size(event.savingsBytes)) (\(event.savingsPercentage.formatted(.number.precision(.fractionLength(0...1))))%)")
+                    .font(.caption).monospacedDigit()
             } else {
                 Text(event.message.isEmpty ? event.outcome.rawValue.capitalized : event.message)
-                    .font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                    .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             }
         }.accessibilityElement(children: .combine)
     }
@@ -149,8 +156,18 @@ struct WatchResultRow: View {
 struct WatchActivityView: View {
     @Environment(WatchedFoldersController.self) private var watcher
     var body: some View {
-        List(watcher.activity) { event in
-            WatchResultRow(event: event).padding(.vertical, 4)
-        }.frame(minWidth: 400, minHeight: 300)
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Watched-folder and clipboard history").font(.headline)
+            Text("Last 200 results are saved locally, including results from previous sessions.")
+                .font(.caption).foregroundStyle(.secondary)
+            if watcher.activity.isEmpty {
+                ContentUnavailableView("No Activity Yet", systemImage: "clock",
+                    description: Text("Completed optimizations will appear here with file sizes and savings."))
+            } else {
+                List(watcher.activity) { event in
+                    WatchResultRow(event: event).padding(.vertical, 6)
+                }.listStyle(.inset)
+            }
+        }.padding(16).frame(minWidth: 420, minHeight: 300)
     }
 }
