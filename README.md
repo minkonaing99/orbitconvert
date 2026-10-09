@@ -4,7 +4,7 @@ OrbitConvert is a native macOS utility for local image conversion. It uses Swift
 
 ## Current status
 
-The app has a native SwiftUI window, file drag/drop, compact rectangular action panels, an app-owned Finder drop target, watched folders, and automatic clipboard image optimization. A persistent menu bar popup shows background jobs, session savings, and recent activity. Image/PDF conversion and manual compression remain available.
+The app has a native SwiftUI window, file drag/drop and shared action controls in the main window, watched folders, and automatic clipboard image optimization. A persistent menu bar popup shows background jobs, session savings, and recent activity. Image/PDF conversion and manual compression remain available.
 
 ## Requirements
 
@@ -29,7 +29,7 @@ Unsigned compilation does not verify sandbox permissions or distribution readine
 
 ## Architecture
 
-SwiftUI owns presentation; AppKit owns floating windows and their lifecycle. Both action panels use the same `FileAction` descriptors and dispatch through existing services. Focused services own file access, inspection, conversion, and safe output. PNG optimization bundles the MIT-licensed Oxipng helper; other conversion engines use Apple frameworks. See [architecture](docs/architecture.md) and [internal contracts](docs/api.md).
+SwiftUI owns the main-window presentation. Shared action controls use `FileAction` descriptors and dispatch through existing services. Focused services own file access, inspection, conversion, and safe output. PNG optimization bundles the MIT-licensed Oxipng helper; other conversion engines use Apple frameworks. See [architecture](docs/architecture.md) and [internal contracts](docs/api.md).
 
 ## Supported conversions and tools
 
@@ -47,7 +47,7 @@ The project enables App Sandbox, read/write user-selected files, and app-scoped 
 
 ## Known limitations
 
-The main window uses compact selectable rows and one shared action area. Floating Actions and Floating Drop Target are available from the toolbar Windows menu. On small displays, actions remain available in the main window. Resize, standalone Metadata, Remove Metadata, and Split are not shown because handlers do not exist yet. Animated or multi-image inputs are rejected; BMP, GIF, WebP, and AVIF remain unsupported. PDF optimization uses PDFKit write options, so exact compression DPI and JPEG quality are unavailable. Manual actions keep originals; watched folders default to validated replacement with a temporary recovery backup. Undo is not offered. A paused writer can resume after the watched-folder quiet period; signed sandbox and real downloads need manual testing. Full-size conversions can use substantial memory. macOS 14 runtime, Intel runtime, signing, signed sandbox behavior, and manual panel/focus/accessibility behavior remain unverified. Finder-wide drag detection is not available through the APIs used here.
+The main window uses compact selectable rows and one shared action area. Add Files and Settings remain in the toolbar; Finder files can be dropped directly into the main window. Resize, standalone Metadata, Remove Metadata, and Split are not shown because handlers do not exist yet. Animated or multi-image inputs are rejected; BMP, GIF, WebP, and AVIF remain unsupported. PDF optimization uses PDFKit write options, so exact compression DPI and JPEG quality are unavailable. Manual actions keep originals; watched folders default to validated replacement with a temporary recovery backup. Undo is not offered. A paused writer can resume after the watched-folder quiet period; signed sandbox and real downloads need manual testing. Full-size conversions can use substantial memory. macOS 14 runtime, Intel runtime, signing, signed sandbox behavior, and manual keyboard/accessibility behavior remain unverified. Finder-wide drag detection is not available through the APIs used here.
 
 ## Documentation and roadmap
 
@@ -66,4 +66,4 @@ The main window uses compact selectable rows and one shared action area. Floatin
 
 ## Testing
 
-The `OrbitConvertTests` target covers intake, detection, conversion, PDF utilities, optimization, collision-safe output, action grouping, and floating placement. Run `xcodebuild test -project OrbitConvert.xcodeproj -scheme OrbitConvert -destination 'platform=macOS' -derivedDataPath /tmp/OrbitConvert-tests CODE_SIGNING_ALLOWED=NO`. Latest counts and coverage are in [testing](docs/testing.md).
+The `OrbitConvertTests` target covers intake, detection, conversion, PDF utilities, optimization, collision-safe output, action grouping, and main-window layouts. Run `xcodebuild test -project OrbitConvert.xcodeproj -scheme OrbitConvert -destination 'platform=macOS' -derivedDataPath /tmp/OrbitConvert-tests CODE_SIGNING_ALLOWED=NO`. Latest counts and coverage are in [testing](docs/testing.md).

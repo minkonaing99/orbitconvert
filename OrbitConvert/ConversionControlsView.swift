@@ -5,8 +5,6 @@ import UniformTypeIdentifiers
 struct ConversionControlsView: View {
     let file: FileItem
     let selection: [FileItem]
-    let autoOpenPanel: Bool
-    let onFloatingOpened: () -> Void
     let onBusyChanged: (Bool) -> Void
 
     @AppStorage("defaultCompressionPreset") private var defaultPreset = CompressionPreset.balanced.rawValue
@@ -18,7 +16,6 @@ struct ConversionControlsView: View {
     @State private var pageSelection = "all"
     @State private var isConverting = false
     @State private var isChoosingFolder = false
-    @State private var floatingController: FloatingActionPanelController?
     @State private var pendingAction: FileAction?
     @State private var message: String?
     @State private var isError = false
@@ -152,13 +149,7 @@ struct ConversionControlsView: View {
                                   process(FileAction(.resize), in: customDirectory, resizeConfirmed: true)
                               })
         }
-        .onDisappear { floatingController?.dismiss(); worker?.cancel() }
-        .onChange(of: selection.map(\.url)) { _, _ in floatingController?.dismiss() }
-        .task(id: autoOpenPanel) {
-            guard autoOpenPanel else { return }
-            showFloatingPanel()
-            onFloatingOpened()
-        }
+        .onDisappear { worker?.cancel() }
     }
 
     private var conversionActions: [FileAction] { actions.filter { $0.category == .conversion } }
@@ -273,20 +264,8 @@ struct ConversionControlsView: View {
         }.font(.callout)
     }
 
-    private func showFloatingPanel() {
-        floatingController?.dismiss()
-        let controller = FloatingActionPanelController(
-            file: file, actions: actions,
-            onSelect: { action in process(action, in: customDirectory) },
-            onClose: { floatingController = nil }
-        )
-        floatingController = controller
-        if !controller.show() { message = "No screen can display the floating panel." }
-    }
-
     private func process(_ action: FileAction, in directory: URL?, resizeConfirmed: Bool = false, targetConfirmed: Bool = false) {
         guard !isConverting else { return }
-        floatingController?.dismiss()
         if action.kind == .compressToSize && !targetConfirmed {
             isShowingTargetSize = true
             return

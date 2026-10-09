@@ -1,6 +1,6 @@
 # Internal API contracts
 
-Status: Image and PDF detection, conversion, optimization, safe output, batch processing, and rectangular action panels are implemented. OrbitConvert has no network API, HTTP server, or OpenAPI schema.
+Status: Image and PDF detection, conversion, optimization, safe output, batch processing, and main-window action controls are implemented. OrbitConvert has no network API, HTTP server, or OpenAPI schema.
 
 ## Core values
 
@@ -8,7 +8,7 @@ Status: Image and PDF detection, conversion, optimization, safe output, batch pr
 - ConversionFormat: stable identifier, UTType, canonical extension, label, relevant options. Display JPG; write `.jpg`. Treat JPEG as the same format.
 - ConversionResult: source and output URLs and original/result byte counts. No result URL until publication succeeds.
 - ConversionOptions: JPEG quality in the closed range 0...1 (default 0.90) and metadata stripping flag. Reject nonfinite quality.
-- FileAction: stable action kind, category, ID, title, and SF Symbol. The panel receives descriptors but never executes conversions itself.
+- FileAction: stable action kind, category, ID, and title. Main-window controls receive descriptors and dispatch work through services.
 - CompressionResult: source/output URLs and byte counts; savings and percentage are derived from the counts, with zero-byte input handled.
 
 ## Service boundaries
@@ -24,7 +24,7 @@ Status: Image and PDF detection, conversion, optimization, safe output, batch pr
 | PDFOptimizationService | PDF and native PDFKit options | Structure-checked smaller candidate or no-reduction outcome |
 | BatchOptimizationService | Ordered files and output folder | Sequential results, skipped files, and per-file failures |
 | BatchConversionService | Files with a common JPEG/PNG target | Sequential conversion through ImageConversionService with per-file results |
-| FileActionService | Action descriptor and settings | Dispatch to conversion or optimization outside the panel UI |
+| FileActionService | Action descriptor and settings | Dispatch to conversion or optimization outside the main-window UI |
 | FileOutputService | Authorized directory and proposed basename | No-overwrite publication with collision retry |
 | SecurityScopedAccessService | User-granted URL/bookmark | Scoped lifetime, bookmark resolution and renewal |
 | Conversion coordinator | Immutable jobs | Ordered progress, cancellation, per-file results |

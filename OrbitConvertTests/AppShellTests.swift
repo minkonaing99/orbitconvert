@@ -101,6 +101,22 @@ final class AppShellTests: XCTestCase {
         add(attachment)
     }
 
+    @MainActor
+    func testManualActionsRenderWithoutAuxiliaryWindows() throws {
+        let file = FileItem(url: URL(fileURLWithPath: "/tmp/photo.jpg"), fileName: "photo.jpg",
+            fileExtension: "jpg", contentTypeIdentifier: UTType.jpeg.identifier,
+            contentTypeName: "JPEG image", fileSize: 2_000_000, creationDate: nil,
+            pixelWidth: 1920, pixelHeight: 1080, pageCount: nil, thumbnailData: Data(),
+            supportedConversions: [.png, .heic, .tiff])
+        let existingPanels = Set(NSApp.windows.filter { $0 is NSPanel }.map(ObjectIdentifier.init))
+        try capture(ConversionControlsView(file: file, selection: [file], onBusyChanged: { _ in }),
+                    width: 550, height: 320, dark: true, name: "Main-window manual actions")
+        let panels = Set(NSApp.windows.filter { $0 is NSPanel }.map(ObjectIdentifier.init))
+        XCTAssertEqual(panels, existingPanels)
+        XCTAssertTrue(FileAction.common(for: [file]).contains(FileAction(.compressToSize)))
+        XCTAssertTrue(FileAction.common(for: [file]).contains(FileAction(.resize)))
+    }
+
     func testAppIdentityMatchesBundleConfiguration() {
         XCTAssertEqual(AppIdentity.name, Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String)
         XCTAssertEqual(Bundle.main.bundleIdentifier, "com.example.OrbitConvert")

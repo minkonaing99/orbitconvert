@@ -1,6 +1,6 @@
 # Architecture
 
-Status: Main-window and floating rectangular action panels, PDF conversion, manual compression, a supported Finder drop target, and watched folders are implemented.
+Status: Main-window action controls, PDF conversion, manual compression, Finder drops into the main window, and watched folders are implemented.
 
 ## Small native application
 
@@ -12,12 +12,11 @@ The project has one application target and one test target. Create files when th
 | Models | FileItem, formats, immutable jobs, results, errors |
 | Views | Main window, drop zone, file details, options, settings |
 | Services | Type inspection, thumbnails, conversion, safe output, scoped access |
-| Tests | Service behavior, fixtures, action grouping, floating placement |
-| FileActionPanelView | Shared rectangular file header and valid action buttons |
+| Tests | Service behavior, fixtures, action grouping, main-window layouts |
 
 Current intake flow: user selects or drops file URLs; FileIntakeService checks local, regular, readable files. FileTypeService then inspects actual bytes with ImageIO, creates bounded oriented thumbnails, reads file metadata, and intersects output formats with installed encoders. Both checks run in a serial background job. Each service balances its security-scoped access around its own read. The UI stores FileItem values and individual issues. Conversion must reacquire scope for its full operation.
 
-Action flow: the main window displays compact checkbox rows and one shared action area for the selected files. `FileAction.common` intersects supported actions. `ConversionControlsView` shows primary compression, a format picker, a tools menu, and collapsed options. `SelectionActionService` snapshots and processes the selection sequentially through the existing `FileActionService`; combined PDF creation and merging execute once. Selection/removal is disabled during processing. Batch jobs request a shared output folder when none has been chosen; single files retain the permission-recovery folder picker. Individual failures do not discard successful batch outputs. Floating panels remain single-file views and dismiss when selection changes.
+Action flow: the main window displays compact checkbox rows and one shared action area for the selected files. `FileAction.common` intersects supported actions. `ConversionControlsView` shows primary compression, a format picker, a tools menu, and collapsed options. `SelectionActionService` snapshots and processes the selection sequentially through the existing `FileActionService`; combined PDF creation and merging execute once. Selection/removal is disabled during processing. Batch jobs request a shared output folder when none has been chosen; single files retain the permission-recovery folder picker. Individual failures do not discard successful batch outputs.
 
 PDFKit owns document/page structure for image-to-PDF, extraction, merge, and optimization. Core Graphics renders individual PDF pages for JPEG/PNG export; ImageIO encodes the bitmap. PDFKit optimization write options may reduce embedded image size without flattening every page. Apple does not expose exact PDF compression DPI or JPEG quality through these options; precise controls require a separate vetted backend. See [PDF and compression](pdf-compression.md).
 
@@ -37,23 +36,13 @@ Jobs transition through preparing, converting, saving, and a terminal completed/
 
 Use os.Logger categories FileAccess, Conversion, UI, Permissions, and Errors when logging is added. Log operation identifiers and error categories, not image contents, GPS, or complete user paths.
 
-## Rectangular action panel
+## Main-window actions and Finder drops
 
-`FileActionPanelView` receives `[FileAction]`, thumbnail data, and select/dismiss closures; it contains no conversion logic. `FileAction.category` separates valid conversion actions from tools. Adaptive grid buttons use standard SwiftUI hit testing, keyboard focus, and accessibility labels. The main-window panel remains available if a display cannot fit the floating panel.
+`ConversionControlsView` presents conversion choices and tools for the current selection. `FileAction.category` separates conversions from tools; `FileAction.common` exposes only actions supported by every selected file. Native buttons provide keyboard focus and accessibility labels. Image batches can use mutually supported output formats; PDF batches can export pages or merge.
 
-Tab navigates controls, Return invokes the first action, and Escape dismisses the floating panel. Native buttons provide pointer and VoiceOver access. For mixed file types, the shared panel offers only common actions. Image batches can use every mutually supported output format; PDF batches can export pages or merge.
+`ContentView.onDrop` receives Finder file providers in the main window. Provider loading starts inside the drop callback, preserves input order, and forwards URLs through the existing intake and inspection services. Import errors remain in the main window. Selected files flow through the normal action controls; no auxiliary action or drop window is created. Closing the controls still cancels their manual worker.
 
-## Floating NSPanel, Phase 6
-
-SwiftUI's regular window scene does not expose the panel's nonactivating style, transparent chrome, floating level, or global screen placement. `FloatingActionPanelController` hosts `FileActionPanelView` in `NSHostingView` inside a borderless [nonactivating NSPanel](https://developer.apple.com/documentation/appkit/nswindow/stylemask-swift.struct/nonactivatingpanel). It returns actions to `ConversionControlsView`; no conversion or file access runs in the controller. The panel can become key for keyboard input without explicitly activating the application.
-
-`FloatingPanelPlacement` chooses the display whose full frame contains the cursor, then clamps the panel to its [visibleFrame](https://developer.apple.com/documentation/appkit/nsscreen/visibleframe), including negative monitor origins. It falls back to the nearest display if needed. If no display can fit the panel, main-window actions remain. The controller repositions on display changes, uses local and global mouse-down monitors for outside clicks, intercepts Escape in its own panel, and removes observers when closing. Global keyboard monitoring is not used. Opening and closing fade for 180 ms unless Reduce Motion is enabled. Live panel focus, Escape, appearance, and monitor changes still need manual verification.
-
-## Finder integration, Phase 9
-
-`FloatingDropWindowController` owns a visible nonactivating drop-target panel. The main window opens it on request. SwiftUI's `onDrop` receives Finder file providers only after the pointer enters and drops on this app-owned window; loading starts inside the drop callback. `ContentView` performs the existing intake/type inspection, scrolls the first supported item into view, and tells its existing `ConversionControlsView` to open the floating action panel. Extra files remain in the main window. Panel code does not inspect or convert files.
-
-This does not detect arbitrary Finder drag starts. No Accessibility permission or Finder extension is used. Details and official API sources: [Finder feasibility](finder-integration.md). Signed sandbox, inactive-app drop delivery, and multi-display behavior still require manual tests; App Store acceptance remains subject to review.
+The floating action and drop-target controllers, panel view, placement code and associated event monitors were removed. Clipboard result cards remain a separate feature. See [Finder workflow](finder-integration.md).
 
 Related: [product plan](product-plan.md), [conversion](image-conversion.md), [sandbox](sandbox-and-output.md).
 

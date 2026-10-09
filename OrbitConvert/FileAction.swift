@@ -53,24 +53,6 @@ struct FileAction: Identifiable, Hashable, Sendable {
         }
     }
 
-    nonisolated var symbolName: String {
-        switch kind {
-        case .convert(let format):
-            switch format {
-            case .png: "square.on.square"
-            case .jpeg: "photo"
-            case .heic: "sparkles.rectangle.stack"
-            case .tiff: "square.stack.3d.up"
-            }
-        case .imagePDF, .mergePDFs, .markdownPDF, .markdownDOCX: "doc.richtext"
-        case .pdfJPEG, .pdfPNG: "photo"
-        case .extractPages: "doc.on.doc"
-        case .compress: "arrow.down.right.and.arrow.up.left"
-        case .compressToSize: "arrow.down.to.line"
-        case .resize: "arrow.up.left.and.arrow.down.right"
-        }
-    }
-
     nonisolated static func common(for files: [FileItem]) -> [FileAction] {
         guard let first = files.first else { return [] }
         return available(for: first, selection: files).filter { action in

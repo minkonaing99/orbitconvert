@@ -2,7 +2,7 @@
 
 Status: proposed only. Reviewed 2026-10-01. No application changes, dependency installation, or benchmark execution performed for this plan.
 
-Implementation update: the first version is now implemented with Pandoc and Ghostscript. PDF rendering uses native AppKit printing after WebKit startup and Core Text table-layout feasibility checks failed. The plan below remains the original proposal; see [actual implementation and limitations](markdown-pdf-implementation.md).
+Implementation update: the first version is now implemented with Pandoc and Ghostscript. PDF rendering uses native AppKit printing after WebKit startup and Core Text table-layout feasibility checks failed. Floating-panel references in this historical proposal were superseded by the 2026-10-09 removal. The plan below remains the original proposal; see [actual implementation and limitations](markdown-pdf-implementation.md).
 
 ## Decisions and assumptions
 

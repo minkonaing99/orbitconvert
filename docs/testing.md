@@ -1,5 +1,17 @@
 # Testing and validation
 
+## Floating-window removal (2026-10-09)
+
+The ad-hoc signed Apple Silicon Release suite passes: **121 tests, 0 failures, 0 skips**, in `/tmp/OrbitConvert-no-floating.xcresult`. Nine tests dedicated to removed floating controllers/placement were deleted; one main-window action regression was added. Review found no blocking issues.
+
+```sh
+xcodebuild test -project OrbitConvert.xcodeproj -scheme OrbitConvert -configuration Release -destination 'platform=macOS,arch=arm64' -derivedDataPath /tmp/OrbitConvert-target-tests ENABLE_TESTABILITY=YES -enableCodeCoverage YES -resultBundlePath /tmp/OrbitConvert-no-floating.xcresult
+```
+
+Source/test searches confirm no remaining removed controller, placement, panel-view or auto-open references. Main-window controls render without creating auxiliary panels; the captured actions view was inspected. Existing conversion, compression, resize, target-size, watched-folder and clipboard tests pass. Closing manual controls still cancels their worker; clipboard result panels are unchanged.
+
+Whole-app coverage is **67.91% (4428/6520 executable lines)**, below the repository's 80% target. Live Finder drag/drop, keyboard interactions, cancellation during a running codec, installed sandbox permissions, macOS 14 and Intel runtime remain manual checks. Earlier floating-window test results in this document are historical, not current product requirements.
+
 ## Watched-folder settings and saved history (2026-10-09)
 
 The ad-hoc signed Apple Silicon Release suite passes: **129 tests, 0 failures, 0 skips**. Result bundle: `/tmp/OrbitConvert-history-verified.xcresult`. Code review found no blocking issues.
@@ -98,11 +110,9 @@ Use controlled service failures for deterministic permission tests; chmod alone 
 
 ## Later gates
 
-Action-panel tests cover grouping conversion and tool actions. AppKit tests cover floating panel Return for its initial action and Escape; Tab-to-another-action, VoiceOver, and reduced motion still need live checks.
+Main-window tests cover conversion/tool grouping, selected-file controls and compact layouts. The floating controller and placement suites were retired with those features on 2026-10-09; earlier dated counts below are historical.
 
-Phase 6 placement tests cover multiple monitors, negative origins, and visible-frame edges. Manually check display removal/repositioning, focus, Return/Escape, outside clicks, dark/light appearance, and panel dismissal before claiming the live UI is verified.
-
-Finder drop-target manual checks: open the floating target, switch to Finder, drop one and several supported files, and confirm the first file opens the rectangular action panel near the pointer. Check an unsupported file, a corrupted image, an off-screen existing scroll position, target close/reopen, multiple displays, and source/output grants in a signed sandbox build. Confirm the target never claims to appear automatically when a Finder drag starts.
+Finder manual checks now use the main window: drop one or several files, import unsupported/corrupt files, select actions, and verify source/output access in a signed sandbox build. Keyboard focus, VoiceOver and installed permission behavior remain manual checks.
 
 PDF/compression automated cases now include PDF recognition, page count, 150-DPI output dimensions, rotated page export, visible annotation rendering, extraction/merge with selectable text, corrupt PDF rejection, image-to-PDF page count, PNG lossless pixel equivalence, JPEG original preservation, rejection of Lossless JPEG, PDFKit rewrite text preservation, no-reduction policy, savings arithmetic, and a batch with one missing file. A manual PDF matrix remains: linked and bookmarked documents, scanned/image-heavy files, interactive widgets, transparency, EXIF orientation, complex outlines, and large page counts. Image-to-PDF visual layout and metadata should be compared in Preview. Manual-action replacement/Undo and exact PDF compression DPI remain unimplemented, so related tests are deferred. No test uses Desktop or Documents.
 

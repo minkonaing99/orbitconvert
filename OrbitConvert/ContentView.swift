@@ -10,8 +10,6 @@ struct ContentView: View {
     @State private var issues: [FileIntakeIssue] = []
     @State private var inspectionTask: Task<Void, Never>?
     @State private var pendingInspections = 0
-    @State private var dropWindow: FloatingDropWindowController?
-    @State private var pendingFloatingFileURL: URL?
     @State private var isProcessing = false
 
     init(files: [FileItem] = []) {
@@ -56,8 +54,6 @@ struct ContentView: View {
                 ScrollView {
                     if let first = selectedFiles.first {
                         ConversionControlsView(file: first, selection: selectedFiles,
-                            autoOpenPanel: pendingFloatingFileURL == first.url,
-                            onFloatingOpened: { pendingFloatingFileURL = nil },
                             onBusyChanged: { isProcessing = $0 })
                     } else {
                         Text("Select files to see available actions.")
@@ -88,11 +84,6 @@ struct ContentView: View {
             ToolbarItemGroup {
                 Button { isImporting = true } label: { Label("Add Files", systemImage: "plus") }
                     .keyboardShortcut("o")
-                Menu {
-                    Button("Floating Drop Target") { toggleDropWindow() }
-                    Button("Floating Actions") { pendingFloatingFileURL = selectedFiles.first?.url }
-                        .disabled(selectedFiles.count != 1 || isProcessing)
-                } label: { Label("Windows", systemImage: "macwindow.on.rectangle") }
                 SettingsLink { Label("Settings", systemImage: "gearshape") }
             }
         }
@@ -105,7 +96,6 @@ struct ContentView: View {
                 issues = issues + [FileIntakeIssue(name: "Selection", message: "The selected files could not be opened.")]
             }
         }
-        .onDisappear { dropWindow?.dismiss() }
     }
 
     private var emptyState: some View {
@@ -165,21 +155,7 @@ struct ContentView: View {
         files = reordered
     }
 
-    private func toggleDropWindow() {
-        if let dropWindow { dropWindow.dismiss(); return }
-        let controller = FloatingDropWindowController(onDrop: { providers in
-            let accepted = importDrop(providers, openFloatingOnImport: true)
-            if accepted { DispatchQueue.main.async { dropWindow?.dismiss() } }
-            return accepted
-        }, onClose: { dropWindow = nil })
-        dropWindow = controller
-        if !controller.show() {
-            dropWindow = nil
-            issues = issues + [FileIntakeIssue(name: "Floating drop target", message: "No screen can display the drop target.")]
-        }
-    }
-
-    private func importDrop(_ providers: [NSItemProvider], openFloatingOnImport: Bool = false) -> Bool {
+    private func importDrop(_ providers: [NSItemProvider]) -> Bool {
         let fileProviders = providers.filter { $0.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) }
         guard !fileProviders.isEmpty else { return false }
         issues = []
@@ -200,12 +176,12 @@ struct ContentView: View {
             for _ in (0..<(fileProviders.count - urls.count)) {
                 issues = issues + [FileIntakeIssue(name: "Dropped item", message: "This file could not be opened.")]
             }
-            accept(urls, openFloatingOnImport: openFloatingOnImport)
+            accept(urls)
         }
         return true
     }
 
-    private func accept(_ urls: [URL], openFloatingOnImport: Bool = false) {
+    private func accept(_ urls: [URL]) {
         let previous = inspectionTask
         pendingInspections += 1
         inspectionTask = Task {
@@ -223,15 +199,7 @@ struct ContentView: View {
             if !isProcessing { selectedURLs = selectedURLs.union(inspected.files.map(\.url)) }
             issues = issues + intake.issues + inspected.issues
             pendingInspections -= 1
-            if openFloatingOnImport,
-               let first = inspected.files.first(where: { !FileAction.available(for: $0, selection: inspected.files).isEmpty }) {
-                if !isProcessing {
-                    selectedURLs = [first.url]
-                    pendingFloatingFileURL = first.url
-                }
-            } else if openFloatingOnImport, !issues.isEmpty {
-                NSApp.activate(ignoringOtherApps: true)
-            }
+
         }
     }
 }

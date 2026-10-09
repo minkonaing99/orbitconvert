@@ -4,7 +4,7 @@ Scope: manual image actions. Watched folders and clipboard optimization do not r
 
 ## Usage
 
-Choose one or more supported images, open Tools, and choose Resize + Optimize. The same action is available in the floating rectangular action panel.
+Choose one or more supported images, open Tools, and choose Resize + Optimize.
 
 Choose 25%, 50%, 75%, longest edge 1080 px or 1920 px, or custom maximum width/height. Custom dimensions are bounds: the image fits within them with its aspect ratio preserved. Images are never enlarged. The sheet previews the resulting dimensions, accounting for image orientation.
 
@@ -32,4 +32,4 @@ Source dimensions are bounded before decoding. This is not an arbitrary-size ima
 
 Automated cases cover dimension presets, custom fit, orientation, transparency, metadata, encoder availability, unsupported inputs, collisions, source preservation, cleanup and selection dispatch. Record actual build/test and coverage results in [testing](testing.md) after the complete run.
 
-Manual checks: compare Preview orientation/color/alpha, test the options sheet and floating panel, resize mixed selections, cancel a large image, and select a writable output folder in an installed signed app. macOS 14 and Intel runtime validation require those environments.
+Manual checks: compare Preview orientation/color/alpha, test the main-window options sheet, resize mixed selections, cancel a large image, and select a writable output folder in an installed signed app. macOS 14 and Intel runtime validation require those environments.

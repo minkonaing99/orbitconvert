@@ -36,7 +36,7 @@ A future stripping tool must disclose when re-encoding changes quality. Compress
 
 ## Compress to Size
 
-For JPEG files, Tools > Compress to Size accepts a maximum size per file in decimal KB or MB (1 MB = 1,000,000 bytes). The default is 2 MB. The same action is available from the floating panel and processes selected JPEGs sequentially.
+For JPEG files, Tools > Compress to Size accepts a maximum size per file in decimal KB or MB (1 MB = 1,000,000 bytes). The default is 2 MB. The main-window action processes selected JPEGs sequentially.
 
 The encoder tries quality values from 100% to 0% in 5-point steps at the original dimensions. If none meets the measured byte limit, it progressively reduces dimensions while preserving aspect ratio, never below a 1080-pixel short edge. A 16:9 landscape image therefore stops at 1920 x 1080; portrait images stop at 1080 x 1920. Originals whose short edge is already 1080 pixels or less retain their dimensions and are never enlarged. Quality is an encoder setting, not a measured visual-fidelity percentage.
 

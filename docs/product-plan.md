@@ -1,10 +1,10 @@
 # Product plan
 
-Status: Phases 1-6 and a supported Phase 9 Finder drop-target workflow are implemented in code; live panel and signed sandbox checks remain open. Other phases are planned. This document translates the supplied product brief into delivery gates.
+Status: Main-window conversion/actions and Finder drops are implemented. Floating Actions and Floating Drop Target were removed on 2026-10-09; their milestones below are retired. Signed sandbox and accessibility checks remain open. This document translates the supplied product brief into delivery gates.
 
 ## Product
 
-Build an original, minimal macOS utility named OrbitConvert. Import files, inspect their content, choose an available action in a rectangular panel, process locally, save a new file, and show a useful result. The normal window remains usable independently of the floating panel. Do not copy another product's branding, assets, exact visual design, or code.
+Build an original, minimal macOS utility named OrbitConvert. Import files, inspect their content, choose an available action in a rectangular panel, process locally, save a new file, and show a useful result. The main window owns file intake and manual actions. Do not copy another product's branding, assets, exact visual design, or code.
 
 ## Immediate scope: phases 1-4
 
@@ -26,10 +26,10 @@ The Phase 1-4 gate established a working normal-window converter. The current ac
 | 3 | Detection and preview | Content-based type, bounded thumbnails, supported actions |
 | 4 | Image conversion and output | Required conversion and safety tests pass |
 | 5 | In-window action panel | Valid grouped buttons, keyboard, VoiceOver tested |
-| 6 | Floating AppKit panel | Multi-display placement, appearance, focus, Escape tested |
+| 6 | Retired floating panel | Removed; use main-window action controls |
 | 7 | Configurable modifiers | Distinct conversion/tool mode without global interception |
 | 8 | Tools | Incremental compression, resize, metadata, stripping, image-to-PDF |
-| 9 | Finder feasibility | Public API comparison complete; app-owned floating drop target implemented; live signed verification pending |
+| 9 | Finder workflow | Drop files into the main window; signed verification pending |
 | 10 | Release preparation | Signed sandbox tests, accessibility, performance, release checks |
 
 Testing, accessibility, and sandbox design start in Phase 1, not Phase 10. Advanced Finder integration requires explicit approval before implementation.
@@ -43,9 +43,9 @@ Testing, accessibility, and sandbox design start in Phase 1, not Phase 10. Advan
 - Open a rectangular action panel for a selected file; buttons invoke valid conversions and tools.
 - Pass core unit tests and accessibility checks.
 
-## Second milestone
+## Retired second milestone
 
-Add a transparent floating rectangular panel near the cursor with a compact file header, screen-bound placement, light/dark appearance, keyboard input, and close-on-selection/cancel/Escape behavior. It is app-owned and explicitly invoked; automatic detection of arbitrary Finder drags is not part of this milestone.
+The auxiliary floating action panel and drop target have been removed. Their AppKit controllers, placement helpers and dedicated tests are no longer part of the product. The main window provides file import and actions.
 
 ## Third milestone and later tools
 

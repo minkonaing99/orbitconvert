@@ -1,18 +1,13 @@
-# Finder workflow feasibility
+# Finder workflow
 
-OrbitConvert uses only documented macOS APIs. No public API supplies both the start of an arbitrary Finder drag and the dragged file URLs to an unrelated app. A global mouse event is not a drag payload. The app must either receive an explicit Finder command or own a visible drop destination.
+Open OrbitConvert from the Dock or its menu bar, then drag Finder files into the main window. The empty window has a drop zone; once files are loaded, more files can be dropped anywhere in the main window. Add Files and Choose Files offer the native picker alternative.
 
-| Approach | Supported entry point | Fit for drag-to-panel workflow |
-| --- | --- | --- |
-| [Finder Sync Extension](https://developer.apple.com/library/archive/documentation/General/Conceptual/ExtensibilityPG/Finder.html) | Badges, toolbar and contextual menus for monitored sync folders | Poor. Apple describes it for folder synchronization, not general Finder UI or arbitrary drag interception. |
-| [Services](https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CocoaKeys.html) and [Quick Actions](https://developer.apple.com/documentation/appkit/add-functionality-to-finder-with-action-extensions) | User invokes a command on selected Finder files; an Action Extension can receive items in an extension context | Strong selection-based alternative, but no drag-start event. An extension target, user enablement, separate sandbox lifecycle, and explicit handoff to the app would add complexity. |
-| [Share Extension](https://developer.apple.com/library/archive/documentation/General/Conceptual/ExtensibilityPG/Share.html) | User opens Share and chooses OrbitConvert; attachments arrive through `NSExtensionContext` | Supported, but more steps and no cursor-positioned drag UI. |
-| [App-owned drag destination](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/DragandDrop/Concepts/dragdestination.html) | Finder delivers file URLs after user drops onto OrbitConvert's visible window | Best fit. A compact floating drop target can remain visible while Finder is active; after drop, the rectangular action panel and converter take over. It cannot materialize when an arbitrary drag starts. |
-| [MenuBarExtra](https://developer.apple.com/documentation/swiftui/menubarextra) | Persistent menu bar command can open an app window or drop target | Useful launcher later, but the menu bar API does not expose Finder's drag payload. |
-| [Global NSEvent monitor](https://developer.apple.com/documentation/appkit/nsevent/addglobalmonitorforevents%28matching%3Ahandler%3A%29) | Observes mouse events in other apps; keyboard monitoring has additional permission rules | No drag source or file URL contract. Suitable for dismissing OrbitConvert's visible panel on an outside click, not for detecting Finder drags. |
+`ContentView.onDrop` accepts file URLs through `NSItemProvider`. Loading begins inside the drop callback and preserves the order of dropped files. The existing intake and inspection services validate files and report individual errors without discarding supported items. Main-window controls then offer common actions for the selected files.
 
-## Chosen workflow
+Floating Drop Target and Floating Actions have been removed, including their controllers, placement code, event monitors and toolbar menu. No Finder extension, global drag detection, Accessibility permission or new entitlement is introduced. Clipboard result cards are independent of this workflow.
 
-User opens OrbitConvert's floating drop target from its main window. The target stays above ordinary windows while Finder is active. User drags a file onto that target. OrbitConvert inspects the dropped URL, displays import errors in the main window, and opens the rectangular action panel for the first supported file. Selection returns through `ConversionControlsView` to `FileActionService`; window code never converts files. Additional dropped files remain in the main window for batch or separate actions.
+Dropped-file access and the existing output-folder permission prompt still need installed signed-app testing. Check single/multiple Finder drops, unsupported files, selected-file actions and output-folder access in the main window.
 
-The target must be opened before dragging. No Accessibility permission, private Finder hook, global pasteboard polling, Finder Sync extension, or new entitlement is needed. App Store acceptance still requires normal signing and review. Signed sandbox testing must verify dropped-file access and the existing output-folder prompt. The existing drop zone remains available if the floating target is closed.
+Reference: Apple's [drag destination documentation](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/DragandDrop/Concepts/dragdestination.html).
+
+Related: [architecture](architecture.md), [sandbox and output](sandbox-and-output.md), [testing](testing.md).

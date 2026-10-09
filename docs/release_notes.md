@@ -1,5 +1,11 @@
 # Release notes
 
+## Unreleased - remove auxiliary floating windows, 2026-10-09
+
+- Removed Floating Drop Target, Floating Actions and their Windows toolbar menu. Add Files, Settings, and main-window drag/drop and action controls remain.
+- Deleted floating controllers, panel presentation, placement helpers, event monitors, unused action icons and dedicated tests. Manual worker cancellation remains intact.
+- Clipboard result cards, watched folders and saved activity history remain available. Earlier release entries describing floating windows are historical.
+
 ## Unreleased - watched-folder layout and activity history, 2026-10-09
 
 - Replaced the split empty layout with a compact, top-aligned folder section and scrollable recent activity. Folder controls and Launch at Login remain available.
