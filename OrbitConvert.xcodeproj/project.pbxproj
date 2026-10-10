@@ -6,9 +6,37 @@
 	objectVersion = 90;
 	objects = {
 
+/* Begin PBXCopyFilesBuildPhase section */
+        E00000000000000000000034 /* Embed App Extensions */ = {isa = PBXCopyFilesBuildPhase; buildActionMask = 2147483647; dstPath = ""; dstSubfolderSpec = 13; files = (E00000000000000000000014, ); name = "Embed App Extensions"; runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXBuildFile section */
+        E00000000000000000000011 /* Handler in Sources */ = {isa = PBXBuildFile; fileRef = E00000000000000000000002; };
+        E00000000000000000000012 /* Request in Sources */ = {isa = PBXBuildFile; fileRef = E00000000000000000000003; };
+        E00000000000000000000013 /* Assets in Resources */ = {isa = PBXBuildFile; fileRef = E00000000000000000000004; };
+        E00000000000000000000014 /* Extension in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = E00000000000000000000001; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		000000000000000151000000 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 000000000000000000000000 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 000000000000000100000000;
+			remoteInfo = OrbitConvert;
+		};
+        E00000000000000000000041 = {isa = PBXContainerItemProxy; containerPortal = 000000000000000000000000; proxyType = 1; remoteGlobalIDString = E00000000000000000000040; remoteInfo = OrbitConvertQuickAction; };
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		000000000000000000000120 /* OrbitConvert.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OrbitConvert.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		000000000000000000000121 /* OrbitConvertTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OrbitConvertTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+        E00000000000000000000001 /* OrbitConvertQuickAction.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; path = OrbitConvertQuickAction.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+        E00000000000000000000002 /* ActionRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionRequestHandler.swift; sourceTree = "<group>"; };
+        E00000000000000000000003 /* QuickActionRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrbitConvert/QuickActionRequest.swift; sourceTree = SOURCE_ROOT; };
+        E00000000000000000000004 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+        E00000000000000000000005 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+        E00000000000000000000006 /* OrbitConvertQuickAction.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OrbitConvertQuickAction.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -35,6 +63,7 @@
 			files = (
 			);
 		};
+        E00000000000000000000033 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -43,6 +72,7 @@
 			children = (
 				000000000000000000000010 /* OrbitConvert */,
 				000000000000000000000011 /* OrbitConvertTests */,
+                E00000000000000000000020 /* OrbitConvertQuickAction */,
 				000000000000000000000020 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -52,10 +82,15 @@
 			children = (
 				000000000000000000000120 /* OrbitConvert.app */,
 				000000000000000000000121 /* OrbitConvertTests.xctest */,
+                E00000000000000000000001 /* OrbitConvertQuickAction.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
+        E00000000000000000000020 /* OrbitConvertQuickAction */ = {
+            isa = PBXGroup; path = OrbitConvertQuickAction; sourceTree = "<group>";
+            children = (E00000000000000000000002, E00000000000000000000003, E00000000000000000000004, E00000000000000000000005, E00000000000000000000006, );
+        };
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -67,12 +102,14 @@
 				000000000000000130000000 /* Frameworks */,
 				000000000000000140000000 /* Resources */,
 				000000000000000160000000 /* Embed PNG optimizer */,
+                E00000000000000000000034 /* Embed App Extensions */,
 			);
 			buildRules = (
 			);
 			fileSystemSynchronizedGroups = (
 				000000000000000000000010 /* OrbitConvert */,
 			);
+            dependencies = (E00000000000000000000042, );
 			name = OrbitConvert;
 			productName = MyApp;
 			productReference = 000000000000000000000120 /* OrbitConvert.app */;
@@ -99,25 +136,14 @@
 			productReference = 000000000000000000000121 /* OrbitConvertTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+        E00000000000000000000040 /* OrbitConvertQuickAction */ = {
+            isa = PBXNativeTarget;
+            buildConfigurationList = E00000000000000000000050;
+            buildPhases = (E00000000000000000000031, E00000000000000000000033, E00000000000000000000032, );
+            buildRules = (); dependencies = (); name = OrbitConvertQuickAction; productName = OrbitConvertQuickAction;
+            productReference = E00000000000000000000001; productType = "com.apple.product-type.app-extension";
+        };
 /* End PBXNativeTarget section */
-
-/* Begin PBXContainerItemProxy section */
-		000000000000000151000000 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 000000000000000000000000 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 000000000000000100000000;
-			remoteInfo = OrbitConvert;
-		};
-/* End PBXContainerItemProxy section */
-
-/* Begin PBXTargetDependency section */
-		000000000000000150000000 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 000000000000000100000000 /* OrbitConvert */;
-			targetProxy = 000000000000000151000000 /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin PBXProject section */
 		000000000000000000000000 /* Project object */ = {
@@ -126,7 +152,7 @@
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 2630;
 				LastUpgradeCheck = 2700;
-			TargetAttributes = {
+				TargetAttributes = {
 					000000000000000100000000 = {
 						CreatedOnToolsVersion = 26.3;
 					};
@@ -152,6 +178,7 @@
 			targets = (
 				000000000000000100000000 /* OrbitConvert */,
 				000000000000000101000000 /* OrbitConvertTests */,
+                E00000000000000000000040 /* OrbitConvertQuickAction */,
 			);
 		};
 /* End PBXProject section */
@@ -167,20 +194,43 @@
 			files = (
 			);
 		};
+        E00000000000000000000032 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (E00000000000000000000013, ); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-        000000000000000160000000 /* Embed PNG optimizer */ = {
-            isa = PBXShellScriptBuildPhase;
-            buildActionMask = 2147483647;
-            files = ();
-            inputPaths = ("$(SRCROOT)/ThirdParty/oxipng/oxipng", "$(SRCROOT)/ThirdParty/oxipng/LICENSE", "$(SRCROOT)/ThirdParty/oxipng/THIRD-PARTY-NOTICES.txt", "$(SRCROOT)/ThirdParty/oxipng/helper.entitlements", "$(SRCROOT)/scripts/embed-oxipng.sh", "$(SRCROOT)/ThirdParty/pandoc/pandoc.gz", "$(SRCROOT)/ThirdParty/pandoc/LICENSE", "$(SRCROOT)/ThirdParty/ghostscript/gs.gz", "$(SRCROOT)/ThirdParty/ghostscript/LICENSE", "$(SRCROOT)/ThirdParty/ghostscript/THIRD-PARTY-NOTICES.txt");
-            name = "Embed PNG optimizer";
-            outputPaths = ("$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Helpers/oxipng.cstemp", "$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Helpers/oxipng", "$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/Oxipng-LICENSE.txt", "$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/Oxipng-THIRD-PARTY-NOTICES.txt", "$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Helpers/pandoc", "$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Helpers/pandoc.cstemp", "$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Helpers/gs", "$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Helpers/gs.cstemp", "$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/pandoc-LICENSE.txt", "$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/ghostscript-LICENSE.txt", "$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/ghostscript-THIRD-PARTY-NOTICES.txt");
-            runOnlyForDeploymentPostprocessing = 0;
-            shellPath = /bin/sh;
-            shellScript = "/bin/sh \"$SRCROOT/scripts/embed-oxipng.sh\"";
-        };
+		000000000000000160000000 /* Embed PNG optimizer */ = {
+			isa = PBXShellScriptBuildPhase;
+			inputPaths = (
+				"$(SRCROOT)/ThirdParty/oxipng/oxipng",
+				"$(SRCROOT)/ThirdParty/oxipng/LICENSE",
+				"$(SRCROOT)/ThirdParty/oxipng/THIRD-PARTY-NOTICES.txt",
+				"$(SRCROOT)/ThirdParty/oxipng/helper.entitlements",
+				"$(SRCROOT)/scripts/embed-oxipng.sh",
+				"$(SRCROOT)/ThirdParty/pandoc/pandoc.gz",
+				"$(SRCROOT)/ThirdParty/pandoc/LICENSE",
+				"$(SRCROOT)/ThirdParty/ghostscript/gs.gz",
+				"$(SRCROOT)/ThirdParty/ghostscript/LICENSE",
+				"$(SRCROOT)/ThirdParty/ghostscript/THIRD-PARTY-NOTICES.txt",
+			);
+			name = "Embed PNG optimizer";
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Helpers/oxipng.cstemp",
+				"$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Helpers/oxipng",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/Oxipng-LICENSE.txt",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/Oxipng-THIRD-PARTY-NOTICES.txt",
+				"$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Helpers/pandoc",
+				"$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Helpers/pandoc.cstemp",
+				"$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Helpers/gs",
+				"$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Helpers/gs.cstemp",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/pandoc-LICENSE.txt",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/ghostscript-LICENSE.txt",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/ghostscript-THIRD-PARTY-NOTICES.txt",
+			);
+			shellPath = /bin/sh;
+			shellScript = (
+				"/bin/sh \"$SRCROOT/scripts/embed-oxipng.sh\"",
+			);
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -194,7 +244,17 @@
 			files = (
 			);
 		};
+        E00000000000000000000031 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (E00000000000000000000011, E00000000000000000000012, ); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		000000000000000150000000 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 000000000000000100000000 /* OrbitConvert */;
+			targetProxy = 000000000000000151000000 /* PBXContainerItemProxy */;
+		};
+        E00000000000000000000042 = {isa = PBXTargetDependency; target = E00000000000000000000040; targetProxy = E00000000000000000000041; };
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		000000000000000011000000 /* Debug configuration for PBXProject "OrbitConvert" */ = {
@@ -341,6 +401,7 @@
 				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = OrbitConvert;
+                INFOPLIST_FILE = "Config/OrbitConvert-Info.plist";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -380,6 +441,7 @@
 				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = OrbitConvert;
+                INFOPLIST_FILE = "Config/OrbitConvert-Info.plist";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -439,6 +501,30 @@
 			};
 			name = Release;
 		};
+        E00000000000000000000051 = {isa = XCBuildConfiguration; buildSettings = {
+                APPLICATION_EXTENSION_API_ONLY = YES;
+                CODE_SIGN_ENTITLEMENTS = OrbitConvertQuickAction/OrbitConvertQuickAction.entitlements;
+                CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; MARKETING_VERSION = 1.0;
+                ENABLE_APP_SANDBOX = YES; ENABLE_USER_SELECTED_FILES = readwrite;
+                GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = OrbitConvertQuickAction/Info.plist;
+                LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/../Frameworks", "@executable_path/../../../../Frameworks", );
+                MACOSX_DEPLOYMENT_TARGET = 14.0;
+                PRODUCT_BUNDLE_IDENTIFIER = com.example.OrbitConvert.QuickAction;
+                PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx; SUPPORTED_PLATFORMS = macosx;
+                SKIP_INSTALL = YES; SWIFT_VERSION = 5.0;
+            }; name = Debug; };
+        E00000000000000000000052 = {isa = XCBuildConfiguration; buildSettings = {
+                APPLICATION_EXTENSION_API_ONLY = YES;
+                CODE_SIGN_ENTITLEMENTS = OrbitConvertQuickAction/OrbitConvertQuickAction.entitlements;
+                CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; MARKETING_VERSION = 1.0;
+                ENABLE_APP_SANDBOX = YES; ENABLE_USER_SELECTED_FILES = readwrite;
+                GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = OrbitConvertQuickAction/Info.plist;
+                LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/../Frameworks", "@executable_path/../../../../Frameworks", );
+                MACOSX_DEPLOYMENT_TARGET = 14.0;
+                PRODUCT_BUNDLE_IDENTIFIER = com.example.OrbitConvert.QuickAction;
+                PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx; SUPPORTED_PLATFORMS = macosx;
+                SKIP_INSTALL = YES; SWIFT_VERSION = 5.0;
+            }; name = Release; };
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -466,6 +552,7 @@
 			);
 			defaultConfigurationName = Release;
 		};
+        E00000000000000000000050 = {isa = XCConfigurationList; buildConfigurations = (E00000000000000000000051, E00000000000000000000052, ); defaultConfigurationName = Release; };
 /* End XCConfigurationList section */
 	};
 	rootObject = 000000000000000000000000 /* Project object */;

@@ -39,6 +39,26 @@ struct OrbitConvertApp: App {
 
 @MainActor
 final class OrbitConvertAppDelegate: NSObject, NSApplicationDelegate {
+    private var quickCompressionWindows: [UUID: QuickCompressionController] = [:]
+
+    func application(_ application: NSApplication, open urls: [URL]) {
+        for url in urls {
+            do {
+                let sources = try QuickActionRequest.read(url)
+                let id = UUID()
+                let controller = QuickCompressionController(sources: sources)
+                controller.onClose = { [weak self] in self?.quickCompressionWindows.removeValue(forKey: id) }
+                quickCompressionWindows[id] = controller
+                controller.show()
+            } catch {
+                let alert = NSAlert()
+                alert.messageText = "Could not open Finder selection"
+                alert.informativeText = error.localizedDescription
+                alert.runModal()
+            }
+        }
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         Self.updateDockVisibility(hidden: UserDefaults.standard.bool(forKey: "hideDockIcon"))
     }

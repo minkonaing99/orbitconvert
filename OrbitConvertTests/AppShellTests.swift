@@ -78,7 +78,7 @@ final class AppShellTests: XCTestCase {
 
     @MainActor
     private func capture<V: View>(_ root: V, width: CGFloat, height: CGFloat,
-                                 dark: Bool, name: String) throws {
+                                 dark: Bool, name: String, scrollToBottom: Bool = false) throws {
         let view = NSHostingView(rootView: root
             .frame(width: width, height: height)
             .background(Color(nsColor: .windowBackgroundColor)))
@@ -90,6 +90,14 @@ final class AppShellTests: XCTestCase {
         defer { window.orderOut(nil) }
         view.layoutSubtreeIfNeeded()
         RunLoop.main.run(until: Date().addingTimeInterval(0.2))
+        if scrollToBottom {
+            let scroll = try XCTUnwrap(firstScrollView(in: view))
+            let document = try XCTUnwrap(scroll.documentView)
+            let bottom = document.isFlipped ? max(0, document.bounds.height - scroll.contentSize.height) : 0
+            scroll.contentView.scroll(to: CGPoint(x: 0, y: bottom))
+            scroll.reflectScrolledClipView(scroll.contentView)
+            RunLoop.main.run(until: Date().addingTimeInterval(0.2))
+        }
         XCTAssertLessThanOrEqual(view.fittingSize.width, width)
         XCTAssertLessThanOrEqual(view.fittingSize.height, height)
         let bitmap = try XCTUnwrap(view.bitmapImageRepForCachingDisplay(in: view.bounds))
@@ -99,6 +107,12 @@ final class AppShellTests: XCTestCase {
         attachment.name = name
         attachment.lifetime = .keepAlways
         add(attachment)
+    }
+
+    @MainActor
+    private func firstScrollView(in view: NSView) -> NSScrollView? {
+        if let scroll = view as? NSScrollView { return scroll }
+        return view.subviews.lazy.compactMap { self.firstScrollView(in: $0) }.first
     }
 
     @MainActor
@@ -117,8 +131,54 @@ final class AppShellTests: XCTestCase {
         XCTAssertTrue(FileAction.common(for: [file]).contains(FileAction(.resize)))
     }
 
+    @MainActor
+    func testGeneralSettingsLayoutPreservesSavedPreferences() throws {
+        let suite = "GeneralSettingsLayout.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        defaults.set(true, forKey: "hideDockIcon")
+        defaults.set("aggressive", forKey: "defaultCompressionPreset")
+        defaults.set(0.75, forKey: "jpegExportQuality")
+        defaults.set(300, forKey: "pdfImageDPI")
+        defaults.set(true, forKey: "removeMetadata")
+        let watcher = WatchedFoldersController(defaults: defaults)
+        for dark in [false, true] {
+            try capture(CompressionSettingsView().environment(watcher).defaultAppStorage(defaults),
+                        width: 590, height: 480, dark: dark,
+                        name: "General settings \(dark ? "dark" : "light")")
+            try capture(CompressionSettingsView().environment(watcher).defaultAppStorage(defaults),
+                        width: 590, height: 480, dark: dark,
+                        name: "General settings privacy \(dark ? "dark" : "light")", scrollToBottom: true)
+        }
+        XCTAssertTrue(defaults.bool(forKey: "hideDockIcon"))
+        XCTAssertEqual(defaults.string(forKey: "defaultCompressionPreset"), "aggressive")
+        XCTAssertEqual(defaults.double(forKey: "jpegExportQuality"), 0.75)
+        XCTAssertEqual(defaults.integer(forKey: "pdfImageDPI"), 300)
+        XCTAssertTrue(defaults.bool(forKey: "removeMetadata"))
+    }
+
     func testAppIdentityMatchesBundleConfiguration() {
         XCTAssertEqual(AppIdentity.name, Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String)
         XCTAssertEqual(Bundle.main.bundleIdentifier, "com.example.OrbitConvert")
+    }
+
+    @MainActor
+    func testQuickCompressionModesFitAndDoNotRunOnOpen() throws {
+        let suite = "QuickCompressionLayout.\(UUID())"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let urls = (1...20).map { URL(fileURLWithPath: "/tmp/A long photo filename from Finder \($0).jpg") }
+        let controller = QuickCompressionController(sources: urls, defaults: defaults)
+        XCTAssertEqual(controller.mode, .keepBoth)
+        for mode in QuickCompressionMode.allCases {
+            controller.mode = mode
+            for dark in [false, true] {
+                try capture(QuickCompressionView(controller: controller), width: 520, height: 480,
+                    dark: dark, name: "Quick compression \(mode.rawValue) \(dark ? "dark" : "light")")
+            }
+        }
+        XCTAssertFalse(controller.isRunning)
+        XCTAssertTrue(controller.results.isEmpty)
+        XCTAssertNil(defaults.object(forKey: "quickCompressionMode"))
     }
 }

@@ -1,5 +1,23 @@
 # Testing and validation
 
+## Finder Quick Action and General settings (2026-10-10)
+
+The ad-hoc signed Apple Silicon Release suite passes: **133 tests, 0 failures, 0 skips**, in `/tmp/OrbitConvert-quick-final.xcresult`. A normal universal Release build passes at `/tmp/OrbitConvert-quick-release/Build/Products/Release/OrbitConvert.app`; strict deep signature verification passes for the app, extension and bundled helpers. macOS PlugInKit lists `com.example.OrbitConvert.QuickAction` at the built extension path. Code and pre-commit security review found no blocking issues.
+
+```sh
+xcodebuild test -project OrbitConvert.xcodeproj -scheme OrbitConvert -configuration Release -destination 'platform=macOS,arch=arm64' -derivedDataPath /tmp/OrbitConvert-quick-tests ENABLE_TESTABILITY=YES -enableCodeCoverage YES -resultBundlePath /tmp/OrbitConvert-quick-final.xcresult
+xcodebuild build -project OrbitConvert.xcodeproj -scheme OrbitConvert -configuration Release -derivedDataPath /tmp/OrbitConvert-quick-release
+```
+
+Ten new service/request/configuration tests cover Keep Both collisions, guarded replacement, selected output folders with duplicate names, unchanged originals, partial failures, symlinks, unsupported input, no reduction, cancellation, malformed and oversized requests, deduplication, saved defaults, and the embedded extension's activation predicate. The new tests first failed because the implementation did not exist. A focused run passes **18 tests**, including existing shell checks and new dialog screenshots for all three modes in light/dark appearance. The compact replacement dialog was visually inspected. General settings tests retain saved preferences and cover the existing grouped layout cleanup.
+
+QuickCompressionService coverage is **98.90% (90/91 lines)**; QuickActionRequest is **92.73% (51/55)**. Whole-app coverage is **67.84% (4881/7195)**, below the 80% target. Controller interaction and extension handoff are not substantially exercised by these unit tests; no code was excluded to improve the report. The final explicit strong task capture removes a Swift diagnostic without changing ownership behavior; the normal Release build was repeated afterward. The only remaining build diagnostic reports no AppIntents metadata dependency.
+
+The first full run passed 132 tests, then the test host exited with code 0 during `testMenuCountsAndPausePreserveAcceptedQueue`. That existing test passed on isolated retry, and the complete rerun passed all 133. Do not count the interrupted run as a pass.
+
+The normal Release extension has sandbox and user-selected read/write entitlements, without the broad temporary read entitlement Xcode adds to test builds. PlugInKit registration and signing checks do **not** prove real Finder invocation. Installed Finder in-place provider access, cross-process bookmark grants, folder-picker denial/cancellation, output reveal, and preservation of originals on extension completion still require live verification. Physical Intel, macOS 14, and VoiceOver interaction also remain unverified. No installation or system extension enablement was performed.
+
+
 ## Floating-window removal (2026-10-09)
 
 The ad-hoc signed Apple Silicon Release suite passes: **121 tests, 0 failures, 0 skips**, in `/tmp/OrbitConvert-no-floating.xcresult`. Nine tests dedicated to removed floating controllers/placement were deleted; one main-window action regression was added. Review found no blocking issues.

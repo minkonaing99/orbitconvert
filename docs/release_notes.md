@@ -1,5 +1,15 @@
 # Release notes
 
+## Unreleased - Finder Quick Action, 2026-10-10
+
+- Added a native **Compress with OrbitConvert** Finder Quick Action for up to 100 JPEG, PNG, or HEIC/HEIF images.
+- Added a compact confirmation window with remembered Keep Both, Replace Original, and Choose Output Folder choices, saved compression preferences, per-file savings, cancellation and Finder reveal.
+- Reused existing validated compression, collision-safe output and guarded replacement. The Finder bridge preserves all input attachments and transfers scoped bookmarks rather than raw paths.
+- General settings now group everyday choices with short explanations while preserving saved preferences.
+- All 133 tests pass; normal Release build and signature verification pass.
+- The action may need enabling in macOS Extensions settings. Live installed Finder handoff and sandbox grants remain manual verification items; see [testing](testing.md).
+
+
 ## Unreleased - remove auxiliary floating windows, 2026-10-09
 
 - Removed Floating Drop Target, Floating Actions and their Windows toolbar menu. Add Files, Settings, and main-window drag/drop and action controls remain.

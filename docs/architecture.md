@@ -4,7 +4,7 @@ Status: Main-window action controls, PDF conversion, manual compression, Finder 
 
 ## Small native application
 
-The project has one application target and one test target. Create files when their behavior is implemented, not an empty copy of every folder in the brief. Use value types and immutable job inputs; preserve source files. Inject focused services where testing needs them. Add protocols at actual interchangeable boundaries, not one protocol per class.
+The project has an application target, a Finder Action extension target, and a test target. Create files when their behavior is implemented, not an empty copy of every folder in the brief. Use value types and immutable job inputs; preserve source files. Inject focused services where testing needs them. Add protocols at actual interchangeable boundaries, not one protocol per class.
 
 | Area | Responsibility |
 | --- | --- |
@@ -35,6 +35,10 @@ FileItem contains identity, source URL, filename, extension, content type/catego
 Jobs transition through preparing, converting, saving, and a terminal completed/failed/cancelled state. Each file retains its own result. Use errors defined in [API contracts](api.md); map them to readable messages and recovery actions.
 
 Use os.Logger categories FileAccess, Conversion, UI, Permissions, and Errors when logging is added. Log operation identifiers and error categories, not image contents, GPS, or complete user paths.
+
+## Finder Quick Action
+
+The embedded `OrbitConvertQuickAction` extension passes a bounded bookmark request document to the containing app. `QuickActionRequest` is compiled into both targets; compression and settings remain app-owned. The app delegate creates a normal window per invocation. `QuickCompressionController` manages confirmation, folder grants and cancellation; `QuickCompressionService` runs existing optimizers and safe output/replacement off MainActor. See [Finder workflow](finder-integration.md) for the three output choices and sandbox boundary.
 
 ## Main-window actions and Finder drops
 
