@@ -15,7 +15,7 @@ The app has a native SwiftUI window, file drag/drop and shared action controls i
 
 ## How to build
 
-For a fresh clone, first [prepare the local document helpers](docs/document-helper-setup.md). Their executables are deliberately excluded from Git; licenses, provenance and build instructions are included. Existing local helper caches remain usable.
+For a fresh clone, first [prepare the local document helpers](docs/SETUP.md#preparing-document-helpers). Their executables are deliberately excluded from Git; licenses, provenance and build instructions are included. Existing local helper caches remain usable.
 
 Open `OrbitConvert.xcodeproj`, select OrbitConvert and My Mac, then choose Product > Build. Configure a signing team for signed sandbox testing.
 
@@ -29,21 +29,21 @@ Unsigned compilation does not verify sandbox permissions or distribution readine
 
 ## Architecture
 
-SwiftUI owns the main-window presentation. Shared action controls use `FileAction` descriptors and dispatch through existing services. Focused services own file access, inspection, conversion, and safe output. PNG optimization bundles the MIT-licensed Oxipng helper; other conversion engines use Apple frameworks. See [architecture](docs/architecture.md) and [internal contracts](docs/api.md).
+SwiftUI owns the main-window presentation. Shared action controls use `FileAction` descriptors and dispatch through existing services. Focused services own file access, inspection, conversion, and safe output. PNG optimization bundles the MIT-licensed Oxipng helper; other conversion engines use Apple frameworks. See [architecture](docs/TECH.md) and [internal contracts](docs/SCHEMA.md).
 
 ## Supported conversions and tools
 
-Single-image PNG, JPEG, HEIC/HEIF, and TIFF inputs can convert to a different format among PNG, JPEG, HEIC, and TIFF when the Apple encoder is available. Images can also become PDF pages. PDFs can be rendered as JPEG/PNG, extracted by page or range, and merged in selection order. JPEG, PNG, and PDF files have a manual Compress action; batch optimization is available for multiple selected files. Watched folders automatically optimize new JPEG, PNG, HEIC, and PDF files and replace originals only after validation and a size reduction. Settings control compression mode, JPEG export quality, PDF image resolution, metadata removal, and watched-folder policies. [PDF and compression details](docs/pdf-compression.md) and [watched folders](docs/watched-folders.md) describe the backends and their limits. See [PNG optimization](docs/png-optimization.md) for the bundled optimizer, provenance, and measured sample.
+Single-image PNG, JPEG, HEIC/HEIF, and TIFF inputs can convert to a different format among PNG, JPEG, HEIC, and TIFF when the Apple encoder is available. Images can also become PDF pages. PDFs can be rendered as JPEG/PNG, extracted by page or range, and merged in selection order. JPEG, PNG, and PDF files have a manual Compress action; batch optimization is available for multiple selected files. Watched folders automatically optimize new JPEG, PNG, HEIC, and PDF files and replace originals only after validation and a size reduction. Settings control compression mode, JPEG export quality, PDF image resolution, metadata removal, and watched-folder policies. [PDF and compression details](docs/TECH.md#pdf) and [watched folders](docs/PRD.md#core-flows) describe the backends and their limits. See [PNG optimization](docs/TECH.md#png-oxipng) for the bundled optimizer, provenance, and measured sample.
 
-Clipboard optimization supports single PNG/JPEG/TIFF/HEIC images and copied image files, reuses the background queue, and preserves source files. Settings include independent pause, ignored apps, result cards, and an optional in-memory collection. See [clipboard optimization](docs/clipboard-optimization.md) for generation safety, temporary-file lifetime, and cross-application limitations.
+Clipboard optimization supports single PNG/JPEG/TIFF/HEIC images and copied image files, reuses the background queue, and preserves source files. Settings include independent pause, ignored apps, result cards, and an optional in-memory collection. See [clipboard optimization](docs/TECH.md#clipboard) for generation safety, temporary-file lifetime, and cross-application limitations.
 
 ## Markdown and stronger PDF compression
 
-Markdown (`.md`, `.markdown`) exports locally to editable DOCX or paginated PDF through existing actions. Bundled Pandoc parses documents; native AppKit printing lays out PDFs with optional font, page and margin controls. Local images require an explicitly selected resource folder and are validated, orientation-normalized and bounded before embedding. Remote images are never fetched. Native PDF web links remain clickable. Stronger manual PDF compression uses bundled Ghostscript and preserves supported web links and nested bookmarks; unsupported protected/interactive documents remain excluded and originals stay intact. Current document helpers support Apple Silicon. See [document conversion and tool details](docs/markdown-pdf-implementation.md).
+Markdown (`.md`, `.markdown`) exports locally to editable DOCX or paginated PDF through existing actions. Bundled Pandoc parses documents; native AppKit printing lays out PDFs with optional font, page and margin controls. Local images require an explicitly selected resource folder and are validated, orientation-normalized and bounded before embedding. Remote images are never fetched. Native PDF web links remain clickable. Stronger manual PDF compression uses bundled Ghostscript and preserves supported web links and nested bookmarks; unsupported protected/interactive documents remain excluded and originals stay intact. Current document helpers support Apple Silicon. See [document conversion and tool details](docs/TECH.md#markdown-export).
 
 ## Sandbox permissions
 
-The project enables App Sandbox, read/write user-selected files, and app-scoped bookmarks for watched folders. A dropped source file does not establish permission to create sibling files; the app asks for an output folder if saving beside the source is denied. Signed sandbox behavior still needs manual verification. See [sandbox and output design](docs/sandbox-and-output.md).
+The project enables App Sandbox, read/write user-selected files, and app-scoped bookmarks for watched folders. A dropped source file does not establish permission to create sibling files; the app asks for an output folder if saving beside the source is denied. Signed sandbox behavior still needs manual verification. See [sandbox and output design](docs/TECH.md#safe-output).
 
 ## Known limitations
 
@@ -51,19 +51,14 @@ The main window uses compact selectable rows and one shared action area. Add Fil
 
 ## Documentation and roadmap
 
-- [Product plan, phases, and acceptance gates](docs/product-plan.md)
-- [Architecture and future AppKit integration](docs/architecture.md)
-- [Internal API contracts](docs/api.md)
-- [Image conversion policies](docs/image-conversion.md)
-- [Sandbox and output safety](docs/sandbox-and-output.md)
-- [Persistence and database policy](docs/database.md)
-- [Testing and validation](docs/testing.md)
-- [Finder workflow feasibility](docs/finder-integration.md)
-- [PDF and compression implementation](docs/pdf-compression.md)
-- [Watched folders and replacement safety](docs/watched-folders.md)
-- [Automatic clipboard optimization](docs/clipboard-optimization.md)
-- [Release notes](docs/release_notes.md)
+- [Product requirements and app flow](docs/PRD.md)
+- [Architecture, decisions and security](docs/TECH.md)
+- [Data models and internal contracts](docs/SCHEMA.md)
+- [UI/UX design brief](docs/DESIGN.md)
+- [Implementation plan and tasks](docs/PLAN.md)
+- [Setup and testing](docs/SETUP.md)
+- [Release notes](docs/RELEASE-NOTES.md)
 
 ## Testing
 
-The `OrbitConvertTests` target covers intake, detection, conversion, PDF utilities, optimization, collision-safe output, action grouping, and main-window layouts. Run `xcodebuild test -project OrbitConvert.xcodeproj -scheme OrbitConvert -destination 'platform=macOS' -derivedDataPath /tmp/OrbitConvert-tests CODE_SIGNING_ALLOWED=NO`. Latest counts and coverage are in [testing](docs/testing.md).
+The `OrbitConvertTests` target covers intake, detection, conversion, PDF utilities, optimization, collision-safe output, action grouping, and main-window layouts. Run `xcodebuild test -project OrbitConvert.xcodeproj -scheme OrbitConvert -destination 'platform=macOS' -derivedDataPath /tmp/OrbitConvert-tests CODE_SIGNING_ALLOWED=NO`. Latest counts and coverage are in [testing](docs/SETUP.md#testing).

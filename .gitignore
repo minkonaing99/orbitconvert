@@ -3,3 +3,10 @@ AGENTS.md
 .DS_Store
 /ThirdParty/pandoc/pandoc.gz
 /ThirdParty/ghostscript/gs.gz
+
+# Claude
+CLAUDE.md
+.claude/
+
+# graphify
+graphify-out/
