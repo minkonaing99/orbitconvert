@@ -17,7 +17,7 @@ Status: Main-window actions, PDF conversion, manual compression, Markdown export
 | Login item | ServiceManagement | Optional Launch at Login |
 | Tests | XCTest (`OrbitConvertTests`) | Xcode-native, coverage via xcresult |
 
-Deployment target macOS 14.0; bundle IDs `com.example.OrbitConvert`, `.QuickAction`, `com.example.OrbitConvertTests`; version 1.0 (1). Default actor isolation is MainActor; services opt out with `nonisolated`.
+Deployment target macOS 14.0; bundle IDs `com.example.OrbitConvert`, `.QuickAction`, `com.example.OrbitConvertTests`; version 2.0 (build 1); App Store category Utilities (`public.app-category.utilities`). The extension reads its version from the same build settings. Default actor isolation is MainActor; services opt out with `nonisolated`.
 
 ## Targets and folder structure
 
