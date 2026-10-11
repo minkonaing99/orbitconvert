@@ -50,6 +50,21 @@ nonisolated struct WatchedFolder: Identifiable, Codable, Equatable, Sendable {
     var preset: CompressionPreset
     var supportedTypes: Set<WatchFileType>
     var replacementBehavior: ReplacementBehavior
+    var rules: [AutomationRule]? = nil
+
+    var effectiveRules: [AutomationRule] {
+        if let rules { return rules }
+        let conditions = supportedTypes.sorted { $0.rawValue < $1.rawValue }.map {
+            AutomationCondition(field: .typeIdentifier, comparison: .equals, value: $0.type.identifier)
+        }
+        guard !conditions.isEmpty else { return [] }
+        return [AutomationRule(id: id, name: "Compress new files", includeSubfolders: watchSubdirectories,
+            matchAll: false, conditions: conditions, actions: [AutomationAction(kind: .compress,
+                preset: preset, replacement: replacementBehavior)])]
+    }
+
+    var admissionTypes: Set<WatchFileType>? { rules == nil ? supportedTypes : nil }
+    var recursive: Bool { watchSubdirectories || effectiveRules.contains { $0.includeSubfolders } }
 
     nonisolated init(id: UUID = UUID(), displayName: String, bookmarkData: Data,
                      isEnabled: Bool = true, watchSubdirectories: Bool = false,
@@ -76,7 +91,7 @@ enum WatchFilePolicy {
             .contains(suffix)
     }
 
-    nonisolated static func isEligibleFile(_ url: URL, allowed: Set<WatchFileType>) -> Bool {
+    nonisolated static func isEligibleFile(_ url: URL, allowed: Set<WatchFileType>?) -> Bool {
         guard isEligibleName(url.lastPathComponent),
               let values = try? url.resourceValues(forKeys: [
                 .isRegularFileKey, .isSymbolicLinkKey, .isUbiquitousItemKey,
@@ -85,6 +100,7 @@ enum WatchFilePolicy {
               values.isRegularFile == true, values.isSymbolicLink != true else { return false }
         if values.isUbiquitousItem == true,
            values.ubiquitousItemDownloadingStatus != .current { return false }
+        guard let allowed else { return true }
         guard let type = values.contentType,
               let watchType = WatchFileType.actualType(type.identifier) else { return false }
         return watchType.isAvailable && allowed.contains(watchType)

@@ -6,6 +6,7 @@ struct WatchedFoldersSettingsView: View {
     @Environment(WatchedFoldersController.self) private var watcher
     @Environment(\.openWindow) private var openWindow
     @State private var issue: String?
+    @State private var editingFolder: WatchedFolder?
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
 
     var body: some View {
@@ -15,7 +16,7 @@ struct WatchedFoldersSettingsView: View {
                 Spacer()
                 Button("Add Folder", systemImage: "plus") { chooseFolders() }
             }
-            Text("Optimize new images and PDFs while OrbitConvert is running. Files stay on your Mac.")
+            Text("Rename, organize, and optimize new files automatically. Files stay on your Mac.")
                 .font(.caption).foregroundStyle(.secondary)
             Toggle("Pause Watching", isOn: Binding(
                 get: { watcher.paused }, set: { watcher.setPaused($0) }
@@ -29,7 +30,7 @@ struct WatchedFoldersSettingsView: View {
                                 .font(.title2).foregroundStyle(.secondary).accessibilityHidden(true)
                             VStack(alignment: .leading, spacing: 4) {
                                 Text("No watched folders yet").font(.headline)
-                                Text("Add a folder to get started. You can include existing files when adding it.")
+                                Text("Add a folder, then choose what happens to new files.")
                                     .font(.caption).foregroundStyle(.secondary)
                             }
                         }
@@ -49,6 +50,10 @@ struct WatchedFoldersSettingsView: View {
             if let issue { Text(issue).font(.caption).foregroundStyle(.red) }
         }
         .padding(.top, 8)
+        .sheet(item: $editingFolder) { folder in
+            AutomationRulesView(folder: folder, canRun: watcher.canRunAutomation(folder.id), onSave: { watcher.update($0) },
+                onRun: { watcher.runAutomation($0, folderID: folder.id) })
+        }
     }
 
     private var recentActivity: some View {
@@ -99,48 +104,12 @@ struct WatchedFoldersSettingsView: View {
                 .font(.caption)
             }
             HStack {
-                Picker("Compression", selection: Binding(
-                    get: { folder.preset },
-                    set: { value in var next = folder; next.preset = value; watcher.update(next) }
-                )) {
-                    ForEach(CompressionPreset.allCases.filter { $0 != .custom && ($0 != .lossless ||
-                        folder.supportedTypes.isDisjoint(with: [.jpeg, .heic])) }) { preset in
-                        Text(preset.label).tag(preset)
-                    }
-                }
-                Picker("Original", selection: Binding(
-                    get: { folder.replacementBehavior },
-                    set: { value in var next = folder; next.replacementBehavior = value; watcher.update(next) }
-                )) {
-                    ForEach(ReplacementBehavior.allCases) { behavior in
-                        Text(behavior.label).tag(behavior)
-                    }
-                }
-            }
-            HStack {
-                ForEach(WatchFileType.allCases) { type in
-                    Toggle(type.label, isOn: Binding(
-                        get: { folder.supportedTypes.contains(type) },
-                        set: { value in
-                            var next = folder
-                            if value { next.supportedTypes.insert(type) } else { next.supportedTypes.remove(type) }
-                            if next.preset == .lossless && !next.supportedTypes.isDisjoint(with: [.jpeg, .heic]) {
-                                next.preset = .balanced
-                            }
-                            watcher.update(next)
-                        }
-                    ))
-                    .disabled(!type.isAvailable)
-                }
-            }
-            HStack {
-                Toggle("Watch Subfolders", isOn: Binding(
-                    get: { folder.watchSubdirectories },
-                    set: { value in var next = folder; next.watchSubdirectories = value; watcher.update(next) }
-                ))
+                Text("\(folder.effectiveRules.filter { $0.isEnabled }.count) active rules")
+                    .font(.caption).foregroundStyle(.secondary)
                 Spacer()
-                Button("Optimize Existing Files") { confirmExisting(folder) }
+                Button("Manage Rules...") { editingFolder = folder }
             }
+
         }
         .padding(12)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
@@ -152,29 +121,8 @@ struct WatchedFoldersSettingsView: View {
         panel.canChooseFiles = false
         panel.allowsMultipleSelection = true
         guard panel.runModal() == .OK else { return }
-        Task {
-            for url in panel.urls {
-                let count = await watcher.existingCount(in: url)
-                let optimize = count > 0 && confirm(
-                    "This folder contains \(count) supported files.",
-                    detail: "Watch new files only, or optimize existing files too?",
-                    action: "Optimize \(count) Existing Files")
-                do { try watcher.add([url], optimizeExisting: optimize) }
-                catch { issue = error.localizedDescription }
-            }
-        }
-    }
-
-    private func confirmExisting(_ folder: WatchedFolder) {
-        Task {
-            let count = await watcher.existingCount(for: folder.id)
-            guard count > 0 else { issue = "No supported files found."; return }
-            if confirm("Optimize \(count) existing files?",
-                       detail: "Files will use this folder's compression and original-handling settings.",
-                       action: "Optimize \(count) Files", cancel: "Cancel") {
-                watcher.optimizeExisting(folder.id)
-            }
-        }
+        do { try watcher.add(panel.urls, optimizeExisting: false, automation: true) }
+        catch { issue = error.localizedDescription }
     }
 
     private func relink(_ folder: WatchedFolder) {
@@ -184,16 +132,6 @@ struct WatchedFoldersSettingsView: View {
         guard panel.runModal() == .OK, let url = panel.url else { return }
         do { try watcher.relink(folder.id, to: url) }
         catch { issue = error.localizedDescription }
-    }
-
-    private func confirm(_ title: String, detail: String, action: String,
-                         cancel: String = "Watch New Files Only") -> Bool {
-        let alert = NSAlert()
-        alert.messageText = title
-        alert.informativeText = detail
-        alert.addButton(withTitle: cancel)
-        alert.addButton(withTitle: action)
-        return alert.runModal() == .alertSecondButtonReturn
     }
 
     private func setLaunchAtLogin(_ enabled: Bool) {

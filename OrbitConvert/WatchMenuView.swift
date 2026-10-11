@@ -62,7 +62,7 @@ struct WatchMenuView: View {
         if stats.totalProcessed > 0 {
             Divider()
             Text(watcher.outstandingJobCount == 0 && stats.failed == 0 && stats.skipped == 0
-                 ? "All files optimized" : "This Session").font(.subheadline.bold())
+                 ? "All files processed" : "This Session").font(.subheadline.bold())
             HStack {
                 Text("\(stats.totalProcessed) processed")
                 Spacer()
@@ -108,7 +108,7 @@ struct WatchResultRow: View {
                 Text(event.fileName).lineLimit(1).truncationMode(.middle)
                 Spacer(minLength: 4)
                 Text(event.outcome == .optimized
-                     ? "Saved \(size(event.savingsBytes))"
+                     ? (event.automation != nil && event.savingsBytes == 0 ? "Completed" : "Saved \(size(event.savingsBytes))")
                      : event.outcome.rawValue.capitalized)
                     .foregroundStyle(.secondary).fixedSize()
             }
@@ -130,7 +130,12 @@ struct WatchResultRow: View {
                 Text(event.date, format: .dateTime.month(.abbreviated).day().hour().minute())
                     .font(.caption).foregroundStyle(.secondary).fixedSize()
             }
-            if event.outcome == .optimized {
+            if let details = event.automation {
+                Text(details.ruleName + ": " + (event.outcome == .failed && details.steps.contains { !$0.failed }
+                    ? "Stopped after completed steps. " + event.message : event.message))
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            if event.outcome == .optimized || event.savingsBytes > 0 {
                 Text("Original \(size(event.originalBytes))  /  Final \(size(event.outputBytes))")
                     .font(.caption).foregroundStyle(.secondary).monospacedDigit()
                 Text("Saved \(size(event.savingsBytes)) (\(event.savingsPercentage.formatted(.number.precision(.fractionLength(0...1))))%)")
@@ -165,7 +170,31 @@ struct WatchActivityView: View {
                     description: Text("Completed optimizations will appear here with file sizes and savings."))
             } else {
                 List(watcher.activity) { event in
-                    WatchResultRow(event: event).padding(.vertical, 6)
+                    VStack(alignment: .leading, spacing: 8) {
+                        WatchResultRow(event: event)
+                        if let details = event.automation {
+                            DisclosureGroup("\(details.ruleName): \(details.steps.count) steps") {
+                                ForEach(details.steps) { step in
+                                    VStack(alignment: .leading, spacing: 3) {
+                                        Label(step.action + ": " + step.message,
+                                            systemImage: step.failed ? "exclamationmark.triangle" : "checkmark")
+                                        Text(step.inputName + " > " + step.outputName)
+                                        Text(step.destination).foregroundStyle(.secondary)
+                                        if step.savedBytes > 0 {
+                                            Text("Saved " + ByteCountFormatter.string(fromByteCount: step.savedBytes, countStyle: .file))
+                                        }
+                                    }.font(.caption).textSelection(.enabled).padding(.vertical, 4)
+                                }
+                                if details.dateFallback {
+                                    Text("Creation date unavailable. Used the original modification date.")
+                                        .font(.caption).foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+                        if watcher.canRetry(event.id) {
+                            Button("Retry Failed Step") { watcher.retryAutomation(event.id) }
+                        }
+                    }.padding(.vertical, 6)
                 }.listStyle(.inset)
             }
         }.padding(16).frame(minWidth: 420, minHeight: 300)

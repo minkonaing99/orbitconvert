@@ -12,20 +12,23 @@ nonisolated struct WatchActivity: Identifiable, Codable, Sendable {
     let originalBytes: Int64
     let outputBytes: Int64
     let message: String
+    var automation: AutomationRunDetails? = nil
 
     var savingsBytes: Int64 {
+        if let automation { return automation.compressionSavedBytes }
         guard outcome == .optimized, originalBytes > 0, outputBytes >= 0 else { return 0 }
         return max(originalBytes - outputBytes, 0)
     }
 
     var savingsPercentage: Double {
-        guard originalBytes > 0 else { return 0 }
-        return Double(savingsBytes) / Double(originalBytes) * 100
+        let total = automation?.compressionOriginalBytes ?? originalBytes
+        guard total > 0 else { return 0 }
+        return Double(savingsBytes) / Double(total) * 100
     }
 
     nonisolated init(fileName: String, outcome: WatchActivityOutcome,
                      originalBytes: Int64 = 0, outputBytes: Int64 = 0,
-                     message: String = "") {
+                     message: String = "", automation: AutomationRunDetails? = nil) {
         self.id = UUID()
         self.date = Date()
         self.fileName = fileName
@@ -33,6 +36,7 @@ nonisolated struct WatchActivity: Identifiable, Codable, Sendable {
         self.originalBytes = originalBytes
         self.outputBytes = outputBytes
         self.message = message
+        self.automation = automation
     }
 }
 
@@ -40,6 +44,7 @@ nonisolated struct WatchJobResult: Sendable {
     let activity: WatchActivity
     let outputURL: URL?
     let retryable: Bool
+    var checkpoint: AutomationCheckpoint? = nil
 }
 
 struct AutoOptimizationService: Sendable {

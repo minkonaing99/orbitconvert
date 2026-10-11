@@ -29,6 +29,11 @@ final class WatchedFoldersController {
     @ObservationIgnored private var activeTask: Task<WatchJobResult, Never>?
     @ObservationIgnored private var worker: Task<Void, Never>?
     @ObservationIgnored private var recent: [URL: (FileFingerprint, Date)] = [:]
+    @ObservationIgnored private var automationApprovals: [URL: AutomationPreviewItem] = [:]
+    @ObservationIgnored private var automationRetries: [URL: AutomationCheckpoint] = [:]
+    private var checkpoints: [UUID: (UUID, AutomationCheckpoint)] = [:]
+    @ObservationIgnored private var publishing: Set<URL> = []
+    @ObservationIgnored private var published: Set<URL> = []
     @ObservationIgnored private var retryOnChange: [URL: FileFingerprint] = [:]
     @ObservationIgnored private let logger = Logger(subsystem: "com.example.OrbitConvert", category: "FolderWatch")
 
@@ -67,7 +72,12 @@ final class WatchedFoldersController {
         clipboard = ClipboardMonitorService(defaults: defaults)
         if let data = defaults.data(forKey: "watchedFolders"),
            let stored = try? JSONDecoder().decode([WatchedFolder].self, from: data) {
-            folders = stored
+            folders = stored.map { folder in
+                var migrated = folder
+                if migrated.rules == nil { migrated.rules = folder.effectiveRules }
+                return migrated
+            }
+            if let data = try? JSONEncoder().encode(folders) { defaults.set(data, forKey: "watchedFolders") }
         }
         if let data = defaults.data(forKey: "watchedActivity"),
            let stored = try? JSONDecoder().decode([WatchActivity].self, from: data) {
@@ -121,12 +131,13 @@ final class WatchedFoldersController {
     }
 
     private func record(_ result: WatchActivity) {
+        checkpoints = checkpoints.filter { key, _ in activity.prefix(199).contains { $0.id == key } || key == result.id }
         sessionStatistics = sessionStatistics.recording(result)
         activity = Array(([result] + activity).prefix(200))
         if let data = try? JSONEncoder().encode(activity) { defaults.set(data, forKey: "watchedActivity") }
     }
 
-    func add(_ urls: [URL], optimizeExisting: Bool) throws {
+    func add(_ urls: [URL], optimizeExisting: Bool, automation: Bool = false) throws {
         for url in urls {
             guard url.isFileURL,
                   try url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory == true else {
@@ -137,7 +148,8 @@ final class WatchedFoldersController {
             }
             let bookmark = try url.bookmarkData(options: .withSecurityScope,
                                                 includingResourceValuesForKeys: nil, relativeTo: nil)
-            let folder = WatchedFolder(displayName: url.lastPathComponent, bookmarkData: bookmark)
+            var folder = WatchedFolder(displayName: url.lastPathComponent, bookmarkData: bookmark)
+            if automation { folder.rules = [] }
             folders = folders + [folder]
             saveFolders()
             if optimizeExisting { optimizeOnStart.insert(folder.id) }
@@ -202,8 +214,8 @@ final class WatchedFoldersController {
         guard let folder = folders.first(where: { $0.id == id }),
               let watch = running[id] else { return 0 }
         return await Task.detached(priority: .utility) {
-            Self.scan(watch.url, recursive: folder.watchSubdirectories,
-                      allowed: folder.supportedTypes).count
+            Self.scan(watch.url, recursive: folder.recursive,
+                      allowed: folder.admissionTypes).count
         }.value
     }
 
@@ -215,7 +227,7 @@ final class WatchedFoldersController {
         }
         Task {
             let urls = await Task.detached(priority: .utility) {
-                Self.scan(watch.url, recursive: folder.watchSubdirectories, allowed: folder.supportedTypes)
+                Self.scan(watch.url, recursive: folder.recursive, allowed: folder.admissionTypes)
             }.value
             guard running[id] === watch else { return }
             for url in urls { enqueue(url, folderID: id) }
@@ -252,8 +264,8 @@ final class WatchedFoldersController {
                 clock_gettime(CLOCK_REALTIME, &started)
                 let startup = Task { [weak self] in
                     let baseline = await Task.detached(priority: .utility) {
-                        Self.scan(resolved.url, recursive: folder.watchSubdirectories,
-                                  allowed: folder.supportedTypes)
+                        Self.scan(resolved.url, recursive: folder.recursive,
+                                  allowed: folder.admissionTypes)
                     }.value
                     guard let self, self.starting[folder.id] != nil else { return }
                     self.starting.removeValue(forKey: folder.id)
@@ -298,6 +310,9 @@ final class WatchedFoldersController {
             url.stopAccessingSecurityScopedResource()
         }
         if let watch = running.removeValue(forKey: id) { watch.stop() }
+        let removed = Set(pending.filter { $0.1 == id }.map(\.0))
+        automationApprovals = automationApprovals.filter { !removed.contains($0.key) }
+        automationRetries = automationRetries.filter { !removed.contains($0.key) }
         pending.removeAll { $0.1 == id }
         queuedURLs = Set(pending.map(\.0))
         if activeFolderID == id { activeTask?.cancel() }
@@ -318,9 +333,9 @@ final class WatchedFoldersController {
             reconcile(folderID)
             return
         }
-        guard Self.isContained(url, in: watch.url, recursive: folder.watchSubdirectories) else { return }
+        guard Self.isContained(url, in: watch.url, recursive: folder.recursive) else { return }
         if flags & FSEventStreamEventFlags(kFSEventStreamEventFlagItemIsDir) != 0 {
-            if folder.watchSubdirectories { reconcile(folderID) }
+            if folder.recursive { reconcile(folderID) }
             return
         }
         if !FileManager.default.fileExists(atPath: url.path) {
@@ -328,7 +343,7 @@ final class WatchedFoldersController {
             retryOnChange.removeValue(forKey: url)
             return
         }
-        guard WatchFilePolicy.isEligibleFile(url, allowed: folder.supportedTypes) else { return }
+        guard WatchFilePolicy.isEligibleFile(url, allowed: folder.admissionTypes) else { return }
         if watch.known.contains(url) {
             let createdDuringScan = eventID <= watch.replayThroughID &&
                 flags & FSEventStreamEventFlags(kFSEventStreamEventFlagItemCreated |
@@ -354,7 +369,7 @@ final class WatchedFoldersController {
             try? await Task.sleep(for: .milliseconds(400))
             guard !Task.isCancelled else { return }
             let current = await Task.detached(priority: .utility) {
-                Self.scan(watch.url, recursive: folder.watchSubdirectories, allowed: folder.supportedTypes)
+                Self.scan(watch.url, recursive: folder.recursive, allowed: folder.admissionTypes)
             }.value
             guard !Task.isCancelled, running[id] === watch else { return }
             guard FileManager.default.fileExists(atPath: watch.url.path) else {
@@ -368,8 +383,8 @@ final class WatchedFoldersController {
         }
     }
 
-    nonisolated private static func scan(_ root: URL, recursive: Bool,
-                                         allowed: Set<WatchFileType>) -> Set<URL> {
+    nonisolated static func scan(_ root: URL, recursive: Bool,
+                                         allowed: Set<WatchFileType>?) -> Set<URL> {
         let manager = FileManager.default
         let keys: [URLResourceKey] = [.isRegularFileKey, .isSymbolicLinkKey, .contentTypeKey]
         let urls: [URL]
@@ -381,10 +396,10 @@ final class WatchedFoldersController {
             urls = (try? manager.contentsOfDirectory(at: root, includingPropertiesForKeys: keys,
                                                      options: [.skipsHiddenFiles])) ?? []
         }
-        return Set(urls.filter { WatchFilePolicy.isEligibleFile($0, allowed: allowed) })
+        return Set(urls.filter { Self.isContained($0, in: root, recursive: recursive) && WatchFilePolicy.isEligibleFile($0, allowed: allowed) })
     }
 
-    nonisolated private static func isContained(_ url: URL, in root: URL, recursive: Bool) -> Bool {
+    nonisolated static func isContained(_ url: URL, in root: URL, recursive: Bool) -> Bool {
         let rootPath = root.standardizedFileURL.path
         let parent = url.deletingLastPathComponent().standardizedFileURL
         guard parent.path == rootPath || (recursive && parent.path.hasPrefix(rootPath + "/")) else {
@@ -403,11 +418,12 @@ final class WatchedFoldersController {
         if recent.count > 500 {
             recent = recent.filter { Date().timeIntervalSince($0.value.1) < 300 }
         }
-        guard !paused, !queuedURLs.contains(url), activeURL != url,
+        guard !paused, !publishing.contains(url), !queuedURLs.contains(url), activeURL != url,
               let folder = folders.first(where: { $0.id == folderID && $0.isEnabled }),
               let watch = running[folderID],
-              Self.isContained(url, in: watch.url, recursive: folder.watchSubdirectories),
-              WatchFilePolicy.isEligibleFile(url, allowed: folder.supportedTypes) else { return }
+              Self.isContained(url, in: watch.url, recursive: folder.recursive),
+              WatchFilePolicy.isEligibleFile(url, allowed: folder.admissionTypes) else { return }
+        guard owner(of: url) == folderID else { return }
         if let previous = recent[url], Date().timeIntervalSince(previous.1) < 300,
            let current = try? FileFingerprint.read(url), current.matches(previous.0) { return }
         pending.append((url, folderID, attempt, Date().addingTimeInterval(delay)))
@@ -437,22 +453,38 @@ final class WatchedFoldersController {
             activeFolderID = id
             currentFileName = url.lastPathComponent
             activePhase = .checkingFile
+            let approval = automationApprovals.removeValue(forKey: url)
+            let checkpoint = automationRetries.removeValue(forKey: url)
             let job = Task.detached(priority: .utility) { [self] in
-                await AutoOptimizationService().process(url, in: folder) { phase in
+                if folder.rules != nil || approval != nil || checkpoint != nil {
+                    return await AutomationWatchService.process(url, folder: folder, approved: approval, resume: checkpoint, willPublish: { output in
+                        try Task.checkCancellation()
+                        await self.suppressOutput(output)
+                    }, didPublish: { output in await self.registerOutput(output) })
+                }
+                return await AutoOptimizationService().process(url, in: folder) { phase in
                     await updatePhase(phase, for: url)
                 }
             }
             activeTask = job
             let result = await job.value
+            let unpublished = publishing.subtracting(published)
+            publishing = []
+            published = []
+            for output in unpublished {
+                for watch in running.values { watch.known.remove(output) }
+                if let owner = owner(of: output) { enqueue(output, folderID: owner) }
+            }
+            if let checkpoint = result.checkpoint { checkpoints[result.activity.id] = (id, checkpoint) }
             if let current = try? FileFingerprint.read(url) { recent[url] = (current, Date()) }
             if let output = result.outputURL {
                 if let current = try? FileFingerprint.read(output) { recent[output] = (current, Date()) }
                 for (watchID, watch) in running {
                     guard let setting = folders.first(where: { $0.id == watchID }),
-                          WatchFilePolicy.isEligibleFile(output, allowed: setting.supportedTypes) else { continue }
+                          WatchFilePolicy.isEligibleFile(output, allowed: setting.admissionTypes) else { continue }
                     let parent = output.deletingLastPathComponent().standardizedFileURL.path
                     let root = watch.url.standardizedFileURL.path
-                    if parent == root || (setting.watchSubdirectories && parent.hasPrefix(root + "/")) {
+                    if parent == root || (setting.recursive && parent.hasPrefix(root + "/")) {
                         watch.known.insert(output)
                     }
                 }
@@ -477,6 +509,57 @@ final class WatchedFoldersController {
             currentFileName = nil
         }
         worker = nil
+    }
+
+    func canRunAutomation(_ id: UUID) -> Bool { !paused && running[id] != nil }
+
+    func runAutomation(_ items: [AutomationPreviewItem], folderID: UUID) {
+        guard !paused, running[folderID] != nil else { return }
+        for item in items where item.rule != nil && item.issue == nil {
+            guard !queuedURLs.contains(item.url), activeURL != item.url, owner(of: item.url) == folderID else { continue }
+            automationApprovals[item.url] = item
+            recent.removeValue(forKey: item.url)
+            enqueue(item.url, folderID: folderID)
+            if !queuedURLs.contains(item.url) { automationApprovals.removeValue(forKey: item.url) }
+        }
+    }
+
+    func canRetry(_ activityID: UUID) -> Bool {
+        guard let (folderID, checkpoint) = checkpoints[activityID], !paused,
+              running[folderID] != nil, activeURL != checkpoint.workingURL,
+              !queuedURLs.contains(checkpoint.workingURL) else { return false }
+        return true
+    }
+
+    func retryAutomation(_ activityID: UUID) {
+        guard canRetry(activityID), let (folderID, checkpoint) = checkpoints.removeValue(forKey: activityID) else { return }
+        let url = checkpoint.workingURL
+        automationRetries[url] = checkpoint
+        pending.append((url, folderID, 0, Date()))
+        queuedURLs.insert(url)
+        if worker == nil { worker = Task { await drain() } }
+    }
+
+    private func owner(of url: URL) -> UUID? {
+        folders.filter { folder in
+            guard folder.isEnabled, let root = try? resolve(folder).url else { return false }
+            return Self.isContained(url, in: root, recursive: folder.recursive)
+        }.max { first, second in
+            ((try? resolve(first).url.path.count) ?? 0) < ((try? resolve(second).url.path.count) ?? 0)
+        }?.id
+    }
+
+    private func suppressOutput(_ url: URL) {
+        if !FileManager.default.fileExists(atPath: url.path) { publishing.insert(url) }
+    }
+
+    private func registerOutput(_ url: URL) {
+        published.insert(url)
+        if let fingerprint = try? FileFingerprint.read(url) { recent[url] = (fingerprint, Date()) }
+        for watch in running.values { watch.known.insert(url) }
+        pending = pending.filter { $0.0 != url }
+        queuedURLs.remove(url)
+        automationApprovals.removeValue(forKey: url)
     }
 
     private func updatePhase(_ phase: OptimizationJobPhase, for url: URL) {

@@ -27,11 +27,17 @@ nonisolated struct SessionStatistics: Sendable {
     func recording(_ result: WatchActivity) -> Self {
         var next = self
         next.totalProcessed += 1
+        if let compression = result.automation {
+            next.originalBytes += max(compression.compressionOriginalBytes, 0)
+            next.optimizedBytes += max(compression.compressionOriginalBytes - compression.compressionSavedBytes, 0)
+        }
         switch result.outcome {
         case .optimized:
             next.successful += 1
-            next.originalBytes += max(result.originalBytes, 0)
-            next.optimizedBytes += max(result.outputBytes, 0)
+            if result.automation == nil {
+                next.originalBytes += max(result.originalBytes, 0)
+                next.optimizedBytes += max(result.outputBytes, 0)
+            }
         case .skipped: next.skipped += 1
         case .failed: next.failed += 1
         }
