@@ -143,8 +143,7 @@ Next:
 - [ ] Stage 1 Restore Original - owner TBD
 - [ ] Stage 0 benchmark fixtures - owner TBD
 - [ ] Raise whole-app coverage toward 80% - owner TBD
-- [ ] Review low-severity items: move-source TOCTOU (consider `trashItem`), copy-source final symlink check, `/tmp` default in `scripts/memory-fixtures.swift` - owner TBD
-- [ ] Stop tracking `xcschememanagement.plist` (`git rm --cached`) - owner TBD
+- [ ] Automation rename follow-ups (review 2026-10-11): case-only rename on case-insensitive volumes gives a `-1` suffix; verify device/inode after `renamex_np`; start access on the source URL in `rename` like `transfer`; map `ENOTSUP`/`EINVAL` from `RENAME_EXCL` on unsupported volumes to a clear message - owner TBD
 - [ ] macOS 14 and Intel runtime validation - owner TBD
 - [ ] Stage 3, stage 4 remainder, stage 6 - owner TBD
 - [ ] Large-image and large-PDF memory profiling - owner TBD

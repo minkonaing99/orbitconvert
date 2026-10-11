@@ -13,7 +13,8 @@ final class AutomationExecutionTests: XCTestCase {
             AutomationAction(kind: .copy, destinationBookmark: try bookmark(copies)),
             AutomationAction(kind: .rename, template: "'Note'_{i}.{ext}"),
             AutomationAction(kind: .move, destinationBookmark: try bookmark(output))])
-        let result = await AutomationExecutionService().run(source, rule: rule)
+        let files = AutomationFileOperations(trash: { try FileManager.default.removeItem(at: $0) })
+        let result = await AutomationExecutionService(files: files).run(source, rule: rule)
         XCTAssertNil(result.checkpoint)
         XCTAssertEqual(result.details.steps.count, 3)
         XCTAssertEqual(result.outputURL?.lastPathComponent, "Note_1.txt")

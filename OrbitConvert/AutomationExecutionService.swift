@@ -1,6 +1,8 @@
 import Foundation
 
 nonisolated struct AutomationExecutionService: Sendable {
+    var files = AutomationFileOperations()
+
     func run(_ source: URL, rule: AutomationRule, resume: AutomationCheckpoint? = nil, expectedSource: FileFingerprint? = nil,
              willPublish: @escaping @Sendable (URL) async throws -> Void = { _ in },
              didPublish: @escaping @Sendable (URL) async -> Void = { _ in }) async -> AutomationRunResult {
@@ -39,7 +41,7 @@ nonisolated struct AutomationExecutionService: Sendable {
                 guard expected.matches(try FileFingerprint.read(working)) else { throw WatchError.sourceChanged }
                 let output: AutomationActionOutput
                 if index == start, let cleanup = resume?.cleanupOutput, let cleanupExpected = resume?.cleanupExpected {
-                    try AutomationFileOperations().finishMove(source: working, expected: expected,
+                    try files.finishMove(source: working, expected: expected,
                         output: cleanup, outputExpected: cleanupExpected)
                     output = AutomationActionOutput(url: cleanup, message: "Move completed", savedBytes: 0, compressedBytes: 0)
                 } else {
@@ -100,13 +102,12 @@ nonisolated struct AutomationExecutionService: Sendable {
                     modificationDate: facts.modificationDate, index: number)
             }
             let name = try render(1)
-            let url = try await AutomationFileOperations().transfer(source: working, to: working.deletingLastPathComponent(),
-                name: name, move: true, expected: expected, collisionName: template.usesIncrement ? render : nil,
-                willPublish: willPublish)
+            let url = try await files.rename(source: working, to: name, expected: expected,
+                collisionName: template.usesIncrement ? render : nil, willPublish: willPublish)
             return AutomationActionOutput(url: url, message: "Renamed", savedBytes: 0, compressedBytes: 0)
         case .move, .copy:
             guard let bookmark = action.destinationBookmark else { throw ConversionError.invalidDestination }
-            let url = try await AutomationFileOperations().transfer(source: working, to: destination(bookmark),
+            let url = try await files.transfer(source: working, to: destination(bookmark),
                 name: working.lastPathComponent, move: action.kind == .move, expected: expected, willPublish: willPublish)
             return AutomationActionOutput(url: url, message: action.kind == .move ? "Moved" : "Copied", savedBytes: 0, compressedBytes: 0)
         default:

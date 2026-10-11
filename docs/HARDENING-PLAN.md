@@ -1,6 +1,6 @@
 # Hardening Plan
 
-Status: In progress. Step 0 done 2026-10-11.
+Status: In progress. Steps 0-1 done 2026-10-11.
 
 Goal: make existing features safe and verified before adding new ones. Order follows risk: data safety first, real-environment verification second, coverage third, cleanup last. The feature freeze lasts until step 3 is complete.
 
@@ -20,7 +20,7 @@ Related: [PLAN](PLAN.md) (roadmap and task lists), [TECH](TECH.md) (architecture
 | Step | Goal | Effort | Depends on | Status |
 | --- | --- | --- | --- | --- |
 | 0 | Freeze and baseline | 0.5 day | - | Done 2026-10-11 |
-| 1 | Quick safety fixes | 1 day | 0 | Not started |
+| 1 | Quick safety fixes | 1 day | 0 | Done 2026-10-11 |
 | 2 | Installed signed-app verification | 1-2 days | 1 | Not started |
 | 3 | Restore Original (Undo) | 1-2 weeks | 2 | Not started |
 | 4 | Coverage to 80% | ~1 week | 1 (parallel with 3) | Not started |
@@ -101,6 +101,17 @@ Notes:
 - Check sandbox behavior of `trashItem` in step 2.
 
 Done when: each change has a test that failed first, the full suite passes, code review has no CRITICAL/HIGH findings, security review passes.
+
+### Step 1 results (2026-10-11)
+
+- 1.1: Move sends the source to Trash through an injectable `trash` closure (default `FileManager.trashItem`); Trash failure keeps the source and reports the published copy. Decision during implementation: Rename no longer copies and removes; it uses atomic same-folder `renamex_np(RENAME_EXCL)` (inode kept, no Trash entry). Only Move uses Trash.
+- 1.2: No change needed. `FileFingerprint.read` uses `lstat` and requires a regular file; `testSymlinkSourceIsRejected` covers it.
+- 1.3: Default fixture output is a unique folder in the per-user temporary directory.
+- 1.4: `AutomationActionEditor.replacementNote` shows an orange warning for Replace Original; the legacy Move Original to Trash note no longer claims it cannot be undone.
+- 1.5: Skip message points to [SETUP memory profiling](SETUP.md#memory-profiling).
+- Full Release suite: **185 tests, 0 failures, 1 opt-in skip**; app coverage **66.14% (6275/9488)**.
+- Code review: no CRITICAL/HIGH. Open items moved to [PLAN](PLAN.md) backlog: case-only rename on case-insensitive volumes yields a `-1` suffix (pre-existing); check-to-rename window (moves, never deletes); `rename` does not start access on the source URL itself.
+- Trash behavior inside the signed sandbox is checked in step 2.
 
 ## Step 2: Installed signed-app verification
 
@@ -239,7 +250,7 @@ Output: a "Scope rule" section in [PRD](PRD.md) and a reordered roadmap in [PLAN
 ## Tracking
 
 - [x] Step 0: freeze and baseline
-- [ ] Step 1: safety fixes 1.1-1.5
+- [x] Step 1: safety fixes 1.1-1.5
 - [ ] Step 2: installed signed-app verification
 - [ ] Step 3a: recovery journal
 - [ ] Step 3b: journaled replacement

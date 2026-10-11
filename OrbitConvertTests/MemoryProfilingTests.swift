@@ -10,7 +10,7 @@ final class MemoryProfilingTests: XCTestCase {
     func testMemoryWorkload() async throws {
         let environment = ProcessInfo.processInfo.environment
         guard let scenario = environment["ORBIT_MEMORY_SCENARIO"] else {
-            throw XCTSkip("Opt-in memory measurement; see docs/memory-profiling.md.")
+            throw XCTSkip("Opt-in memory measurement; see docs/SETUP.md#memory-profiling.")
         }
         guard ["images24", "images48", "convert", "pdfs", "idle"].contains(scenario),
               let path = environment["ORBIT_MEMORY_FIXTURES"], path.hasPrefix("/") else {

@@ -75,10 +75,20 @@ struct AutomationActionEditor: View {
             }
             Text("Supports JPEG, PNG, HEIC and PDF. Lossless is unavailable for JPEG and HEIC.")
                 .font(.caption).foregroundStyle(.secondary)
-            Text(action.replacement == .keepBoth
-                 ? "Keep Both protects the original; later actions use the compressed copy."
-                 : "Replaces the original only with a validated smaller file. This cannot be undone in OrbitConvert.")
-                .font(.caption).foregroundStyle(.secondary)
+            let note = Self.replacementNote(action.replacement)
+            Label(note.text, systemImage: note.warning ? "exclamationmark.triangle" : "info.circle")
+                .font(.caption).foregroundStyle(note.warning ? .orange : .secondary)
+        }
+    }
+
+    static func replacementNote(_ behavior: ReplacementBehavior) -> (text: String, warning: Bool) {
+        switch behavior {
+        case .keepBoth:
+            ("Keep Both protects the original; later actions use the compressed copy.", false)
+        case .moveOriginalToTrash:
+            ("Moves the original to Trash after a validated smaller file is saved.", false)
+        case .replaceOriginal:
+            ("Replaces the file in place with a validated smaller file. There is no Undo yet.", true)
         }
     }
 

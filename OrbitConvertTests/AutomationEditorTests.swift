@@ -4,6 +4,18 @@ import XCTest
 @testable import OrbitConvert
 
 final class AutomationEditorTests: XCTestCase {
+    func testReplacementNoteWarnsOnlyForInPlaceReplacement() {
+        let replace = AutomationActionEditor.replacementNote(.replaceOriginal)
+        XCTAssertTrue(replace.warning)
+        XCTAssertTrue(replace.text.contains("no Undo"))
+        let keep = AutomationActionEditor.replacementNote(.keepBoth)
+        XCTAssertFalse(keep.warning)
+        XCTAssertTrue(keep.text.contains("protects the original"))
+        let trash = AutomationActionEditor.replacementNote(.moveOriginalToTrash)
+        XCTAssertFalse(trash.warning)
+        XCTAssertTrue(trash.text.contains("Trash"))
+    }
+
     @MainActor func testRuleEditorFitsAndDoesNotSaveOnOpen() {
         var saved = false
         let view = NSHostingView(rootView: AutomationRuleEditor(rule: AutomationRule(),

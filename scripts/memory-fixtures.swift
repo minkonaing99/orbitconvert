@@ -5,7 +5,8 @@ import ImageIO
 import UniformTypeIdentifiers
 
 // Run outside the measured process so fixture generation does not inflate its baseline.
-let root = URL(fileURLWithPath: CommandLine.arguments.dropFirst().first ?? "/tmp/orbit-memory-fixtures")
+let defaultRoot = FileManager.default.temporaryDirectory.appendingPathComponent("orbit-memory-fixtures-\(UUID().uuidString)")
+let root = CommandLine.arguments.dropFirst().first.map { URL(fileURLWithPath: $0) } ?? defaultRoot
 guard root.isFileURL, !FileManager.default.fileExists(atPath: root.path) else {
     fatalError("Choose a new fixture directory; existing data is never replaced.")
 }

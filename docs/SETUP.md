@@ -128,6 +128,25 @@ Use a fresh result bundle path for each run. Signed installed-app testing is req
 - Lossy assertions use pixel tolerance, not byte equality. Report codec capability skips.
 - Mocking: inject focused services or deterministic failure points where needed (clock, filesystem hooks); otherwise exercise real ImageIO, PDFKit and helpers. chmod alone does not prove sandbox denial.
 
+### Memory profiling
+
+`MemoryProfilingTests.testMemoryWorkload` is opt-in and skipped in normal runs. It samples memory while processing three batches of a scenario, then checks that every input completed and sources are unchanged.
+
+1. Generate fixtures in a new directory (default: a unique folder in the per-user temporary directory; existing directories are refused):
+   ```sh
+   swift scripts/memory-fixtures.swift [/absolute/new/directory]
+   ```
+   It prints the fixture path: `images24` (12 x 6000x4000 JPEG), `images48` (4 x 8000x6000 JPEG), `pdfs` (3 x 20-page image PDFs).
+2. Run the test with the scenario and fixture path. xcodebuild forwards variables prefixed with `TEST_RUNNER_`:
+   ```sh
+   TEST_RUNNER_ORBIT_MEMORY_SCENARIO=images24 TEST_RUNNER_ORBIT_MEMORY_FIXTURES=/path/printed/above \
+   xcodebuild test -project OrbitConvert.xcodeproj -scheme OrbitConvert -configuration Release -destination 'platform=macOS,arch=arm64' -derivedDataPath /tmp/OrbitConvert-tests ENABLE_TESTABILITY=YES -only-testing:OrbitConvertTests/MemoryProfilingTests -resultBundlePath /tmp/OrbitConvert-memory.xcresult
+   ```
+   Scenarios: `images24`, `images48` (Balanced optimization), `convert` (`images24` to PNG), `pdfs`, `idle`. The run takes several minutes by design (idle, cooldown and settle phases).
+3. The memory CSV is attached to the result bundle as `memory-<scenario>.csv`; phase markers print as `MEMORY_PROFILE` lines.
+
+Only these test variables exist; nothing configures the app itself through the environment.
+
 ### Required automated cases
 
 | Area | Evidence |
@@ -151,6 +170,7 @@ Use a fresh result bundle path for each run. Signed installed-app testing is req
 
 | Date | Milestone | Tests | Whole-app coverage | Notes |
 | --- | --- | --- | --- | --- |
+| 2026-10-11 | Hardening step 1 (Release, arm64) | 185 run, 184 pass, 1 skipped | 66.14% (6275/9488) | Trash on Move, atomic Rename, Replace Original warning |
 | 2026-10-11 | Hardening baseline (Release, arm64) | 175 run, 174 pass, 1 skipped (opt-in memory test) | 65.94% (6224/9439) | Quick Action extension 29.82% (51/171) |
 | 2026-10-11 | Folder automation | 174 pass | 65.94% | Automation core 89.38% (views excluded from that figure) |
 | 2026-10-10 | Finder Quick Action | 133 pass | 67.84% | QuickCompressionService 98.90%, QuickActionRequest 92.73% |

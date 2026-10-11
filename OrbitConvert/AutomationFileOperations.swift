@@ -13,7 +13,18 @@ nonisolated enum AutomationTransferError: Error, LocalizedError, Sendable {
 }
 
 nonisolated struct AutomationFileOperations: Sendable {
-    init() {}
+    private let trash: @Sendable (URL) throws -> Void
+
+    init(trash: @escaping @Sendable (URL) throws -> Void = { _ = try AutomationFileOperations.moveToTrash($0) }) {
+        self.trash = trash
+    }
+
+    // Moved sources go to Trash so a wrongly removed file stays recoverable.
+    static func moveToTrash(_ url: URL) throws -> URL? {
+        var resulting: NSURL?
+        try FileManager.default.trashItem(at: url, resultingItemURL: &resulting)
+        return resulting as URL?
+    }
 
     func transfer(source: URL, to directory: URL, name: String, move: Bool,
                   expected: FileFingerprint,
@@ -47,6 +58,35 @@ nonisolated struct AutomationFileOperations: Sendable {
         return output
     }
 
+    // Same-folder rename is atomic: no copy is made and nothing is removed.
+    func rename(source: URL, to name: String, expected: FileFingerprint,
+                collisionName: (@Sendable (Int) throws -> String)? = nil,
+                willPublish: @Sendable (URL) async throws -> Void = { _ in }) async throws -> URL {
+        let directory = source.deletingLastPathComponent()
+        guard source.isFileURL else { throw ConversionError.invalidDestination }
+        try validate(name)
+        try Self.validateAncestors(source)
+        let access = directory.startAccessingSecurityScopedResource()
+        defer { if access { directory.stopAccessingSecurityScopedResource() } }
+        try check(source, expected)
+        if directory.appendingPathComponent(name).standardizedFileURL == source.standardizedFileURL { return source }
+        var suffix = 0
+        while true {
+            let output = directory.appendingPathComponent(try candidate(name, suffix: suffix, collisionName: collisionName))
+            try Task.checkCancellation()
+            try await willPublish(output)
+            try Task.checkCancellation()
+            try check(source, expected)
+            let result = source.path.withCString { old in
+                output.path.withCString { new in renamex_np(old, new, UInt32(RENAME_EXCL)) }
+            }
+            if result == 0 { return output }
+            let code = errno
+            guard code == EEXIST else { throw FileOutputService.writeError(for: code) }
+            suffix += 1
+        }
+    }
+
     func finishMove(source: URL, expected: FileFingerprint, output: URL,
                     outputExpected: FileFingerprint) throws {
         let sourceAccess = source.startAccessingSecurityScopedResource()
@@ -66,7 +106,7 @@ nonisolated struct AutomationFileOperations: Sendable {
             try check(output, outputExpected)
             try Task.checkCancellation()
             try check(source, expected)
-            try FileManager.default.removeItem(at: source)
+            try trash(source)
         } catch {
             throw AutomationTransferError.publishedCopy(output, error.localizedDescription)
         }
@@ -116,15 +156,9 @@ nonisolated struct AutomationFileOperations: Sendable {
                          expected: FileFingerprint,
                          collisionName: (@Sendable (Int) throws -> String)?,
                          willPublish: @Sendable (URL) async throws -> Void) async throws -> URL {
-        let ext = (name as NSString).pathExtension
-        let stem = ext.isEmpty ? name : (name as NSString).deletingPathExtension
         var suffix = 0
         while true {
-            guard suffix < Int.max else { throw ConversionError.cannotWriteFile }
-            let fallback = suffix == 0 ? name : stem + "-\(suffix)" + (ext.isEmpty ? "" : "." + ext)
-            let candidate = try collisionName?(suffix + 1) ?? fallback
-            try validate(candidate)
-            let output = directory.appendingPathComponent(candidate)
+            let output = directory.appendingPathComponent(try candidate(name, suffix: suffix, collisionName: collisionName))
             try Task.checkCancellation()
             try await willPublish(output)
             try Task.checkCancellation()
@@ -140,11 +174,22 @@ nonisolated struct AutomationFileOperations: Sendable {
         }
     }
 
+    private func candidate(_ name: String, suffix: Int,
+                           collisionName: (@Sendable (Int) throws -> String)?) throws -> String {
+        guard suffix < Int.max else { throw ConversionError.cannotWriteFile }
+        let ext = (name as NSString).pathExtension
+        let stem = ext.isEmpty ? name : (name as NSString).deletingPathExtension
+        let fallback = suffix == 0 ? name : stem + "-\(suffix)" + (ext.isEmpty ? "" : "." + ext)
+        let candidate = try collisionName?(suffix + 1) ?? fallback
+        try validate(candidate)
+        return candidate
+    }
+
     private func removeSource(_ source: URL, expected: FileFingerprint, output: URL) throws {
         do {
             try Task.checkCancellation()
             try check(source, expected)
-            try FileManager.default.removeItem(at: source)
+            try trash(source)
         } catch {
             throw AutomationTransferError.publishedCopy(output, error.localizedDescription)
         }
