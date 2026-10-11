@@ -134,7 +134,7 @@ Next:
 
 ### In Progress
 
-- [ ] Phase 10 manual verification of the installed signed app (sandbox grants, Finder Quick Action hand-off, watched folders, clipboard, VoiceOver) - owner TBD, due TBD
+- [ ] Itemized installed-app checks still unrecorded (owner reported all working 2026-10-11): in-sandbox Trash on Move, Quick Action cold start / Replace Original / originals kept, read-only destination, VoiceOver, keyboard - owner TBD, before Restore Original ships
 
 ### Backlog
 

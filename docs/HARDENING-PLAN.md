@@ -1,6 +1,6 @@
 # Hardening Plan
 
-Status: In progress. Steps 0-1 done 2026-10-11.
+Status: In progress. Steps 0-2 closed 2026-10-11.
 
 Goal: make existing features safe and verified before adding new ones. Order follows risk: data safety first, real-environment verification second, coverage third, cleanup last. The feature freeze lasts until step 3 is complete.
 
@@ -21,7 +21,7 @@ Related: [PLAN](PLAN.md) (roadmap and task lists), [TECH](TECH.md) (architecture
 | --- | --- | --- | --- | --- |
 | 0 | Freeze and baseline | 0.5 day | - | Done 2026-10-11 |
 | 1 | Quick safety fixes | 1 day | 0 | Done 2026-10-11 |
-| 2 | Installed signed-app verification | 1-2 days | 1 | Not started |
+| 2 | Installed signed-app verification | 1-2 days | 1 | Closed 2026-10-11 (owner-reported, not itemized) |
 | 3 | Restore Original (Undo) | 1-2 weeks | 2 | Not started |
 | 4 | Coverage to 80% | ~1 week | 1 (parallel with 3) | Not started |
 | 5 | Source structure | 0.5 day | 1 | Not started |
@@ -145,6 +145,12 @@ Output: a dated "Installed-app verification" section in [SETUP](SETUP.md), and o
 
 Done when: every row has a recorded result and every failure is tracked.
 
+### Step 2 results (2026-10-11)
+
+- Release build (commit `268ddf1`) installed at `~/Applications/OrbitConvert.app`: universal binary, strict deep signature verification passes, app and extension carry the expected sandbox entitlements, Quick Action registered with PlugInKit from the installed copy.
+- A 43-check checklist and fixture folder were prepared. The owner reported that everything works in daily use and chose to close the step without filling in the checklist; the fixtures were deleted.
+- **Evidence level: owner-reported, not itemized.** No individual result is recorded for in-sandbox `trashItem` on Move, Finder Quick Action hand-off (cold start, Replace Original, originals kept), read-only destination errors, VoiceOver or keyboard-only use. Treat these as unverified for step 3 design decisions; re-run the high-risk checks (watched-folder Rename and Move, Quick Action Keep Both and Replace Original, read-only destination) before enabling Restore Original by default.
+
 ## Step 3: Restore Original (Undo)
 
 Goal: make Replace Original reversible after crashes and mistakes. Full design: [PLAN stage 1](PLAN.md#stage-1-durable-restore-original). Scope: watched-folder and automation Replace Original jobs. Quick Action Replace Original can adopt it after 3d.
@@ -251,7 +257,7 @@ Output: a "Scope rule" section in [PRD](PRD.md) and a reordered roadmap in [PLAN
 
 - [x] Step 0: freeze and baseline
 - [x] Step 1: safety fixes 1.1-1.5
-- [ ] Step 2: installed signed-app verification
+- [x] Step 2: installed signed-app verification (owner-reported, not itemized)
 - [ ] Step 3a: recovery journal
 - [ ] Step 3b: journaled replacement
 - [ ] Step 3c: guarded restore and reconciliation
