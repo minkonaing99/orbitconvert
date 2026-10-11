@@ -1,6 +1,6 @@
 # Hardening Plan
 
-Status: Proposed 2026-10-11. Not started.
+Status: In progress. Step 0 done 2026-10-11.
 
 Goal: make existing features safe and verified before adding new ones. Order follows risk: data safety first, real-environment verification second, coverage third, cleanup last. The feature freeze lasts until step 3 is complete.
 
@@ -19,7 +19,7 @@ Related: [PLAN](PLAN.md) (roadmap and task lists), [TECH](TECH.md) (architecture
 
 | Step | Goal | Effort | Depends on | Status |
 | --- | --- | --- | --- | --- |
-| 0 | Freeze and baseline | 0.5 day | - | Not started |
+| 0 | Freeze and baseline | 0.5 day | - | Done 2026-10-11 |
 | 1 | Quick safety fixes | 1 day | 0 | Not started |
 | 2 | Installed signed-app verification | 1-2 days | 1 | Not started |
 | 3 | Restore Original (Undo) | 1-2 weeks | 2 | Not started |
@@ -51,6 +51,38 @@ Tasks:
 
 Done when: baseline numbers are recorded and the suite result is known (pass or listed failures).
 
+### Step 0 results (2026-10-11)
+
+- Full Release suite (arm64, ad-hoc signed): **175 tests, 0 failures, 1 skipped** (`MemoryProfilingTests.testMemoryWorkload`, opt-in). Result bundle `/tmp/OrbitConvert-baseline.xcresult`.
+- Coverage: app **65.94% (6224/9439)**, Quick Action extension 29.82% (51/171). Reaching 80% needs about **1,328 more covered lines** in the app target.
+- `xcschememanagement.plist` untracked; no other `xcuserdata` file is tracked.
+- Found: `MemoryProfilingTests.swift:13` skip message points to `docs/memory-profiling.md`, which does not exist. Fix in step 1.
+
+Top uncovered files (input for step 4):
+
+| Uncovered lines | File | Coverage |
+| ---: | --- | --- |
+| 430 | ConversionControlsView.swift | 44.08% (339/769) |
+| 322 | WatchMenuView.swift | 35.21% (175/497) |
+| 264 | AutomationRulesView.swift | 0.00% (0/264) |
+| 192 | ResizeOptionsView.swift | 0.00% (0/192) |
+| 179 | AutomationActionEditor.swift | 33.46% (90/269) |
+| 167 | ContentView.swift | 60.61% (257/424) |
+| 165 | AutomationPreviewView.swift | 0.00% (0/165) |
+| 156 | WatchedFoldersController.swift | 77.33% (532/688) |
+| 149 | QuickCompressionController.swift | 9.15% (15/164) |
+| 149 | ClipboardMonitorService.swift | 45.02% (122/271) |
+| 114 | ClipboardSettingsView.swift | 0.00% (0/114) |
+| 101 | AutomationRuleEditor.swift | 79.84% (400/501) |
+| 92 | ClipboardResultPanel.swift | 0.00% (0/92) |
+| 86 | TargetSizeOptionsView.swift | 0.00% (0/86) |
+| 79 | QuickCompressionView.swift | 64.73% (145/224) |
+| 60 | WatchedFoldersSettingsView.swift | 82.66% (286/346) |
+| 56 | ClipboardWriterService.swift | 66.47% (111/167) |
+| 42 | FileActionService.swift | 61.47% (67/109) |
+
+Most of the gap is SwiftUI views and controllers, confirming step 4's extract-logic approach.
+
 ## Step 1: Quick safety fixes
 
 Goal: close the low-severity findings from the 2026-10-11 security review and reduce the risk of the destructive Replace Original choice.
@@ -61,6 +93,7 @@ Goal: close the low-severity findings from the 2026-10-11 security review and re
 | 1.2 | Reject a copy/move source whose final path component is a symlink (ancestors are already checked) | `OrbitConvert/AutomationFileOperations.swift` | Symlinked source fails with a clear message; target file untouched |
 | 1.3 | Take the output directory as an argument, defaulting to a per-user temporary directory instead of `/tmp/orbit-memory-fixtures` | `scripts/memory-fixtures.swift` | Manual run with and without argument |
 | 1.4 | Show a visible warning in the rule editor when a Compress action uses Replace Original ("Replaces the file in place. There is no Undo yet.") | `OrbitConvert/AutomationActionEditor.swift` | Editor test: warning present for Replace Original, absent for Keep Both |
+| 1.5 | Point the `MemoryProfilingTests` skip message at an existing doc (`docs/SETUP.md`) | `OrbitConvertTests/MemoryProfilingTests.swift` | Trivial; no test |
 
 Notes:
 
@@ -205,8 +238,8 @@ Output: a "Scope rule" section in [PRD](PRD.md) and a reordered roadmap in [PLAN
 
 ## Tracking
 
-- [ ] Step 0: freeze and baseline
-- [ ] Step 1: safety fixes 1.1-1.4
+- [x] Step 0: freeze and baseline
+- [ ] Step 1: safety fixes 1.1-1.5
 - [ ] Step 2: installed signed-app verification
 - [ ] Step 3a: recovery journal
 - [ ] Step 3b: journaled replacement

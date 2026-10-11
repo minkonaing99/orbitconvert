@@ -151,6 +151,7 @@ Use a fresh result bundle path for each run. Signed installed-app testing is req
 
 | Date | Milestone | Tests | Whole-app coverage | Notes |
 | --- | --- | --- | --- | --- |
+| 2026-10-11 | Hardening baseline (Release, arm64) | 175 run, 174 pass, 1 skipped (opt-in memory test) | 65.94% (6224/9439) | Quick Action extension 29.82% (51/171) |
 | 2026-10-11 | Folder automation | 174 pass | 65.94% | Automation core 89.38% (views excluded from that figure) |
 | 2026-10-10 | Finder Quick Action | 133 pass | 67.84% | QuickCompressionService 98.90%, QuickActionRequest 92.73% |
 | 2026-10-09 | Watched-folder history | 129 pass | 66.01% | |
