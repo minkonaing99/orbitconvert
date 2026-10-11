@@ -41,7 +41,6 @@ Public distribution is not prepared. Bundled GPL/AGPL helpers need a separate li
 
 **Extended (v2 candidates, see [PLAN](PLAN.md))**
 
-- Durable Restore Original / Undo for watched-folder replacements.
 - Optional palette PNG reduction (pngquant), disabled by default.
 - Target size for HEIC and PNG.
 - Editable DOCX equations, then offline PDF math and Mermaid.
@@ -55,6 +54,7 @@ Public distribution is not prepared. Bundled GPL/AGPL helpers need a separate li
 - Video optimization, ZIP/archive creation, OCR of scanned PDFs, Word-document text extraction.
 - Animated or multi-image inputs; BMP, GIF, WebP and AVIF (deferred).
 - Radial or floating action panels (floating windows were removed on 2026-10-09).
+- Undo / Restore Original for in-place replacements (dropped 2026-10-11; use Keep Both when the original matters).
 - Redo stacks, persistent retry queues, plugin frameworks, a database.
 
 ### User stories
@@ -73,7 +73,7 @@ Public distribution is not prepared. Bundled GPL/AGPL helpers need a separate li
 - App Sandbox with user-selected read/write and app-scoped bookmarks only. No broad filesystem, network, Accessibility, Input Monitoring or Screen Recording permission.
 - Bundled Pandoc and Ghostscript are arm64 only and are not committed to Git (fresh clones run [setup](SETUP.md)).
 - Personal use. GPL (Pandoc) and AGPL (Ghostscript) obligations apply before any redistribution.
-- Coverage target 80%; current whole-app coverage is about 66%.
+- Coverage target 80%; current whole-app coverage is 80.67%.
 
 ### Open questions and assumptions
 

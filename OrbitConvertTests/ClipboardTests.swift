@@ -128,6 +128,42 @@ import UniformTypeIdentifiers
         XCTAssertEqual(board.string(forType: .string), "newer copy C")
     }
 
+    func testCollectedResultsCanBeCopiedAgainAndCleared() async throws {
+        let board = NSPasteboard.withUniqueName()
+        defer { board.releaseGlobally() }
+        let data = try fixture(.png)
+        let output = fakeResult(data)
+        let defaults = try isolatedDefaults()
+        defer { defaults.removePersistentDomain(forName: defaults.string(forKey: "testSuite") ?? "") }
+        let monitor = ClipboardMonitorService(defaults: defaults, pasteboard: board) { _, _, _ in output }
+        monitor.collectResults = true
+        monitor.showResults = true
+        defer { monitor.clearResults() }
+        board.setData(data, forType: .png)
+        let item = ClipboardItem(generation: board.changeCount, data: data, fileURL: nil, typeIdentifier: UTType.png.identifier)
+        let activity = await monitor.process(item)
+        XCTAssertEqual(activity?.outcome, .optimized)
+        XCTAssertEqual(monitor.results.map(\.id), [output.id])
+        XCTAssertEqual(monitor.lastResult?.id, output.id)
+
+        board.clearContents(); board.setString("user text", forType: .string)
+        monitor.copy(monitor.results)
+        for _ in 0..<40 where board.string(forType: .string) != nil { try await Task.sleep(for: .milliseconds(25)) }
+        XCTAssertNil(board.string(forType: .string))
+        XCTAssertEqual(board.pasteboardItems?.count, 1)
+        XCTAssertEqual(board.data(forType: .png), output.data)
+
+        monitor.clearResults()
+        XCTAssertTrue(monitor.results.isEmpty)
+        XCTAssertNil(monitor.lastResult)
+        monitor.collectResults = true
+        _ = await monitor.process(ClipboardItem(generation: board.changeCount, data: data, fileURL: nil,
+                                                typeIdentifier: UTType.png.identifier))
+        XCTAssertEqual(monitor.results.count, 1)
+        monitor.collectResults = false
+        XCTAssertTrue(monitor.results.isEmpty, "Turning collection off releases collected results")
+    }
+
     func testFailureAndNoReductionLeaveClipboardUntouched() async throws {
         let board = NSPasteboard.withUniqueName()
         defer { board.releaseGlobally() }

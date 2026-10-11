@@ -59,7 +59,7 @@ Entry format: `- **Headline** - what changed + why it matters to the user. (#iss
 
 - **Moved files go to Trash** (2026-10-11) - When an automation rule moves a file, the original is sent to Trash after the verified copy is saved, so a mistaken move can be recovered. If Trash is unavailable, the original is kept and the copy is reported.
 - **Rename no longer copies files** (2026-10-11) - Rule renames now rename the file in place: faster, no duplicate data, and nothing is deleted.
-- **Clearer Replace Original warning** (2026-10-11) - The rule editor shows a visible warning that in-place replacement has no Undo yet.
+- **Clearer Replace Original warning** (2026-10-11) - The rule editor shows a visible warning that in-place replacement cannot be undone.
 
 ### Removed
 

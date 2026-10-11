@@ -88,7 +88,7 @@ struct AutomationActionEditor: View {
         case .moveOriginalToTrash:
             ("Moves the original to Trash after a validated smaller file is saved.", false)
         case .replaceOriginal:
-            ("Replaces the file in place with a validated smaller file. There is no Undo yet.", true)
+            ("Replaces the file in place with a validated smaller file. There is no Undo.", true)
         }
     }
 

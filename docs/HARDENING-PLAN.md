@@ -1,8 +1,8 @@
 # Hardening Plan
 
-Status: In progress. Steps 0-2 closed 2026-10-11.
+Status: In progress. Steps 0-2 closed, step 3 dropped 2026-10-11. Step 4 done. Remaining: 5, 6.
 
-Goal: make existing features safe and verified before adding new ones. Order follows risk: data safety first, real-environment verification second, coverage third, cleanup last. The feature freeze lasts until step 3 is complete.
+Goal: make existing features safe and verified before adding new ones. Order follows risk: data safety first, real-environment verification second, coverage third, cleanup last. The feature freeze lasts until the step 6 direction decision.
 
 Related: [PLAN](PLAN.md) (roadmap and task lists), [TECH](TECH.md) (architecture and security), [SETUP](SETUP.md) (test commands and manual checklist).
 
@@ -22,15 +22,14 @@ Related: [PLAN](PLAN.md) (roadmap and task lists), [TECH](TECH.md) (architecture
 | 0 | Freeze and baseline | 0.5 day | - | Done 2026-10-11 |
 | 1 | Quick safety fixes | 1 day | 0 | Done 2026-10-11 |
 | 2 | Installed signed-app verification | 1-2 days | 1 | Closed 2026-10-11 (owner-reported, not itemized) |
-| 3 | Restore Original (Undo) | 1-2 weeks | 2 | Not started |
-| 4 | Coverage to 80% | ~1 week | 1 (parallel with 3) | Not started |
+| 3 | Restore Original (Undo) | - | - | Dropped 2026-10-11 (owner decision) |
+| 4 | Coverage to 80% | ~1 week | 1 | Done 2026-10-11 (80.67%) |
 | 5 | Source structure | 0.5 day | 1 | Not started |
 | 6 | Product direction decision | Decision | - (before any new feature) | Not started |
 
 ```
-0 -> 1 -> 2 -> 3a -> 3b -> 3c -> 3d
-       \-> 4 (parallel with 3)
-       \-> 5 (any time after 1)
+0 -> 1 -> 2 (done)    3 dropped
+4 coverage, 5 structure: any order
 6 before any new feature
 ```
 
@@ -151,49 +150,14 @@ Done when: every row has a recorded result and every failure is tracked.
 - A 43-check checklist and fixture folder were prepared. The owner reported that everything works in daily use and chose to close the step without filling in the checklist; the fixtures were deleted.
 - **Evidence level: owner-reported, not itemized.** No individual result is recorded for in-sandbox `trashItem` on Move, Finder Quick Action hand-off (cold start, Replace Original, originals kept), read-only destination errors, VoiceOver or keyboard-only use. Treat these as unverified for step 3 design decisions; re-run the high-risk checks (watched-folder Rename and Move, Quick Action Keep Both and Replace Original, read-only destination) before enabling Restore Original by default.
 
-## Step 3: Restore Original (Undo)
+## Step 3: Restore Original (Undo) - dropped
 
-Goal: make Replace Original reversible after crashes and mistakes. Full design: [PLAN stage 1](PLAN.md#stage-1-durable-restore-original). Scope: watched-folder and automation Replace Original jobs. Quick Action Replace Original can adopt it after 3d.
+Decision 2026-10-11 (owner): not implemented. Rationale: the cost (about 1-2 weeks, a recovery journal, retained originals, restore UI) outweighs the need. Replace Original already publishes only a validated, smaller file with in-swap rollback, and Keep Both is available wherever the original matters. The planned design (journal schema, state machine, decision table, backup location options) remains in git history (`docs/PLAN.md` stage 1 and this file before this change) if it is ever revisited.
 
-Provisional limits: 7 days, 100 entries, 1,000,000,000 bytes of retained originals. If capacity cannot be reserved, skip replacement and keep the original.
+Consequences:
 
-### 3a. Recovery journal (no UI, no behavior change)
-
-- New `OrbitConvert/OptimizationRecoveryStore.swift`, `OrbitConvertTests/OptimizationRecoveryTests.swift`.
-- One versioned, bounded JSON file per entry in a private Application Support directory; atomic writes; not UserDefaults.
-- Fields: UUID, schema version, state, timestamps, folder ID, folder bookmark, volume identity, relative source path, backup and staging names, byte counts, SHA-256 of original and candidate, source and post-swap fingerprints.
-- States: `prepared`, `replacing`, `restorable`, `restoring`, `purgePending`, `finished`. Malformed records are quarantined; unknown schema versions block cleanup.
-- Inject clock and narrow filesystem failure hooks for tests.
-
-Done when: every state transition and reconciliation decision is unit tested, including corrupt and unknown-version records.
-
-### 3b. Journaled replacement
-
-- `SafeFileReplacementService.swift`, `AutoOptimizationService.swift`, `AutomationExecutionService.swift`.
-- Persist `prepared`, then `replacing` before the swap; keep the backup instead of deleting it; verify hashes; persist `restorable` before reporting success.
-- If journal completion fails after the swap, roll back while keeping the backup and report Recovery Required.
-
-Done when: injected failures before and after each durable write, swap, validation and cleanup leave either the original or a recoverable backup, never neither.
-
-### 3c. Guarded restore and startup reconciliation
-
-- Reconcile all records before watched folders admit files.
-- Restore only if the current file matches the recorded optimized content and identity; otherwise offer Save Recovered Copy to a chosen folder.
-- Restore from a staged copy of the backup; never consume the only backup.
-- Run restore through the existing sequential queue; suppress re-admission of the restored path.
-- Restore does not change savings statistics.
-
-Done when: edited, moved, deleted and symlink-swapped sources all keep every copy and report a conflict.
-
-### 3d. Retention and UI
-
-- Optional recovery ID on `WatchActivity` (backward-compatible decoding).
-- Restore Original on eligible rows in `WatchMenuView.swift`; recovery list with retained bytes and expiry in Settings.
-- States shown: Restorable, Needs Access, Conflict, Recovery Required, Expired.
-- Cleanup at startup and before reserving space; never purge unresolved records.
-- Explain that backups keep original metadata that compression may have removed.
-
-Done when: installed-app test kills the app during replace and during restore, relaunches twice, restores byte-identical originals, and nothing is reoptimized. Only then remove the step 1.4 "no Undo" warning and enable by default.
+- Replace Original stays without Undo; the rule editor warning from step 1.4 is permanent.
+- The itemized installed-app checks in [PLAN](PLAN.md) are no longer gating Undo, but still matter before relying on Replace Original for important folders.
 
 ## Step 4: Coverage to 80%
 
@@ -207,6 +171,22 @@ Goal: reach the repository's 80% whole-app line coverage honestly.
 Rules: no files excluded from measurement; no tests that only mirror implementation; coverage must not drop in any commit.
 
 Done when: whole-app coverage is at least 80% in a full Release run, recorded in [SETUP](SETUP.md#results-history).
+
+### Step 4 results (2026-10-11)
+
+App coverage **66.14% -> 80.67% (7654/9488)**; full Release suite **200 tests, 0 failures, 1 opt-in skip**. No production logic changed and no files were excluded.
+
+| Batch | Tests added | Coverage after |
+| --- | --- | --- |
+| 1 | `ViewRenderingTests`: Compress to Size, Resize (all presets, real image), rules list (legacy and custom), rule preview (matches and unavailable folder), clipboard settings, clipboard result card show/close | 74.54% |
+| 2 | `ControlsRenderingTests`: action editor for every action kind and replacement, menu and activity with saved history (paused and empty), action controls for image/PDF/Markdown/mixed selections, Quick Compression window open/close with saved mode | 79.11% |
+| 3 | `FileActionServiceTests`: real dispatch for convert, image to PDF, PDF to PNG, page extraction, image and PDF compression | 79.48% |
+| 4 | `WatchedFolderManagementTests`: relink, display path, invalid relink target, eligible-file counts | 79.75% |
+| 5 | `ClipboardTests.testCollectedResultsCanBeCopiedAgainAndCleared`: collection, Copy All, Clear, collection off | 80.67% |
+
+Render tests (shared helper `RenderTestSupport.swift`) fix the width to the window so text wraps as on screen, then assert the content fits the window height (skipped for scrolling forms), that the render is not blank, and that opening a view never fires save/run callbacks or changes its input. They render in light and dark appearance. A code review found the first version's size check could never fail; it was corrected before commit. They use isolated UserDefaults suites (including `defaultAppStorage` for the action controls), private pasteboards and temporary folders.
+
+Remaining low-coverage areas: `ConversionControlsView` (option panels and running states need interaction), `ContentView` drop import, `QuickCompressionController` compress flow (needs folder pickers), Quick Action extension 29.82% (outside the app target).
 
 ## Step 5: Source structure
 
@@ -247,21 +227,17 @@ Output: a "Scope rule" section in [PRD](PRD.md) and a reordered roadmap in [PLAN
 
 | Risk | Mitigation |
 | --- | --- |
-| Step 2 finds sandbox failures that block step 3 design | Step 2 runs first; adjust 3a-3d before coding |
 | `trashItem` fails on some volumes | Keep source and report; never silently delete permanently |
 | Journal durability on power loss | Promise process-crash recovery only; document limits |
 | Coverage work turns into mirror tests | Extract real logic; review tests for meaningful assertions |
-| Freeze slips under feature pressure | New ideas go to PLAN backlog until step 3 is done |
+| Freeze slips under feature pressure | New ideas go to PLAN backlog until the step 6 direction decision |
 
 ## Tracking
 
 - [x] Step 0: freeze and baseline
 - [x] Step 1: safety fixes 1.1-1.5
 - [x] Step 2: installed signed-app verification (owner-reported, not itemized)
-- [ ] Step 3a: recovery journal
-- [ ] Step 3b: journaled replacement
-- [ ] Step 3c: guarded restore and reconciliation
-- [ ] Step 3d: retention and UI
-- [ ] Step 4: coverage at 80%
+- [x] Step 3: dropped (owner decision 2026-10-11)
+- [x] Step 4: coverage at 80% (80.67%)
 - [ ] Step 5: source structure
 - [ ] Step 6: product direction decision

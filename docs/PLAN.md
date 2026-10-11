@@ -2,7 +2,7 @@
 
 Keep updated. Claude reads this before starting work.
 
-**Current status:** Phases 1-5 and 8-9 delivered; folder automation landed 2026-10-11 (commit `26207d8`). Active focus: [Hardening Plan](HARDENING-PLAN.md) (proposed 2026-10-11): feature freeze, safety fixes, installed-app verification, Restore Original, coverage to 80%. New features wait until its step 3 is done.
+**Current status:** Phases 1-5 and 8-9 delivered; folder automation landed 2026-10-11 (commit `26207d8`). Active focus: [Hardening Plan](HARDENING-PLAN.md) (proposed 2026-10-11): feature freeze, safety fixes, installed-app verification, Restore Original, coverage to 80%. Restore Original was dropped 2026-10-11; new features wait for the step 6 product direction decision.
 
 ## Phases
 
@@ -57,7 +57,7 @@ Constraints: keep current engines, the action UI, scoped access and the single s
 | Stage | Deliverable | Status |
 | --- | --- | --- |
 | 0 | Benchmark fixtures and measurements (vs Clop where available) | Not started |
-| 1 | Durable Restore Original and crash recovery | Not started (next) |
+| 1 | Durable Restore Original and crash recovery | Dropped 2026-10-11 (owner decision; Keep Both covers the need) |
 | 2 | Manual Resize + Optimize | Done 2026-10-03 |
 | 3 | Opt-in palette PNG reduction (pngquant) | Not started; license gate |
 | 4 | Target file size | Partly done: JPEG Compress to Size (different search than proposed). HEIC/PNG, quality floor and Save Best Copy not done |
@@ -68,7 +68,7 @@ Constraints: keep current engines, the action UI, scoped access and the single s
 
 Record fixtures with hashes, categories and dimensions in a new benchmark doc section (text screenshots, transparent graphics, gradients, photos, HEIC, scanned and vector PDFs, already-optimized and malformed files). Record hardware, OS, versions, preset, metadata policy, bytes, time, peak memory and outcome; one warm-up plus at least three runs, report medians. Compare Clop only with the same originals and comparable policies; label "Not measured" otherwise. Invalid output counts as failure. No universal savings claim.
 
-### Stage 1: Durable Restore Original
+### Stage 1: Durable Restore Original (dropped 2026-10-11, kept for reference)
 
 Scope: successful watched-folder Replace Original jobs. Add Restore Original to activity rows and a recovery list in Settings that survives history eviction. States shown: Restorable, Needs Access, Conflict, Recovery Required, Expired. Provisional limits: seven days, 100 entries, 1,000,000,000 bytes of original payload. If capacity cannot be reserved, skip replacement and keep the original; never replace without Undo.
 
@@ -120,7 +120,7 @@ Next:
 | Uncoordinated writer resumes after quiet period | Medium | Medium | Stability checks; Keep Both default for Quick Action; test producer apps |
 | Signed sandbox behaves differently from tests | Medium | High | Installed signed-app manual checks before relying on features |
 | License obligations for bundled helpers | Medium (if shared) | High | Personal use only; review before distribution |
-| Coverage below 80% | High | Medium | Add tests for UI-adjacent logic; never exclude files to hit target |
+| Coverage drops below 80% again | Medium | Medium | Add tests for UI-adjacent logic; never exclude files to hit target |
 | Memory spikes on large images/PDFs | Medium | Medium | Pixel/byte caps, sequential queue, profiling fixtures |
 
 ## Definition of done (per slice)
@@ -134,15 +134,13 @@ Next:
 
 ### In Progress
 
-- [ ] Itemized installed-app checks still unrecorded (owner reported all working 2026-10-11): in-sandbox Trash on Move, Quick Action cold start / Replace Original / originals kept, read-only destination, VoiceOver, keyboard - owner TBD, before Restore Original ships
+- [ ] Itemized installed-app checks still unrecorded (owner reported all working 2026-10-11): in-sandbox Trash on Move, Quick Action cold start / Replace Original / originals kept, read-only destination, VoiceOver, keyboard - owner TBD, before relying on Replace Original for important folders
 
 ### Backlog
 
 - [ ] Add a folder automation entry to RELEASE-NOTES Unreleased - owner TBD
 - [ ] Update README known limitations (Resize is implemented) and doc links - owner TBD
-- [ ] Stage 1 Restore Original - owner TBD
 - [ ] Stage 0 benchmark fixtures - owner TBD
-- [ ] Raise whole-app coverage toward 80% - owner TBD
 - [ ] Automation rename follow-ups (review 2026-10-11): case-only rename on case-insensitive volumes gives a `-1` suffix; verify device/inode after `renamex_np`; start access on the source URL in `rename` like `transfer`; map `ENOTSUP`/`EINVAL` from `RENAME_EXCL` on unsupported volumes to a clear message - owner TBD
 - [ ] macOS 14 and Intel runtime validation - owner TBD
 - [ ] Stage 3, stage 4 remainder, stage 6 - owner TBD

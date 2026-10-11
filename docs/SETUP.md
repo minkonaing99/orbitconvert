@@ -95,7 +95,7 @@ Unsigned builds do not verify sandbox permissions or distribution readiness.
 
 ### Framework
 
-XCTest in the `OrbitConvertTests` target with the shared OrbitConvert scheme. About 31 test files and 175 test functions. Coverage through `-enableCodeCoverage YES` and xcresult bundles.
+XCTest in the `OrbitConvertTests` target with the shared OrbitConvert scheme. About 36 test files and 200 tests. Coverage through `-enableCodeCoverage YES` and xcresult bundles.
 
 ### Run tests
 
@@ -115,7 +115,7 @@ Use a fresh result bundle path for each run. Signed installed-app testing is req
 
 ### Coverage target and workflow
 
-- Target: 80%+ of executable application code. Current whole-app coverage is about 66%. Never exclude difficult code to reach the target; report scope and result honestly.
+- Target: 80%+ of executable application code. Current whole-app coverage is 80.67% (2026-10-11). Never exclude difficult code to reach the target; report scope and result honestly.
 - TDD: RED -> GREEN -> REFACTOR for every nontrivial behavior. Docs and config-only changes are exempt.
 - Test types: unit and service integration tests (real codecs and bundled helpers), layout snapshot tests (xcresult attachments). No automated E2E; installed-app checks are manual.
 - Never claim a build or test passed unless it ran successfully. Report the build command, tests, coverage, manual checks and limitations per milestone.
@@ -170,6 +170,7 @@ Only these test variables exist; nothing configures the app itself through the e
 
 | Date | Milestone | Tests | Whole-app coverage | Notes |
 | --- | --- | --- | --- | --- |
+| 2026-10-11 | Hardening step 4 (Release, arm64) | 200 run, 199 pass, 1 skipped | 80.67% (7654/9488) | Render, dispatch, folder management and clipboard collection tests; target met |
 | 2026-10-11 | Hardening step 1 (Release, arm64) | 185 run, 184 pass, 1 skipped | 66.14% (6275/9488) | Trash on Move, atomic Rename, Replace Original warning |
 | 2026-10-11 | Hardening baseline (Release, arm64) | 175 run, 174 pass, 1 skipped (opt-in memory test) | 65.94% (6224/9439) | Quick Action extension 29.82% (51/171) |
 | 2026-10-11 | Folder automation | 174 pass | 65.94% | Automation core 89.38% (views excluded from that figure) |
