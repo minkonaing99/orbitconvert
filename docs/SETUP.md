@@ -170,6 +170,7 @@ Only these test variables exist; nothing configures the app itself through the e
 
 | Date | Milestone | Tests | Whole-app coverage | Notes |
 | --- | --- | --- | --- | --- |
+| 2026-10-11 | Cleanups (Release, arm64) | 202 run, 201 pass, 1 skipped | 80.26% (7635/9513) | Case-only rename, unsupported-volume message |
 | 2026-10-11 | Hardening step 5, source folders (Release, arm64) | 200 run, 199 pass, 1 skipped | 80.33% (7622/9488) | Rename-only change; variance from async render tests |
 | 2026-10-11 | Hardening step 4 (Release, arm64) | 200 run, 199 pass, 1 skipped | 80.67% (7654/9488) | Render, dispatch, folder management and clipboard collection tests; target met |
 | 2026-10-11 | Hardening step 1 (Release, arm64) | 185 run, 184 pass, 1 skipped | 66.14% (6275/9488) | Trash on Move, atomic Rename, Replace Original warning |

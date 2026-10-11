@@ -138,16 +138,14 @@ Next:
 
 ### Backlog
 
-- [ ] Add a folder automation entry to RELEASE-NOTES Unreleased - owner TBD
-- [ ] Update README known limitations (Resize is implemented) and doc links - owner TBD
 - [ ] Stage 0 benchmark fixtures - owner TBD
-- [ ] Automation rename follow-ups (review 2026-10-11): case-only rename on case-insensitive volumes gives a `-1` suffix; verify device/inode after `renamex_np`; start access on the source URL in `rename` like `transfer`; map `ENOTSUP`/`EINVAL` from `RENAME_EXCL` on unsupported volumes to a clear message - owner TBD
 - [ ] macOS 14 and Intel runtime validation - owner TBD
 - [ ] Stage 3, stage 4 remainder, stage 6 - owner TBD
 - [ ] Large-image and large-PDF memory profiling - owner TBD
 
 ### Done
 
+- [x] Cleanups: README limitations, folder automation release note, rename follow-ups (case-only rename, post-rename identity check, source access, unsupported-volume message) - 2026-10-11
 - [x] Folder automation rules - 2026-10-11
 - [x] Finder Quick Action - 2026-10-10
 - [x] Floating window removal, activity history, JPEG target size - 2026-10-09

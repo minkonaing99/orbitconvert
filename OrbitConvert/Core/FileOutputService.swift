@@ -11,6 +11,7 @@ enum ConversionError: Error, LocalizedError, Equatable, Sendable {
     case invalidDestination
     case invalidQuality
     case imageTooLarge
+    case unsupportedVolume
 
     var errorDescription: String? {
         switch self {
@@ -23,6 +24,7 @@ enum ConversionError: Error, LocalizedError, Equatable, Sendable {
         case .invalidDestination: "Choose an available output folder."
         case .invalidQuality: "JPEG quality must be between 0 and 1."
         case .imageTooLarge: "This image is too large for the selected conversion options."
+        case .unsupportedVolume: "This drive does not support OrbitConvert's safe save method. Choose another folder."
         }
     }
 }
@@ -84,6 +86,7 @@ struct FileOutputService: Sendable {
         switch code {
         case EACCES, EPERM: .permissionDenied
         case ENOENT, ENOTDIR: .invalidDestination
+        case ENOTSUP: .unsupportedVolume
         default: .cannotWriteFile
         }
     }

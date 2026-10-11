@@ -311,6 +311,23 @@ final class AutomationFileOperationsTests: XCTestCase {
         XCTAssertTrue(FileManager.default.fileExists(atPath: source.path))
     }
 
+    func testRenameChangingOnlyLetterCaseKeepsName() async throws {
+        let folder = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let source = folder.appendingPathComponent("photo.jpg")
+        try Data("contents".utf8).write(to: source)
+        let output = try await AutomationFileOperations().rename(source: source, to: "Photo.jpg",
+            expected: FileFingerprint.read(source))
+        XCTAssertEqual(output.lastPathComponent, "Photo.jpg")
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: folder.path), ["Photo.jpg"])
+        XCTAssertEqual(try Data(contentsOf: output), Data("contents".utf8))
+    }
+
+    func testUnsupportedVolumeErrorIsExplained() {
+        XCTAssertEqual(FileOutputService.writeError(for: ENOTSUP), .unsupportedVolume)
+        XCTAssertTrue(ConversionError.unsupportedVolume.localizedDescription.contains("another folder"))
+    }
+
     func testDefaultTrashMovesFileToTrash() throws {
         let folder = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: folder) }

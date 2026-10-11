@@ -66,8 +66,12 @@ nonisolated struct AutomationFileOperations: Sendable {
         guard source.isFileURL else { throw ConversionError.invalidDestination }
         try validate(name)
         try Self.validateAncestors(source)
+        let sourceAccess = source.startAccessingSecurityScopedResource()
         let access = directory.startAccessingSecurityScopedResource()
-        defer { if access { directory.stopAccessingSecurityScopedResource() } }
+        defer {
+            if sourceAccess { source.stopAccessingSecurityScopedResource() }
+            if access { directory.stopAccessingSecurityScopedResource() }
+        }
         try check(source, expected)
         if directory.appendingPathComponent(name).standardizedFileURL == source.standardizedFileURL { return source }
         var suffix = 0
@@ -77,11 +81,13 @@ nonisolated struct AutomationFileOperations: Sendable {
             try await willPublish(output)
             try Task.checkCancellation()
             try check(source, expected)
-            let result = source.path.withCString { old in
-                output.path.withCString { new in renamex_np(old, new, UInt32(RENAME_EXCL)) }
+            let caseOnly = output.lastPathComponent.lowercased() == source.lastPathComponent.lowercased()
+                && isSameFile(output, as: expected) && Self.isCaseInsensitive(directory)
+            let code = caseOnly ? try renameChangingCase(source, to: output) : exclusiveRename(source, to: output)
+            if code == 0 {
+                guard isSameFile(output, as: expected) else { throw WatchError.sourceChanged }
+                return output
             }
-            if result == 0 { return output }
-            let code = errno
             guard code == EEXIST else { throw FileOutputService.writeError(for: code) }
             suffix += 1
         }
@@ -172,6 +178,35 @@ nonisolated struct AutomationFileOperations: Sendable {
             guard code == EEXIST else { throw FileOutputService.writeError(for: code) }
             suffix += 1
         }
+    }
+
+    // Returns 0 or the errno captured right after the call.
+    private func exclusiveRename(_ source: URL, to output: URL) -> Int32 {
+        source.path.withCString { old in
+            output.path.withCString { new in renamex_np(old, new, UInt32(RENAME_EXCL)) == 0 ? 0 : errno }
+        }
+    }
+
+    // On a case-insensitive volume the target name is the source itself; go through a unique name so no step can overwrite.
+    private func renameChangingCase(_ source: URL, to output: URL) throws -> Int32 {
+        let interim = source.deletingLastPathComponent().appendingPathComponent(".orbitconvert-rename-\(UUID().uuidString)")
+        let first = exclusiveRename(source, to: interim)
+        guard first == 0 else { return first }
+        let second = exclusiveRename(interim, to: output)
+        guard second != 0 else { return 0 }
+        guard exclusiveRename(interim, to: source) == 0 else {
+            throw WatchError.recoveryRequired(interim.lastPathComponent)
+        }
+        return second
+    }
+
+    static func isCaseInsensitive(_ directory: URL) -> Bool {
+        (try? directory.resourceValues(forKeys: [.volumeSupportsCaseSensitiveNamesKey]).volumeSupportsCaseSensitiveNames) == false
+    }
+
+    private func isSameFile(_ url: URL, as expected: FileFingerprint) -> Bool {
+        guard let current = try? FileFingerprint.read(url) else { return false }
+        return current.device == expected.device && current.inode == expected.inode
     }
 
     private func candidate(_ name: String, suffix: Int,

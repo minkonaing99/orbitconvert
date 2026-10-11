@@ -253,6 +253,6 @@ Logging categories (os.Logger) when added: FileAccess, Conversion, UI, Permissio
 | Decompression bombs | Pixel/byte caps before decode |
 | Helper processes | Fixed paths, argument arrays, inherited sandbox, restricted environment, bounded stderr |
 
-Known low-severity items from the 2026-10-11 review: a small check-to-remove window before deleting a moved source (`AutomationFileOperations.swift`); the final path component of a copy source should be confirmed non-symlink; Move/Copy destinations can be any user-chosen folder; `scripts/memory-fixtures.swift` defaults to `/tmp`.
+Rule renames use exclusive `renamex_np(RENAME_EXCL)` in place (a case-only change goes through a hidden unique name so no step can overwrite) and verify the renamed file's identity; moves copy, verify and send the source to Trash. Drives without exclusive rename or hard links report a clear unsupported-volume error. Remaining low-severity item: a small check-to-rename window can rename a file swapped in at the same moment (never deletes or overwrites); Move/Copy destinations can be any user-chosen folder.
 
 **Dependency audit.** No package manager. On each helper upgrade verify upstream release hashes, architectures, linked libraries (Pandoc: Apple system libraries only; Ghostscript: libSystem and libiconv), signing, and update licenses and `THIRD-PARTY-NOTICES.txt`. Review GPL/AGPL obligations before distributing a built app.
