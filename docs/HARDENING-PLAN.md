@@ -1,6 +1,6 @@
 # Hardening Plan
 
-Status: In progress. Steps 0-2 closed, step 3 dropped 2026-10-11. Step 4 done. Remaining: 5, 6.
+Status: In progress. Steps 0-2 closed, step 3 dropped 2026-10-11. Steps 4-5 done. Remaining: 6.
 
 Goal: make existing features safe and verified before adding new ones. Order follows risk: data safety first, real-environment verification second, coverage third, cleanup last. The feature freeze lasts until the step 6 direction decision.
 
@@ -24,7 +24,7 @@ Related: [PLAN](PLAN.md) (roadmap and task lists), [TECH](TECH.md) (architecture
 | 2 | Installed signed-app verification | 1-2 days | 1 | Closed 2026-10-11 (owner-reported, not itemized) |
 | 3 | Restore Original (Undo) | - | - | Dropped 2026-10-11 (owner decision) |
 | 4 | Coverage to 80% | ~1 week | 1 | Done 2026-10-11 (80.67%) |
-| 5 | Source structure | 0.5 day | 1 | Not started |
+| 5 | Source structure | 0.5 day | 1 | Done 2026-10-11 |
 | 6 | Product direction decision | Decision | - (before any new feature) | Not started |
 
 ```
@@ -88,10 +88,10 @@ Goal: close the low-severity findings from the 2026-10-11 security review and re
 
 | # | Change | File | Test |
 | --- | --- | --- | --- |
-| 1.1 | After a validated Move, send the source to Trash (`FileManager.trashItem`) instead of `removeItem`, so a wrong deletion is recoverable. Keep the existing fingerprint recheck immediately before | `OrbitConvert/AutomationFileOperations.swift` | Source ends in Trash; changed source between check and removal is kept |
-| 1.2 | Reject a copy/move source whose final path component is a symlink (ancestors are already checked) | `OrbitConvert/AutomationFileOperations.swift` | Symlinked source fails with a clear message; target file untouched |
+| 1.1 | After a validated Move, send the source to Trash (`FileManager.trashItem`) instead of `removeItem`, so a wrong deletion is recoverable. Keep the existing fingerprint recheck immediately before | `OrbitConvert/Automation/AutomationFileOperations.swift` | Source ends in Trash; changed source between check and removal is kept |
+| 1.2 | Reject a copy/move source whose final path component is a symlink (ancestors are already checked) | `OrbitConvert/Automation/AutomationFileOperations.swift` | Symlinked source fails with a clear message; target file untouched |
 | 1.3 | Take the output directory as an argument, defaulting to a per-user temporary directory instead of `/tmp/orbit-memory-fixtures` | `scripts/memory-fixtures.swift` | Manual run with and without argument |
-| 1.4 | Show a visible warning in the rule editor when a Compress action uses Replace Original ("Replaces the file in place. There is no Undo yet.") | `OrbitConvert/AutomationActionEditor.swift` | Editor test: warning present for Replace Original, absent for Keep Both |
+| 1.4 | Show a visible warning in the rule editor when a Compress action uses Replace Original ("Replaces the file in place. There is no Undo yet.") | `OrbitConvert/Automation/AutomationActionEditor.swift` | Editor test: warning present for Replace Original, absent for Keep Both |
 | 1.5 | Point the `MemoryProfilingTests` skip message at an existing doc (`docs/SETUP.md`) | `OrbitConvertTests/MemoryProfilingTests.swift` | Trivial; no test |
 
 Notes:
@@ -209,6 +209,12 @@ Proposed groups (Xcode groups backed by folders):
 
 Done when: build and full suite pass with only file moves in the diff (`git diff -M` shows renames only).
 
+### Step 5 results (2026-10-11)
+
+- 62 Swift files moved with `git mv` into 10 folders (App 4, Core 11, Images 5, PDF 5, Documents 4, Watch 6, Automation 13, Clipboard 6, QuickAction 4, Settings 4). `MenuStatus.swift` went to Watch and `ClipboardSettingsView.swift` to Clipboard. Diff: 62 renames with no content change, plus one `project.pbxproj` path for `QuickActionRequest.swift`, which the extension target references by path.
+- The app target uses an Xcode synced folder group, so no other project edits were needed.
+- Full Release suite: 200 tests, 0 failures, 1 opt-in skip; normal Release build and strict deep signature verification pass. App coverage 80.33% in this run (80.67% before); the small difference comes from timing in async render tests, since no code changed.
+
 ## Step 6: Product direction
 
 Goal: decide what OrbitConvert is before adding features. This is the owner's decision.
@@ -239,5 +245,5 @@ Output: a "Scope rule" section in [PRD](PRD.md) and a reordered roadmap in [PLAN
 - [x] Step 2: installed signed-app verification (owner-reported, not itemized)
 - [x] Step 3: dropped (owner decision 2026-10-11)
 - [x] Step 4: coverage at 80% (80.67%)
-- [ ] Step 5: source structure
+- [x] Step 5: source structure
 - [ ] Step 6: product direction decision

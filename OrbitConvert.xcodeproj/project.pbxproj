@@ -33,7 +33,7 @@
 		000000000000000000000121 /* OrbitConvertTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OrbitConvertTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
         E00000000000000000000001 /* OrbitConvertQuickAction.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; path = OrbitConvertQuickAction.appex; sourceTree = BUILT_PRODUCTS_DIR; };
         E00000000000000000000002 /* ActionRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionRequestHandler.swift; sourceTree = "<group>"; };
-        E00000000000000000000003 /* QuickActionRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrbitConvert/QuickActionRequest.swift; sourceTree = SOURCE_ROOT; };
+        E00000000000000000000003 /* QuickActionRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrbitConvert/QuickAction/QuickActionRequest.swift; sourceTree = SOURCE_ROOT; };
         E00000000000000000000004 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
         E00000000000000000000005 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
         E00000000000000000000006 /* OrbitConvertQuickAction.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OrbitConvertQuickAction.entitlements; sourceTree = "<group>"; };

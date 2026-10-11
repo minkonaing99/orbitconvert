@@ -22,17 +22,21 @@ Deployment target macOS 14.0; bundle IDs `com.example.OrbitConvert`, `.QuickActi
 ## Targets and folder structure
 
 ```
-OrbitConvert/                 App target (SwiftUI app, services, views; flat folder, ~64 files)
-  OrbitConvertApp.swift       Scenes: main Window, Settings, Recent Activity, MenuBarExtra; app delegate
-  Automation*.swift           Folder automation rules, conditions, rename, execution, preview, UI
-  Clipboard*.swift            Clipboard monitor, writer, optimization, result panel, settings
-  Quick*.swift                Finder Quick Action request, controller, service, view
-  *Service.swift              Focused services (intake, type, conversion, optimization, output, watch)
-  *View.swift                 SwiftUI views and sheets
+OrbitConvert/                 App target (62 Swift files in feature folders; Xcode synced folder group)
+  App/                        OrbitConvertApp (scenes, app delegate), AppIdentity, ContentView, ConversionControlsView
+  Core/                       Intake, type detection, actions, selection, output, stability, safe replacement, batches, compression models
+  Images/                     Image conversion, optimization, resize, target size, Oxipng
+  PDF/                        PDF conversion, navigation, optimization, validation, Ghostscript
+  Documents/                  Markdown conversion, PDF renderer, image resources, bundled tool runner
+  Watch/                      FSEvents watcher, watched folder model and controller, auto optimization, menu bar views
+  Automation/                 Rules, conditions, rename templates, execution, file operations, media, preview, editors
+  Clipboard/                  Monitor, writer, optimization, result card, settings
+  QuickAction/                Finder Quick Action request (also compiled into the extension), controller, service, view
+  Settings/                   General and watched-folder settings, resize and target-size sheets
   Assets.xcassets             AppIcon (16-512 pt @1x/@2x), symbols
   OrbitConvert.entitlements   Sandbox, user-selected read/write, app-scope bookmarks
 OrbitConvertQuickAction/      Finder Action extension (ActionRequestHandler, Info.plist, entitlements)
-OrbitConvertTests/            XCTest target (~31 files, 175 test functions)
+OrbitConvertTests/            XCTest target (~36 files, 200 tests)
 Config/OrbitConvert-Info.plist
 ThirdParty/oxipng|pandoc|ghostscript/   Helper binaries/caches, licenses, notices
 scripts/embed-oxipng.sh       Copies and signs helpers during build
@@ -40,7 +44,7 @@ scripts/memory-fixtures.swift Generates memory-profiling fixtures
 docs/                         Project documentation
 ```
 
-Create files when behavior is implemented, not empty folders. Use value types and immutable job inputs. Add protocols only at real interchangeable boundaries.
+Add new files to the matching feature folder; new folders are picked up automatically. `QuickAction/QuickActionRequest.swift` is referenced by path from the extension target in `project.pbxproj`; update that path if it moves. Create files when behavior is implemented, not empty folders. Use value types and immutable job inputs. Add protocols only at real interchangeable boundaries.
 
 ## Data flow
 
