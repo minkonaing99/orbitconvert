@@ -2,7 +2,7 @@
 
 Keep updated. Claude reads this before starting work.
 
-**Current status:** Phases 1-5 and 8-9 delivered; folder automation landed 2026-10-11 (commit `26207d8`). Active focus: Phase 10 release verification and the roadmap below. Next implementation candidate: Restore Original (roadmap stage 1).
+**Current status:** Phases 1-5 and 8-9 delivered; folder automation landed 2026-10-11 (commit `26207d8`). Active focus: [Hardening Plan](HARDENING-PLAN.md) (proposed 2026-10-11): feature freeze, safety fixes, installed-app verification, Restore Original, coverage to 80%. New features wait until its step 3 is done.
 
 ## Phases
 
