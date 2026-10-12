@@ -74,7 +74,7 @@ struct FileAction: Identifiable, Hashable, Sendable {
         if [.jpeg, .png].contains(ConversionFormat.sourceFormat(for: file.contentTypeIdentifier)) {
             actions.append(FileAction(.compress))
         }
-        if ConversionFormat.sourceFormat(for: file.contentTypeIdentifier) == .jpeg {
+        if TargetSizeCompressionService.format(for: file) != nil {
             actions.append(FileAction(.compressToSize))
         }
         if ImageResizeService.supports(file) { actions.append(FileAction(.resize)) }

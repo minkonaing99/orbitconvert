@@ -27,6 +27,7 @@ Entry format: `- **Headline** - what changed + why it matters to the user. (#iss
 
 ### New Features
 
+- **Compress to Size for HEIC and PNG** (2026-10-12) - Compress to Size now works on HEIC and PNG as well as JPEG, and keeps each file's format. PNGs are optimized losslessly first; screenshot PNGs often cannot reach small targets yet, which palette reduction will address.
 - **Rule templates** (2026-10-12) - Add Rule now offers ready-made rules: rename and compress screenshots, make smaller copies of large JPEG photos, add dates to PDFs and compress them, and sort downloads into folders by type. Each opens in the editor for review before saving, and new rules are placed above sorting rules so they are not skipped.
 - **Add whole folders** (2026-10-12) - Drop a folder onto the main window, or pick one with Choose Files, to add all its supported images, PDFs and Markdown files at once (top level only, up to 500). Hidden and partially downloaded files are skipped.
 - **Lifetime savings total** (2026-10-12) - The menu bar and Watched Folders settings show how much space OrbitConvert has saved across launches, including manual and Finder compressions. It starts from your saved history and can be reset in Settings.

@@ -67,17 +67,88 @@ final class TargetSizeCompressionTests: XCTestCase {
         }
     }
 
-    func testActionOnlyAvailableForJPEG() throws {
+    func testActionAvailableForJPEGHEICAndPNGOnly() throws {
         let folder = try folder()
         defer { try? FileManager.default.removeItem(at: folder) }
         let jpeg = try fixture(folder)
-        XCTAssertTrue(FileAction.common(for: [jpeg]).contains(FileAction(.compressToSize)))
-        let png = FileItem(url: jpeg.url, fileName: "fake.png", fileExtension: "png",
-            contentTypeIdentifier: UTType.png.identifier, contentTypeName: "PNG", fileSize: 1,
+        let png = try fixture(folder, type: .png)
+        XCTAssertTrue(FileAction.common(for: [jpeg, png]).contains(FileAction(.compressToSize)))
+        if heicAvailable {
+            XCTAssertTrue(FileAction.common(for: [try fixture(folder, type: .heic)]).contains(FileAction(.compressToSize)))
+        }
+        let tiff = FileItem(url: jpeg.url, fileName: "scan.tiff", fileExtension: "tiff",
+            contentTypeIdentifier: UTType.tiff.identifier, contentTypeName: "TIFF", fileSize: 1,
             creationDate: nil, pixelWidth: 1, pixelHeight: 1, pageCount: nil,
             thumbnailData: Data(), supportedConversions: [])
-        XCTAssertFalse(FileAction.common(for: [jpeg, png]).contains(FileAction(.compressToSize)))
-        XCTAssertThrowsError(try TargetSizeCompressionService().compress(png, in: folder, targetBytes: 100))
+        XCTAssertFalse(FileAction.common(for: [jpeg, tiff]).contains(FileAction(.compressToSize)))
+        XCTAssertThrowsError(try TargetSizeCompressionService().compress(tiff, in: folder, targetBytes: 100))
+    }
+
+    func testHEICMeetsTargetAndStaysHEIC() throws {
+        try XCTSkipUnless(heicAvailable, "HEIC encoder unavailable on this Mac")
+        let folder = try folder()
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let file = try fixture(folder, type: .heic)
+        let original = try Data(contentsOf: file.url)
+        let target = Int64(original.count / 2)
+        let result = try XCTUnwrap(TargetSizeCompressionService().compress(file, in: folder, targetBytes: target).compression)
+        XCTAssertEqual(result.outputURL.pathExtension, "heic")
+        XCTAssertEqual(try outputType(result.outputURL), UTType.heic.identifier)
+        XCTAssertLessThanOrEqual(result.outputBytes, target)
+        XCTAssertEqual(try Data(contentsOf: file.url), original)
+    }
+
+    func testPNGResizesToMeetTargetAndKeepsFormatAndTransparency() throws {
+        let folder = try folder()
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let file = try fixture(folder, width: 2160, height: 1440, type: .png, photoLike: true)
+        let original = try Data(contentsOf: file.url)
+        let target = Int64(original.count) * 7 / 10
+        let report = try TargetSizeCompressionService().compress(file, in: folder, targetBytes: target)
+        let result = try XCTUnwrap(report.compression)
+        XCTAssertEqual(result.outputURL.pathExtension, "png")
+        XCTAssertEqual(try outputType(result.outputURL), UTType.png.identifier)
+        XCTAssertLessThanOrEqual(result.outputBytes, target)
+        let source = try XCTUnwrap(CGImageSourceCreateWithURL(result.outputURL as CFURL, nil))
+        let image = try XCTUnwrap(CGImageSourceCreateImageAtIndex(source, 0, nil))
+        XCTAssertGreaterThanOrEqual(min(image.width, image.height), 1080)
+        XCTAssertFalse([.none, .noneSkipLast, .noneSkipFirst].contains(image.alphaInfo), "Transparency kept")
+        XCTAssertTrue(report.message.contains("PNG"))
+        XCTAssertEqual(try Data(contentsOf: file.url), original)
+    }
+
+    func testPNGUsesLosslessOptimizerBeforeResizing() throws {
+        let folder = try folder()
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let file = try fixture(folder, type: .png)
+        let target = Int64(try Data(contentsOf: file.url).count) * 9 / 10
+        let report = try TargetSizeCompressionService().compress(file, in: folder, targetBytes: target)
+        let result = try XCTUnwrap(report.compression)
+        XCTAssertLessThanOrEqual(result.outputBytes, target)
+        XCTAssertTrue(report.message.contains("dimensions unchanged"), report.message)
+    }
+
+    func testResizedOpaquePNGStaysOpaque() throws {
+        let folder = try folder()
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let file = try fixture(folder, width: 2160, height: 1440, type: .png, photoLike: true, opaque: true)
+        let target = Int64(try Data(contentsOf: file.url).count) * 7 / 10
+        let result = try XCTUnwrap(TargetSizeCompressionService().compress(file, in: folder, targetBytes: target).compression)
+        let image = try XCTUnwrap(CGImageSourceCreateImageAtIndex(
+            try XCTUnwrap(CGImageSourceCreateWithURL(result.outputURL as CFURL, nil)), 0, nil))
+        XCTAssertTrue([.none, .noneSkipLast, .noneSkipFirst].contains(image.alphaInfo), "No alpha channel added")
+    }
+
+    func testPNGUnreachableAndAlreadySmallLeaveNoOutput() throws {
+        let folder = try folder()
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let file = try fixture(folder, type: .png)
+        XCTAssertThrowsError(try TargetSizeCompressionService().compress(file, in: folder, targetBytes: 1)) { error in
+            XCTAssertEqual(error as? TargetSizeError, .unreachable)
+        }
+        let report = try TargetSizeCompressionService().compress(file, in: folder, targetBytes: 1_000_000_000)
+        XCTAssertTrue(report.outputURLs.isEmpty)
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: folder.path), ["photo.png"])
     }
 
     func testMetadataPolicyPreservesOrientation() throws {
@@ -166,20 +237,38 @@ final class TargetSizeCompressionTests: XCTestCase {
         return folder
     }
 
-    private func fixture(_ folder: URL, metadata: Bool = false, width: Int = 320, height: Int = 240) throws -> FileItem {
-        let url = folder.appendingPathComponent("photo.jpg")
+    private var heicAvailable: Bool {
+        (CGImageDestinationCopyTypeIdentifiers() as? [String] ?? []).contains(UTType.heic.identifier)
+    }
+
+    private func outputType(_ url: URL) throws -> String? {
+        CGImageSourceGetType(try XCTUnwrap(CGImageSourceCreateWithURL(url as CFURL, nil))) as String?
+    }
+
+    private func fixture(_ folder: URL, metadata: Bool = false, width: Int = 320, height: Int = 240,
+                         type: UTType = .jpeg, photoLike: Bool = false, opaque: Bool = false) throws -> FileItem {
+        let url = folder.appendingPathComponent("photo." + (type == .jpeg ? "jpg" : type.preferredFilenameExtension ?? "img"))
         let context = try XCTUnwrap(CGContext(data: nil, width: width, height: height, bitsPerComponent: 8,
             bytesPerRow: 0, space: CGColorSpaceCreateDeviceRGB(),
-            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
-        for y in 0..<height {
+            bitmapInfo: (opaque ? CGImageAlphaInfo.noneSkipLast : .premultipliedLast).rawValue))
+        if photoLike {
+            // Smooth gradients behave like photos: fewer pixels means a smaller PNG.
+            let colors = [CGColor(red: 0.9, green: 0.3, blue: 0.1, alpha: 1), CGColor(red: 0.1, green: 0.4, blue: 0.9, alpha: 1)]
+            let gradient = try XCTUnwrap(CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors as CFArray, locations: nil))
+            context.drawLinearGradient(gradient, start: .zero, end: CGPoint(x: width, y: height), options: [])
+            context.drawRadialGradient(gradient, startCenter: CGPoint(x: width / 3, y: height / 2), startRadius: 0,
+                endCenter: CGPoint(x: width / 3, y: height / 2), endRadius: CGFloat(height), options: [])
+            if !opaque { context.clear(CGRect(x: 0, y: 0, width: 8, height: height)) }
+        }
+        for y in 0..<height where !photoLike {
             for x in 0..<width {
                 context.setFillColor(CGColor(red: CGFloat((x * 13 + y * 7) % 256) / 255,
-                    green: CGFloat((x * 3 + y * 17) % 256) / 255, blue: 0.6, alpha: 1))
+                    green: CGFloat((x * 3 + y * 17) % 256) / 255, blue: 0.6, alpha: x < 8 && type == .png ? 0 : 1))
                 context.fill(CGRect(x: x, y: y, width: 1, height: 1))
             }
         }
         let destination = try XCTUnwrap(CGImageDestinationCreateWithURL(url as CFURL,
-            UTType.jpeg.identifier as CFString, 1, nil))
+            type.identifier as CFString, 1, nil))
         var properties: [String: Any] = [kCGImageDestinationLossyCompressionQuality as String: 1.0]
         if metadata {
             properties[kCGImagePropertyOrientation as String] = 6

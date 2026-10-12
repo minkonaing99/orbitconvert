@@ -8,7 +8,7 @@ nonisolated enum TargetSizeError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidTarget: "Enter a target between 1 byte and 1,000 MB."
-        case .unreachable: "Cannot meet this target without going below the 1080 px short-edge minimum, or shrinking an already smaller original. Choose a larger target."
+        case .unreachable: "Cannot meet this target in the same format without going below the 1080 px short-edge minimum, or shrinking an already smaller original. Choose a larger target."
         }
     }
 }
@@ -45,9 +45,7 @@ struct TargetSizeCompressionService: Sendable {
     nonisolated func compress(_ file: FileItem, in directory: URL, targetBytes: Int64,
                               removeMetadata: Bool = false) throws -> FileActionReport {
         guard (1...1_000_000_000).contains(targetBytes) else { throw TargetSizeError.invalidTarget }
-        guard file.url.isFileURL, file.contentTypeIdentifier == UTType.jpeg.identifier else {
-            throw OptimizationError.unsupportedInput
-        }
+        guard file.url.isFileURL, let format = Self.format(for: file) else { throw OptimizationError.unsupportedInput }
         guard directory.isFileURL else { throw ConversionError.invalidDestination }
         let sourceScoped = file.url.startAccessingSecurityScopedResource()
         defer { if sourceScoped { file.url.stopAccessingSecurityScopedResource() } }
@@ -69,25 +67,34 @@ struct TargetSizeCompressionService: Sendable {
         let temporary = try output.makeTemporaryFile(in: directory)
         defer { output.removeTemporaryFile(temporary) }
         let match = try candidate(source, image: image, properties: properties, displaySize: displaySize,
-                                  removeMetadata: removeMetadata, targetBytes: targetBytes, at: temporary)
+                                  removeMetadata: removeMetadata, targetBytes: targetBytes, format: format, at: temporary)
         try Task.checkCancellation()
         let url = try output.publish(temporary, stem: file.url.deletingPathExtension().lastPathComponent + "-target-size",
-                                     fileExtension: "jpg", in: directory)
+                                     fileExtension: format.fileExtension, in: directory)
+        let encoding = match.quality.map { "\($0)% \(format.label) quality" } ?? "lossless \(format.label)"
         return FileActionReport(outputURLs: [url],
-            message: "Saved \(url.lastPathComponent). Within target at \(match.quality)% JPEG quality; \(match.dimensions).",
+            message: "Saved \(url.lastPathComponent). Within target as \(encoding); \(match.dimensions).",
             compression: CompressionResult(originalURL: file.url, outputURL: url,
                 originalBytes: Int64(originalBytes), outputBytes: match.bytes))
     }
 
+    // JPEG and HEIC lower quality first; PNG stays lossless. Every format keeps its type.
+    nonisolated static func format(for file: FileItem) -> ConversionFormat? {
+        guard let format = ConversionFormat.sourceFormat(for: file.contentTypeIdentifier),
+              [.jpeg, .heic, .png].contains(format),
+              (CGImageDestinationCopyTypeIdentifiers() as? [String] ?? []).contains(format.typeIdentifier) else { return nil }
+        return format
+    }
+
     nonisolated private func candidate(_ source: CGImageSource, image: CGImage, properties: [String: Any],
-        displaySize: ResizeDimensions, removeMetadata: Bool, targetBytes: Int64,
-        at url: URL) throws -> (bytes: Int64, quality: Int, dimensions: String) {
+        displaySize: ResizeDimensions, removeMetadata: Bool, targetBytes: Int64, format: ConversionFormat,
+        at url: URL) throws -> (bytes: Int64, quality: Int?, dimensions: String) {
         let outputProperties = removeMetadata ? properties.filter {
             [kCGImagePropertyOrientation as String, kCGImagePropertyDPIWidth as String,
              kCGImagePropertyDPIHeight as String].contains($0.key)
         } : properties
-        if let match = try findCandidate(image, properties: outputProperties, targetBytes: targetBytes, at: url) {
-            try validate(url, image: image, targetBytes: targetBytes)
+        if let match = try findCandidate(image, properties: outputProperties, targetBytes: targetBytes, format: format, at: url) {
+            try validate(url, image: image, targetBytes: targetBytes, format: format)
             return (match.bytes, match.quality, "dimensions unchanged")
         }
         for size in TargetSizeOptions.resizeDimensions(width: displaySize.width, height: displaySize.height) {
@@ -96,8 +103,8 @@ struct TargetSizeCompressionService: Sendable {
                 let prepared = try ImageResizeService().preparedImage(source, properties: properties,
                     dimensions: size, removeMetadata: removeMetadata)
                 guard let match = try findCandidate(prepared.image, properties: prepared.properties,
-                    targetBytes: targetBytes, at: url) else { return nil as (bytes: Int64, quality: Int)? }
-                try validate(url, image: prepared.image, targetBytes: targetBytes)
+                    targetBytes: targetBytes, format: format, at: url) else { return nil as (bytes: Int64, quality: Int?)? }
+                try validate(url, image: prepared.image, targetBytes: targetBytes, format: format)
                 return match
             }
             if let match { return (match.bytes, match.quality, "resized to \(size.width) x \(size.height) px") }
@@ -105,13 +112,18 @@ struct TargetSizeCompressionService: Sendable {
         throw TargetSizeError.unreachable
     }
 
-    nonisolated private func findCandidate(_ image: CGImage, properties: [String: Any],
-        targetBytes: Int64, at url: URL) throws -> (bytes: Int64, quality: Int)? {
+    nonisolated private func findCandidate(_ image: CGImage, properties: [String: Any], targetBytes: Int64,
+        format: ConversionFormat, at url: URL) throws -> (bytes: Int64, quality: Int?)? {
         // shortcut: quality is sampled in 5-point steps; refine only if finer control is needed.
-        for quality in stride(from: 100, through: 0, by: -5) {
+        let qualities: [Int?] = format == .png ? [nil] : Array(stride(from: 100, through: 0, by: -5))
+        for quality in qualities {
             try Task.checkCancellation()
-            try ImageOptimizationService().encodeResized(image, properties: properties, format: .jpeg,
-                preset: .custom, jpegQuality: Double(quality) / 100, to: url)
+            if format == .png {
+                try encodeOptimizedPNG(image, properties: properties, to: url)
+            } else {
+                try ImageOptimizationService().encodeResized(image, properties: properties, format: format,
+                    preset: .custom, jpegQuality: quality.map { Double($0) / 100 }, to: url)
+            }
             guard let size = try FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int64, size > 0 else {
                 throw OptimizationError.cannotEncode
             }
@@ -120,9 +132,19 @@ struct TargetSizeCompressionService: Sendable {
         return nil
     }
 
-    nonisolated private func validate(_ url: URL, image: CGImage, targetBytes: Int64) throws {
+    // ImageIO PNGs are much larger than Oxipng output, so each PNG candidate is optimized losslessly before measuring.
+    nonisolated private func encodeOptimizedPNG(_ image: CGImage, properties: [String: Any], to url: URL) throws {
+        let raw = url.deletingLastPathComponent().appendingPathComponent(UUID().uuidString + ".png")
+        defer { try? FileManager.default.removeItem(at: raw) }
+        try ImageOptimizationService().encodeResized(image, properties: properties, format: .png,
+            preset: .balanced, jpegQuality: nil, to: raw)
+        try? FileManager.default.removeItem(at: url)
+        try OxipngService().optimize(source: raw, destination: url, preset: .balanced)
+    }
+
+    nonisolated private func validate(_ url: URL, image: CGImage, targetBytes: Int64, format: ConversionFormat) throws {
         guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
-              CGImageSourceGetType(source) as String? == UTType.jpeg.identifier,
+              CGImageSourceGetType(source) as String? == format.typeIdentifier,
               CGImageSourceGetCount(source) == 1, CGImageSourceGetStatusAtIndex(source, 0) == .statusComplete,
               let result = CGImageSourceCreateImageAtIndex(source, 0, nil),
               result.width == image.width, result.height == image.height,

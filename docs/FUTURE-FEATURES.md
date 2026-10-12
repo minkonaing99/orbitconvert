@@ -10,7 +10,7 @@ Rules for every feature: TDD, code review (fix CRITICAL/HIGH), security review b
 
 | # | Feature | Side | Effort | Depends on | Status |
 | --- | --- | --- | --- | --- | --- |
-| F1 | Compress to Size for HEIC and PNG | Converter | 1-2 days | F5 for PNG beyond lossless | Proposed |
+| F1 | Compress to Size for HEIC and PNG | Converter | 1-2 days | F5 for PNG beyond lossless | Done 2026-10-12 |
 | F2 | Drag a folder onto the main window | Converter | 0.5-1 day | - | Done 2026-10-12 |
 | F3 | Lifetime "Saved X MB" counter | Both | 0.5 day | - | Done 2026-10-12 |
 | F4 | Rule templates | Automation | 1 day | - | Done 2026-10-12 |
@@ -19,6 +19,8 @@ Rules for every feature: TDD, code review (fix CRITICAL/HIGH), security review b
 Suggested order: F3 (smallest, visible daily) -> F2 -> F4 -> F5 -> F1 (PNG part benefits from F5).
 
 ## F1. Compress to Size for HEIC and PNG
+
+**Done 2026-10-12.** HEIC and PNG keep their format; no JPEG fallback (owner decision). PNG candidates use ImageIO plus Oxipng. Finding: downscaling screenshot-like PNGs usually increases their size, so PNG targets work mainly for photo-like PNGs; F5 should add palette reduction as the first PNG step. Follow-up: faster HEIC quality search.
 
 **Goal:** fit uploads with size limits for HEIC and PNG, not only JPEG.
 

@@ -31,7 +31,7 @@ Public distribution is not prepared. Bundled GPL/AGPL helpers need a separate li
 - Image conversion among PNG, JPEG, HEIC/HEIF and TIFF where an Apple encoder exists; JPEG quality and metadata removal.
 - PDF: image-to-PDF (fit, image size, A4, US Letter), PDF to JPEG/PNG at 72-300 DPI, page/range extraction, merge in selection order.
 - Compress JPEG, PNG, HEIC and PDF (Lossless, Balanced, Maximum); Oxipng for PNG; optional Stronger PDF compression via Ghostscript.
-- Compress to Size for JPEGs (default 2 MB per file, 1080 px short-edge floor).
+- Compress to Size for JPEG, HEIC and PNG, keeping the format (default 2 MB per file, 1080 px short-edge floor).
 - Resize + Optimize (25/50/75%, longest edge 1080/1920, custom bounds).
 - Markdown (`.md`, `.markdown`) export to PDF and DOCX, with optional local images.
 - Watched folders with ordered automation rules (conditions plus Rename, Move, Copy, Compress, Convert, Resize, Remove metadata).
@@ -109,11 +109,11 @@ Decided 2026-10-12: OrbitConvert is **personal use only** (no distribution, no n
 4. Run an action. Files process one at a time. Batches ask for a shared output folder when none is chosen.
 5. Results show output size and savings, with Reveal in Finder. Originals are kept. Existing names get numeric suffixes (`photo-1.jpg`).
 
-**2. Compress to Size (JPEG)**
+**2. Compress to Size (JPEG, HEIC, PNG)**
 
 1. Tools > Compress to Size; enter a limit in decimal KB/MB (1 MB = 1,000,000 bytes, default 2 MB).
-2. The app tries quality 100% down to 0% in 5-point steps, then shrinks dimensions down to a 1080 px short edge (1920 x 1080 for 16:9).
-3. Only a validated JPEG within the limit is saved as `-target-size.jpg`. Already-small files are skipped; unreachable limits report an error.
+2. JPEG and HEIC try quality 100% down to 0% in 5-point steps; PNG is optimized losslessly (Oxipng). Then dimensions shrink down to a 1080 px short edge (1920 x 1080 for 16:9).
+3. Only a validated file of the same format within the limit is saved as `-target-size.jpg`, `.heic` or `.png`. Already-small files are skipped; unreachable limits report an error (no JPEG fallback). Downscaling often does not shrink screenshot PNGs, so they frequently report unreachable until palette reduction (F5).
 
 **3. Resize + Optimize**
 

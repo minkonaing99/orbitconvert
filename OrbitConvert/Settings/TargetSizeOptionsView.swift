@@ -20,9 +20,9 @@ struct TargetSizeOptionsView: View {
                     Text("MB").tag(true)
                 }.frame(width: 110)
             }
-            Text("1 MB = 1,000,000 bytes. Applies to each selected JPEG.")
+            Text("1 MB = 1,000,000 bytes. Applies to each selected JPEG, HEIC or PNG.")
                 .font(.caption).foregroundStyle(.secondary)
-            Text("Lowers JPEG quality first, then resizes if needed. Resizing preserves aspect ratio and keeps the short edge at least 1080 px (1920 x 1080 for 16:9). Smaller originals keep their dimensions.")
+            Text("JPEG and HEIC lower quality first, then resize if needed. PNG stays lossless and can only be resized, which often cannot shrink screenshots. Resizing preserves aspect ratio and keeps the short edge at least 1080 px (1920 x 1080 for 16:9). Smaller originals keep their dimensions; files keep their format.")
                 .font(.callout)
             Text("Saves a separate file. Images already within the limit are left unchanged.")
                 .font(.caption).foregroundStyle(.secondary)
