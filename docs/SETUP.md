@@ -170,6 +170,7 @@ Only these test variables exist; nothing configures the app itself through the e
 
 | Date | Milestone | Tests | Whole-app coverage | Notes |
 | --- | --- | --- | --- | --- |
+| 2026-10-12 | F4 rule templates (Release, arm64) | 219 run, 218 pass, 1 skipped | 80.58% (7896/9799) | Template validity, matching, editor render, rule insertion order |
 | 2026-10-12 | F2 folder intake (Release, arm64) | 210 run, 209 pass, 1 skipped | 80.13% (7759/9683) | Folder expansion, empty and 500-file notices, dedupe |
 | 2026-10-12 | F3 lifetime savings (Release, arm64) | 207 run, 206 pass, 1 skipped | 80.07% (7712/9632) | Persisted total, seeding, manual recording, reset |
 | 2026-10-11 | Cleanups (Release, arm64) | 202 run, 201 pass, 1 skipped | 80.26% (7635/9513) | Case-only rename, unsupported-volume message |

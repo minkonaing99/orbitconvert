@@ -27,7 +27,7 @@ struct AutomationRulesView: View {
             HStack {
                 Text("Rules").font(.headline)
                 Spacer()
-                Button("Add Rule", systemImage: "plus") { editing = AutomationRule() }
+                addRuleMenu
             }
             if folder.effectiveRules.isEmpty {
                 VStack(spacing: 10) {
@@ -101,11 +101,28 @@ struct AutomationRulesView: View {
         }.padding(.vertical, 8)
     }
 
+    private var addRuleMenu: some View {
+        Menu {
+            Button("Blank Rule") { editing = AutomationRule() }
+            Divider()
+            ForEach(AutomationRuleTemplate.allCases.filter { !$0.isSorting }) { template in
+                Button(template.title) { editing = template.makeRule() }
+            }
+            Menu("Sort Downloads") {
+                ForEach(AutomationRuleTemplate.allCases.filter(\.isSorting)) { template in
+                    Button(template.menuTitle) { editing = template.makeRule() }
+                }
+            }
+        } label: {
+            Label("Add Rule", systemImage: "plus")
+        }
+        .fixedSize()
+        .help("Start from a blank rule or a template. Nothing runs until you save.")
+    }
+
     private func saveRule(_ rule: AutomationRule) {
         let rules = folder.effectiveRules
-        save(rules.contains { $0.id == rule.id }
-             ? rules.map { $0.id == rule.id ? rule : $0 }
-             : rules + [rule])
+        save(AutomationRule.inserting(rule, into: rules))
     }
 
     private func save(_ rules: [AutomationRule]) {

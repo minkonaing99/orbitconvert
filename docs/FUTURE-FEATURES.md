@@ -13,7 +13,7 @@ Rules for every feature: TDD, code review (fix CRITICAL/HIGH), security review b
 | F1 | Compress to Size for HEIC and PNG | Converter | 1-2 days | F5 for PNG beyond lossless | Proposed |
 | F2 | Drag a folder onto the main window | Converter | 0.5-1 day | - | Done 2026-10-12 |
 | F3 | Lifetime "Saved X MB" counter | Both | 0.5 day | - | Done 2026-10-12 |
-| F4 | Rule templates | Automation | 1 day | - | Proposed |
+| F4 | Rule templates | Automation | 1 day | - | Done 2026-10-12 |
 | F5 | Palette PNG option (pngquant) | Both | 1-2 days | License check | Proposed |
 
 Suggested order: F3 (smallest, visible daily) -> F2 -> F4 -> F5 -> F1 (PNG part benefits from F5).
@@ -79,6 +79,17 @@ Suggested order: F3 (smallest, visible daily) -> F2 -> F4 -> F5 -> F1 (PNG part 
 **Open question:** include manual (main-window and Quick Action) savings or only automatic ones.
 
 ## F4. Rule templates
+
+**Done 2026-10-12.** `Automation/AutomationRuleTemplates.swift`; "Add Rule" is a menu (Blank Rule, templates, Sort Downloads submenu) that opens the normal editor, so nothing runs until Save. Shipped templates (changed from the proposal after review):
+
+| Template | Conditions | Actions |
+| --- | --- | --- |
+| Screenshots: rename and compress | Name starts with "Screenshot" (English macOS; edit for other languages), file type PNG, name does not contain "-optimized" | Rename `'Screenshot'_yyyy-MM-dd_HH-mm-ss.{ext}`, Compress (Keep Both) |
+| Large JPEG photos: make smaller copy | File type JPEG, width greater than 2560 | Resize to fit 2560 x 2560 (separate `-resized` copy) |
+| PDFs: add date and compress | Category PDF | Rename `yyyy-MM-dd_{name}.{ext}`, Compress (Keep Both) |
+| Sort Downloads: Images / PDFs / Archives / Documents and text files | Category | Move (choose destination before Save) |
+
+New rules without a Move action are inserted above existing Move rules, so sort rules stay last in first-match-wins order. Known behavior: a PDF that already starts with a date gets a second date prefix.
 
 **Goal:** create common rules in one click instead of building them by hand.
 

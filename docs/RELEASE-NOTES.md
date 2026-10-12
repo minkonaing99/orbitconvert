@@ -27,6 +27,7 @@ Entry format: `- **Headline** - what changed + why it matters to the user. (#iss
 
 ### New Features
 
+- **Rule templates** (2026-10-12) - Add Rule now offers ready-made rules: rename and compress screenshots, make smaller copies of large JPEG photos, add dates to PDFs and compress them, and sort downloads into folders by type. Each opens in the editor for review before saving, and new rules are placed above sorting rules so they are not skipped.
 - **Add whole folders** (2026-10-12) - Drop a folder onto the main window, or pick one with Choose Files, to add all its supported images, PDFs and Markdown files at once (top level only, up to 500). Hidden and partially downloaded files are skipped.
 - **Lifetime savings total** (2026-10-12) - The menu bar and Watched Folders settings show how much space OrbitConvert has saved across launches, including manual and Finder compressions. It starts from your saved history and can be reset in Settings.
 - **Folder automation rules** (2026-10-11) - Each watched folder can run ordered rules on new files: match on name, extension, category, size, dates, image size, Finder tags or document text, then Rename (date/name/number templates), Move, Copy, Compress, Convert, Resize or Remove metadata. Test Rule and Run Now preview changes before anything happens, failed steps can be retried, and OrbitConvert's own outputs never trigger other folders. Existing compression settings migrate to an equivalent rule.
