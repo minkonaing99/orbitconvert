@@ -144,4 +144,4 @@ Possible additions, to decide before building:
 | C. Folder-level triggers | Conditions on folder state (e.g. folder over 2 GB, file older than 30 days) | New condition types; deletion-like actions stay excluded |
 | D. Keep as is | New arrivals only | None |
 
-Owner to choose before any automation work beyond F4.
+**Decision 2026-10-12: D, keep as is.** New-arrival triggering already covers the main use (screenshots saved to a dedicated watched folder run a rule automatically; the owner has this set up). Revisit A-C only if a concrete need appears.
