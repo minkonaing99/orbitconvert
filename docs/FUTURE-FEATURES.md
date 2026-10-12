@@ -15,6 +15,9 @@ Rules for every feature: TDD, code review (fix CRITICAL/HIGH), security review b
 | F3 | Lifetime "Saved X MB" counter | Both | 0.5 day | - | Done 2026-10-12 |
 | F4 | Rule templates | Automation | 1 day | - | Done 2026-10-12 |
 | F5 | Palette PNG option (pngquant) | Both | 1-2 days | License check | Done 2026-10-12 |
+| F6 | JPEG: skip re-encoding already-compressed files | Both | 1 day | - | Proposed |
+| F7 | JPEG lossless optimization (mozjpeg jpegtran) | Both | 1-2 days | Binary/license check | Proposed |
+| F8 | Palette PNG levels: Safe and Smaller | Both | 0.5 day | F5 | Proposed |
 
 Suggested order: F3 (smallest, visible daily) -> F2 -> F4 -> F5 -> F1 (PNG part benefits from F5).
 
@@ -134,6 +137,43 @@ New rules without a Move action are inserted above existing Move rules, so sort 
 **Files:** new `Images/PngquantService.swift`, `Images/ImageOptimizationService.swift`, `Core/CompressionModels.swift`, settings and rule editor options, `scripts/embed-oxipng.sh` (embed step), `ThirdParty/pngquant/`, setup instructions in `docs/SETUP.md`, provenance in `docs/TECH.md`.
 
 **Tests:** screenshot and gradient fixtures shrink; transparency visually kept; exit 99 skipped; corrupt output rejected; missing helper reported; timeout and cancellation; option off = current lossless behavior unchanged.
+
+## F6. JPEG: skip re-encoding already-compressed files
+
+**Goal:** stop making JPEGs bigger and worse. Today Compress re-encodes every JPEG at 0.85 (Balanced) or 0.70 (Maximum), even when the file is already at a lower quality. Clop's `jpegoptim --max 85` only re-encodes when the estimated quality is above the cap.
+
+**Behavior:**
+
+- Estimate the source JPEG quality from its quantization tables (standard IJG scaling; no decode needed).
+- If the estimate is at or below the preset's quality, do not re-encode; only lossless optimization (F7, once available) can run. Report "Already compressed at about N% quality".
+- Otherwise re-encode as today; the existing "publish only if smaller" check stays.
+- Applies to Compress, batch, watched-folder and Quick Action JPEG paths (they share `ImageOptimizationService`). Compress to Size is unchanged (it searches quality to hit a byte limit).
+
+**Files:** new `Images/JPEGQualityEstimator.swift`, `Images/ImageOptimizationService.swift`, tests.
+
+**Tests:** estimates within a few points for JPEGs written at 50/70/85/95; already-low JPEG is not re-encoded and reports why; high-quality JPEG still compresses; corrupt/missing tables fall back to today's behavior.
+
+## F7. JPEG lossless optimization (mozjpeg jpegtran)
+
+**Goal:** 5-15% smaller JPEGs with zero quality change, for every JPEG (including ones F6 skips).
+
+**Behavior:** run `jpegtran -copy all -optimize -progressive` (mozjpeg build) on the source or the re-encoded candidate; keep it only if smaller and the decoded pixels are identical. Metadata is kept unless Remove metadata is on (`-copy none`).
+
+**Open before building:** source of a self-contained universal `jpegtran` binary (mozjpeg is BSD/IJG-licensed; check official releases vs a local build), same local-cache pattern and hash recording as pngquant.
+
+**Files:** new `Images/JpegtranService.swift`, `scripts/embed-oxipng.sh`, `ThirdParty/mozjpeg/`, `Images/ImageOptimizationService.swift`, docs (SETUP, TECH provenance).
+
+**Tests:** smaller with identical pixels; metadata kept/removed per setting; progressive output decodes; helper missing or failing falls back.
+
+## F8. Palette PNG levels: Safe and Smaller
+
+**Goal:** let screenshots shrink further when slight color changes are acceptable.
+
+**Behavior:** replace the on/off "Reduce PNG colors" with Off / Safe (quality 80-100, today) / Smaller (quality 60-100). Existing "on" maps to Safe. Same fallbacks and metadata note as F5.
+
+**Files:** `Images/PngquantService.swift` (quality parameter), settings view, `QuickCompressionSettings`, `FileActionSettings`, `docs/SCHEMA.md`.
+
+**Tests:** Smaller produces a palette file where Safe skips (fixture between the two floors); migration from the old Bool; Off unchanged.
 
 ## Open: "watch folder changes"
 

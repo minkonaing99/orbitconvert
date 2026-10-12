@@ -140,6 +140,7 @@ Next:
 
 ### Backlog
 
+- [ ] F6-F8 Clop-parity compression (JPEG skip re-encode, jpegtran lossless, palette levels) in [FUTURE-FEATURES](FUTURE-FEATURES.md) - owner TBD
 - [ ] Stage 0 benchmark fixtures - owner TBD
 - [ ] Stage 6 (Markdown math and Mermaid) - owner TBD
 - [ ] Large-image and large-PDF memory profiling - owner TBD
