@@ -19,10 +19,11 @@ nonisolated enum DocumentConversionError: Error, LocalizedError {
 struct BundledDocumentTool: Sendable {
     nonisolated init() {}
 
+    @discardableResult
     nonisolated func run(_ name: String, arguments: [String], in directory: URL,
-                         timeout: Duration = .seconds(60)) throws {
+                         timeout: Duration = .seconds(60), acceptedStatuses: Set<Int32> = [0]) throws -> Int32 {
         let executable = Bundle.main.bundleURL.appendingPathComponent("Contents/Helpers/" + name)
-        guard ["pandoc", "gs"].contains(name), FileManager.default.isExecutableFile(atPath: executable.path) else {
+        guard ["pandoc", "gs", "pngquant"].contains(name), FileManager.default.isExecutableFile(atPath: executable.path) else {
             throw DocumentConversionError.unavailableTool
         }
         try Task.checkCancellation()
@@ -52,9 +53,10 @@ struct BundledDocumentTool: Sendable {
             }
         }
         try Task.checkCancellation()
-        guard process.terminationReason == .exit, process.terminationStatus == 0 else {
+        guard process.terminationReason == .exit, acceptedStatuses.contains(process.terminationStatus) else {
             throw DocumentConversionError.toolFailed
         }
+        return process.terminationStatus
     }
 
     nonisolated static func workspace() throws -> URL {

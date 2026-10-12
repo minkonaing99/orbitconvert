@@ -14,7 +14,7 @@ Rules for every feature: TDD, code review (fix CRITICAL/HIGH), security review b
 | F2 | Drag a folder onto the main window | Converter | 0.5-1 day | - | Done 2026-10-12 |
 | F3 | Lifetime "Saved X MB" counter | Both | 0.5 day | - | Done 2026-10-12 |
 | F4 | Rule templates | Automation | 1 day | - | Done 2026-10-12 |
-| F5 | Palette PNG option (pngquant) | Both | 1-2 days | License check | Proposed |
+| F5 | Palette PNG option (pngquant) | Both | 1-2 days | License check | Done 2026-10-12 |
 
 Suggested order: F3 (smallest, visible daily) -> F2 -> F4 -> F5 -> F1 (PNG part benefits from F5).
 
@@ -114,6 +114,8 @@ New rules without a Move action are inserted above existing Move rules, so sort 
 **Open question:** Screenshots template default - Keep Both (safe) or Replace Original (saves space). Recommendation: Keep Both.
 
 ## F5. Palette PNG option (pngquant)
+
+**Done 2026-10-12.** Official pngquant 3.0.3 universal binary, local-only like Pandoc (owner decision), quality 80-100 (owner decision). "Reduce PNG colors" in General settings, off by default; applies to manual Compress, Compress to Size (tried first for PNG) and the Finder Quick Action. Watched folders and clipboard stay lossless for now. Palette output is sRGB and drops metadata, which the setting text states.
 
 **Goal:** much smaller screenshots and graphics (often 60-80%) by reducing colors.
 

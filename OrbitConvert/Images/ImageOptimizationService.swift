@@ -20,7 +20,8 @@ struct ImageOptimizationService: Sendable {
     nonisolated func optimize(_ file: FileItem, in directory: URL,
                               preset: CompressionPreset = .balanced,
                               jpegQuality: Double? = nil,
-                              removeMetadata: Bool = false) throws -> OptimizationOutcome {
+                              removeMetadata: Bool = false,
+                              palette: Bool = false) throws -> OptimizationOutcome {
         guard let format = ConversionFormat.sourceFormat(for: file.contentTypeIdentifier),
               [.jpeg, .png, .heic].contains(format) else { throw OptimizationError.unsupportedInput }
         guard Set(CGImageDestinationCopyTypeIdentifiers() as? [String] ?? []).contains(format.typeIdentifier) else {
@@ -42,13 +43,8 @@ struct ImageOptimizationService: Sendable {
         let temporary = try output.makeTemporaryFile(in: directory)
         defer { output.removeTemporaryFile(temporary) }
         if format == .png {
-            if removeMetadata {
-                let stripped = temporary.deletingLastPathComponent().appendingPathComponent("stripped.png")
-                try encode(source, to: stripped, format: format, quality: nil, removeMetadata: true)
-                try OxipngService().optimize(source: stripped, destination: temporary, preset: preset)
-            } else {
-                try OxipngService().optimize(source: file.url, destination: temporary, preset: preset)
-            }
+            try encodePNG(file.url, source: source, to: temporary, preset: preset,
+                          removeMetadata: removeMetadata, palette: palette)
         } else {
             try encode(source, to: temporary, format: format, quality: quality, removeMetadata: removeMetadata)
         }
@@ -70,6 +66,30 @@ struct ImageOptimizationService: Sendable {
         let url = try output.publish(temporary, stem: stem, fileExtension: format.fileExtension, in: directory)
         return .saved(CompressionResult(originalURL: file.url, outputURL: url,
                                         originalBytes: Int64(originalSize), outputBytes: Int64(candidateSize)))
+    }
+
+    nonisolated private func encodePNG(_ url: URL, source: CGImageSource, to temporary: URL,
+                                       preset: CompressionPreset, removeMetadata: Bool, palette: Bool) throws {
+        if palette, try paletteCandidate(url, to: temporary, preset: preset, removeMetadata: removeMetadata) { return }
+        if removeMetadata {
+            let stripped = temporary.deletingLastPathComponent().appendingPathComponent("stripped.png")
+            try encode(source, to: stripped, format: .png, quality: nil, removeMetadata: true)
+            try OxipngService().optimize(source: stripped, destination: temporary, preset: preset)
+        } else {
+            try OxipngService().optimize(source: url, destination: temporary, preset: preset)
+        }
+    }
+
+    // Palette output drops metadata, so content credentials still require an explicit Remove metadata choice.
+    // Returns false when pngquant skips the file, so the lossless path runs instead.
+    nonisolated private func paletteCandidate(_ url: URL, to temporary: URL, preset: CompressionPreset,
+                                              removeMetadata: Bool) throws -> Bool {
+        if !removeMetadata { try OxipngService().validateRewrite(of: url) }
+        let quantized = temporary.deletingLastPathComponent().appendingPathComponent("palette.png")
+        defer { try? FileManager.default.removeItem(at: quantized) }
+        guard try PngquantService().quantize(url, to: quantized) else { return false }
+        try OxipngService().optimize(source: quantized, destination: temporary, preset: preset)
+        return true
     }
 
     nonisolated private func resolvedQuality(for format: ConversionFormat,

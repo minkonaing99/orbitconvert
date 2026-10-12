@@ -134,7 +134,7 @@ Next:
 
 ### In Progress
 
-- [ ] Next: F5 (palette PNG, also the first step of PNG Compress to Size) in [FUTURE-FEATURES](FUTURE-FEATURES.md) - owner TBD
+- [ ] Optional: palette PNG for watched-folder and clipboard compression (currently manual only) - owner TBD
 - [ ] Faster HEIC quality search in Compress to Size (up to 21 encodes per size level) - owner TBD
 - [ ] Installed-app check: Choose Files with a folder, then convert a file from it (sandbox access for folder contents) - owner
 
@@ -146,6 +146,7 @@ Next:
 
 ### Done
 
+- [x] F5 palette PNG (pngquant), opt-in - 2026-10-12
 - [x] F1 Compress to Size for HEIC and PNG - 2026-10-12
 - [x] F4 rule templates - 2026-10-12
 - [x] F2 folder drop and folder selection in the main window - 2026-10-12

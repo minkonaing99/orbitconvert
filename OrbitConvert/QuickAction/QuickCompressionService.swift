@@ -23,14 +23,17 @@ nonisolated enum QuickCompressionMode: String, CaseIterable, Identifiable {
 nonisolated struct QuickCompressionSettings: Sendable {
     let preset: CompressionPreset
     let removeMetadata: Bool
-    init(preset: CompressionPreset = .balanced, removeMetadata: Bool = false) {
+    let palette: Bool
+    init(preset: CompressionPreset = .balanced, removeMetadata: Bool = false, palette: Bool = false) {
         self.preset = preset
         self.removeMetadata = removeMetadata
+        self.palette = palette
     }
     init(defaults: UserDefaults) {
         let saved = CompressionPreset(rawValue: defaults.string(forKey: "defaultCompressionPreset") ?? "")
         preset = saved == .custom ? .balanced : saved ?? .balanced
         removeMetadata = defaults.bool(forKey: "removeMetadata")
+        palette = defaults.bool(forKey: "paletteReduction")
     }
 }
 
@@ -79,7 +82,7 @@ struct QuickCompressionService: Sendable {
         let temporary = try FileOutputService().makeTemporaryFile(in: FileManager.default.temporaryDirectory)
         defer { FileOutputService().removeTemporaryFile(temporary) }
         let outcome = try ImageOptimizationService().optimize(file, in: temporary.deletingLastPathComponent(),
-            preset: settings.preset, removeMetadata: settings.removeMetadata)
+            preset: settings.preset, removeMetadata: settings.removeMetadata, palette: settings.palette)
         guard case .saved(let result) = outcome else { return nil }
         try Task.checkCancellation()
         let output: URL

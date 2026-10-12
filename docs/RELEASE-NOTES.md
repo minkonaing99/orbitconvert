@@ -27,6 +27,7 @@ Entry format: `- **Headline** - what changed + why it matters to the user. (#iss
 
 ### New Features
 
+- **Smaller PNG screenshots** (2026-10-12) - Turn on "Reduce PNG colors" in General settings to shrink screenshots and graphics much further (often 50-80%) when quality stays high. Works with Compress, Compress to Size and the Finder Quick Action. Colors are converted to sRGB and hidden file details are removed; off by default.
 - **Compress to Size for HEIC and PNG** (2026-10-12) - Compress to Size now works on HEIC and PNG as well as JPEG, and keeps each file's format. PNGs are optimized losslessly first; screenshot PNGs often cannot reach small targets yet, which palette reduction will address.
 - **Rule templates** (2026-10-12) - Add Rule now offers ready-made rules: rename and compress screenshots, make smaller copies of large JPEG photos, add dates to PDFs and compress them, and sort downloads into folders by type. Each opens in the editor for review before saving, and new rules are placed above sorting rules so they are not skipped.
 - **Add whole folders** (2026-10-12) - Drop a folder onto the main window, or pick one with Choose Files, to add all its supported images, PDFs and Markdown files at once (top level only, up to 500). Hidden and partially downloaded files are skipped.

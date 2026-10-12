@@ -6,6 +6,7 @@ struct CompressionSettingsView: View {
     @AppStorage("jpegExportQuality") private var jpegExportQuality = 0.90
     @AppStorage("pdfImageDPI") private var pdfImageDPI = 150
     @AppStorage("removeMetadata") private var removeMetadata = false
+    @AppStorage("paletteReduction") private var paletteReduction = false
 
     var body: some View {
         TabView {
@@ -55,6 +56,14 @@ struct CompressionSettingsView: View {
                 Text("Lossless keeps image quality and is unavailable for JPEG images.")
                     .font(.caption).foregroundStyle(.secondary)
             }
+            Toggle(isOn: $paletteReduction) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Reduce PNG colors (smaller screenshots)")
+                    Text("Uses a limited color palette when it keeps quality high, often making screenshots 50-80% smaller. Colors are converted to sRGB and hidden file details are removed. Applies to Compress, Compress to Size and the Finder Quick Action.")
+                        .font(.caption).foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }.toggleStyle(.switch)
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
                     Text("JPEG output quality")

@@ -49,6 +49,21 @@ gzip -n -c bin/gs > "$repositoryRoot/ThirdParty/ghostscript/gs.gz"
 cd "$repositoryRoot"
 ```
 
+Then the palette PNG helper (official pngquant 3.0.3 universal macOS binary, GPL v3):
+
+```sh
+cd "$toolWorkspace"
+curl --fail --location --output pngquant.tar.bz2 https://pngquant.org/pngquant.tar.bz2
+printf '%s  %s\n' 68c32e4988d3f99f79f0642a94900756b7a2a463166067c5862826ced1e0ce1e pngquant.tar.bz2 | shasum -a 256 -c -
+tar -xjf pngquant.tar.bz2
+printf '%s  %s\n' 00d3e980ab3c3c39a9df1069b406f4e5013b97394988f66d8356d4d7d05f011c pngquant | shasum -a 256 -c -
+codesign -dv pngquant 2>&1 | grep -q 'TeamIdentifier=59KZTZA4XR' && echo "Developer ID OK"
+gzip -n -c pngquant > "$repositoryRoot/ThirdParty/pngquant/pngquant.gz"
+cd "$repositoryRoot"
+```
+
+pngquant.org publishes no separate checksum; the hashes above were recorded on 2026-10-12. If upstream updates the unversioned download, verification fails; re-inspect the new binary (`lipo -archs`, `otool -L`, `codesign -dv`) before updating the hashes.
+
 If any command fails, stop rather than continuing with partial assets. Xcode builds decompress and sign the helpers inside the app. Remove the temporary workspace after success; keep upstream source if preparing a distribution. A locally rebuilt executable can differ from the recorded hash. Provenance is in [TECH](TECH.md#bundled-helpers).
 
 This setup is for personal builds. It does not establish license compliance for distributing a built app; review GPL/AGPL source and notice obligations first ([GNU license FAQ](https://www.gnu.org/licenses/gpl-faq.en.html), [Ghostscript license](https://ghostscript.com/faq/)).
@@ -170,6 +185,7 @@ Only these test variables exist; nothing configures the app itself through the e
 
 | Date | Milestone | Tests | Whole-app coverage | Notes |
 | --- | --- | --- | --- | --- |
+| 2026-10-12 | F5 palette PNG (Release, arm64) | 230 run, 229 pass, 1 skipped | 80.80% (8018/9923) | Real pngquant helper: palette output, skip below quality floor, optimizer and target-size integration |
 | 2026-10-12 | F1 target size HEIC/PNG (Release, arm64) | 224 run, 223 pass, 1 skipped | 80.63% (7919/9821) | HEIC/PNG formats, Oxipng candidates, opaque PNG |
 | 2026-10-12 | F4 rule templates (Release, arm64) | 219 run, 218 pass, 1 skipped | 80.58% (7896/9799) | Template validity, matching, editor render, rule insertion order |
 | 2026-10-12 | F2 folder intake (Release, arm64) | 210 run, 209 pass, 1 skipped | 80.13% (7759/9683) | Folder expansion, empty and 500-file notices, dedupe |

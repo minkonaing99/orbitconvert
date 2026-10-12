@@ -211,6 +211,8 @@
 				"$(SRCROOT)/ThirdParty/ghostscript/gs.gz",
 				"$(SRCROOT)/ThirdParty/ghostscript/LICENSE",
 				"$(SRCROOT)/ThirdParty/ghostscript/THIRD-PARTY-NOTICES.txt",
+				"$(SRCROOT)/ThirdParty/pngquant/pngquant.gz",
+				"$(SRCROOT)/ThirdParty/pngquant/LICENSE",
 			);
 			name = "Embed PNG optimizer";
 			outputPaths = (
@@ -225,6 +227,9 @@
 				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/pandoc-LICENSE.txt",
 				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/ghostscript-LICENSE.txt",
 				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/ghostscript-THIRD-PARTY-NOTICES.txt",
+				"$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Helpers/pngquant",
+				"$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Helpers/pngquant.cstemp",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/pngquant-LICENSE.txt",
 			);
 			shellPath = /bin/sh;
 			shellScript = (

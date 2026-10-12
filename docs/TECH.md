@@ -83,6 +83,14 @@ Add new files to the matching feature folder; new folders are picked up automati
 - Limits: 256 MB compressed/decompressed, 100,000 chunks. Candidate fully decoded by ImageIO and published only if smaller.
 - Measured sample (one 1120 x 2048 screenshot, 651,432 bytes): ImageIO re-encode 652,127 (larger); Oxipng Lossless 379,856 (41.7%), Balanced 375,926 (42.3%, ~0.74 s, identical pixels), Maximum 370,844 (43.1%). Single sample, not a general guarantee.
 
+### Palette PNG: pngquant
+
+- Opt-in (`paletteReduction`, off by default) for manual Compress, Compress to Size and the Finder Quick Action; watched folders and clipboard stay lossless.
+- `PngquantService` runs the bundled helper through `BundledDocumentTool` in a private job directory with generated names: `--quality=80-100 --speed 3 --skip-if-larger`. Exit 99 (quality floor not met) and 98 (not smaller) mean skipped; the lossless Oxipng path then runs.
+- The palette result is optimized with Oxipng and validated like any PNG candidate. Measured on a 1200 x 800 screenshot-like PNG: 29.8 KB to 6.7 KB.
+- Inputs over 256 MB or 100 megapixels (checked from IHDR before the helper runs), helper failures and a missing helper all count as "skipped" and fall back to lossless; cancellation still stops the job.
+- The macOS build converts colors to sRGB (rendered pixels compared identical for in-gamut colors) and drops metadata chunks (ICC, EXIF, text). With Remove metadata off, content-credential PNGs are still refused before pngquant runs, in both Compress and Compress to Size; other metadata is removed by design and the setting says so.
+
 ### PDF
 
 - PDFKit: image-to-PDF (fit, image size, A4, Letter), extraction without rasterizing, merge in selection order. Core Graphics renders pages to JPEG/PNG at 72/100/150/200/300 DPI, rejecting pages over 100 million output pixels, drawing visible annotations after content.
@@ -149,6 +157,7 @@ All helpers use fixed bundle paths, `Process.arguments` (no shell, no PATH looku
 | --- | --- | --- |
 | Oxipng | 10.2.1, universal (lipo of official arm64 + x86_64) | aarch64 tarball `7039fcfc78e8aa1ed2b57d848057a0296f082e92b3e1807ac65402d10d926764`; x86_64 tarball `111883bbe42b25e01cb1ca41f39f8094e4830b173f0e42be342ecc4ca48f3131`; combined binary before signing `3075732d53c63423b66fe6fcd4a0c3a7d8d0ed3c104cce28798512518b012647`. Committed. Notices cover all 75 crates in the pinned Cargo.lock |
 | Pandoc | 3.12, arm64 | `pandoc-3.12-arm64-macOS.zip` `f148ca09c9f36594db527a9fc988ad736290ce428f79594c50208cd1ec58b3c0`; executable `944a597887d68721af64673df44b366905f1771307bbb57615b299d0cb9245f4`. Gzip cache not committed |
+| pngquant | 3.0.3, universal (official macOS build) | `https://pngquant.org/pngquant.tar.bz2` `68c32e4988d3f99f79f0642a94900756b7a2a463166067c5862826ced1e0ce1e`; executable `00d3e980ab3c3c39a9df1069b406f4e5013b97394988f66d8356d4d7d05f011c`; Developer ID team 59KZTZA4XR; links only system libraries; GPL v3. Gzip cache not committed; publisher provides no checksum |
 | Ghostscript | 10.08.0, arm64, built locally | `ghostscript-10.08.0.tar.gz` `caf199e3f233f1290b27d0972d636f66c303355f2353309b7bfddf1edda06b3d`; executable `a94e0278a8dc5977f9d3c31fc44da5ee2e7e502c208ada974b99dc52692d410e`. Gzip cache not committed |
 
 Pandoc and Ghostscript add about 206 MB to the built app (about 55 MB compressed caches). Build steps are in [SETUP](SETUP.md). Do not replace a binary without verifying source, architectures, dependencies and signing.

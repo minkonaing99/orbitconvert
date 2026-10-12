@@ -6,6 +6,7 @@ struct FileActionSettings: Sendable {
     var markdownImageFolder: URL? = nil
     var markdownPDFStyle = MarkdownPDFStyle()
     var strongerPDFCompression = false
+    var palettePNG = false
     let jpegQuality: Double
     let stripMetadata: Bool
     let compressionPreset: CompressionPreset
@@ -28,9 +29,9 @@ struct FileActionService: Sendable {
                              progress: @Sendable (String) -> Void = { _ in }) async throws -> FileActionReport {
         switch action.kind {
         case .compressToSize:
-            progress("Finding JPEG quality for target size...")
+            progress("Finding a size that fits the target...")
             return try TargetSizeCompressionService().compress(file, in: directory,
-                targetBytes: settings.targetBytes, removeMetadata: settings.stripMetadata)
+                targetBytes: settings.targetBytes, removeMetadata: settings.stripMetadata, palette: settings.palettePNG)
         case .resize:
             progress("Resizing and optimizing...")
             let outcome = try ImageResizeService().resize(
@@ -92,7 +93,8 @@ struct FileActionService: Sendable {
             } else {
                 outcome = try ImageOptimizationService().optimize(
                     file, in: directory, preset: settings.compressionPreset,
-                    jpegQuality: settings.jpegQuality, removeMetadata: settings.stripMetadata
+                    jpegQuality: settings.jpegQuality, removeMetadata: settings.stripMetadata,
+                    palette: settings.palettePNG
                 )
             }
             switch outcome {
