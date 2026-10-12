@@ -134,7 +134,8 @@ Next:
 
 ### In Progress
 
-- [ ] Next: F2, F4, F5, F1 in [FUTURE-FEATURES](FUTURE-FEATURES.md) - owner TBD
+- [ ] Next: F4, F5, F1 in [FUTURE-FEATURES](FUTURE-FEATURES.md) - owner TBD
+- [ ] Installed-app check: Choose Files with a folder, then convert a file from it (sandbox access for folder contents) - owner
 
 ### Backlog
 
@@ -144,6 +145,7 @@ Next:
 
 ### Done
 
+- [x] F2 folder drop and folder selection in the main window - 2026-10-12
 - [x] F3 lifetime savings counter - 2026-10-12
 - [x] Installed-app checks on the 2.0 build (owner-verified) and product direction decided - 2026-10-12
 - [x] Cleanups: README limitations, folder automation release note, rename follow-ups (case-only rename, post-rename identity check, source access, unsupported-volume message) - 2026-10-11

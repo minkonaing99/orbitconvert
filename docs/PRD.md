@@ -103,7 +103,7 @@ Decided 2026-10-12: OrbitConvert is **personal use only** (no distribution, no n
 
 **1. Manual conversion and tools**
 
-1. Drop files into the main window, or use Add Files / Choose Files.
+1. Drop files or a folder into the main window, or use Add Files / Choose Files (folders add their top-level supported files, up to 500).
 2. The app validates each file and shows a compact selectable row with a thumbnail, type, size and dimensions. Invalid files show individual errors; valid ones stay selected.
 3. Check the files to act on. The shared action area shows only actions every checked file supports: a primary Compress button, a format picker, a Tools menu and collapsed Options.
 4. Run an action. Files process one at a time. Batches ask for a shared output folder when none is chosen.

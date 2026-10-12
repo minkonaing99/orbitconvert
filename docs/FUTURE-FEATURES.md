@@ -11,7 +11,7 @@ Rules for every feature: TDD, code review (fix CRITICAL/HIGH), security review b
 | # | Feature | Side | Effort | Depends on | Status |
 | --- | --- | --- | --- | --- | --- |
 | F1 | Compress to Size for HEIC and PNG | Converter | 1-2 days | F5 for PNG beyond lossless | Proposed |
-| F2 | Drag a folder onto the main window | Converter | 0.5-1 day | - | Proposed |
+| F2 | Drag a folder onto the main window | Converter | 0.5-1 day | - | Done 2026-10-12 |
 | F3 | Lifetime "Saved X MB" counter | Both | 0.5 day | - | Done 2026-10-12 |
 | F4 | Rule templates | Automation | 1 day | - | Proposed |
 | F5 | Palette PNG option (pngquant) | Both | 1-2 days | License check | Proposed |
@@ -38,6 +38,8 @@ Suggested order: F3 (smallest, visible daily) -> F2 -> F4 -> F5 -> F1 (PNG part 
 **Open question:** offer the "convert to JPEG if needed" fallback or not.
 
 ## F2. Drag a folder onto the main window
+
+**Done 2026-10-12.** `Core/FileIntakeService.swift` expands dropped or chosen folders to their top-level PNG, JPEG, HEIC/HEIF, TIFF, PDF and Markdown files, sorted by name, using the watched-folder skip rules; capped at 500 with a notice; empty folders report a notice; duplicates across inputs are removed. Choose Files accepts folders. Decision: top level only (subfolders not included). Folder access is kept for the session so the files inside stay readable; confirm Choose Files with a folder in the installed signed app.
 
 **Goal:** drop a folder and get all its supported files, instead of selecting files one by one.
 

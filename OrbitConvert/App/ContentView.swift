@@ -46,7 +46,7 @@ struct ContentView: View {
                 HStack {
                     Text("\(selectedFiles.count) selected · \(ByteCountFormatter.string(fromByteCount: selectedFiles.reduce(0) { $0 + $1.fileSize }, countStyle: .file))")
                     Spacer()
-                    Text("Drop more files anywhere").foregroundStyle(.tertiary)
+                    Text("Drop more files or folders anywhere").foregroundStyle(.tertiary)
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -87,7 +87,7 @@ struct ContentView: View {
                 SettingsLink { Label("Settings", systemImage: "gearshape") }
             }
         }
-        .fileImporter(isPresented: $isImporting, allowedContentTypes: [.item], allowsMultipleSelection: true) { result in
+        .fileImporter(isPresented: $isImporting, allowedContentTypes: [.item, .folder], allowsMultipleSelection: true) { result in
             switch result {
             case .success(let urls):
                 issues = []
@@ -102,7 +102,7 @@ struct ContentView: View {
         VStack(spacing: 16) {
             Image(systemName: "square.and.arrow.down")
                 .font(.system(size: 42, weight: .ultraLight)).accessibilityHidden(true)
-            Text("Drop files here").font(.title2.weight(.semibold))
+            Text("Drop files or a folder here").font(.title2.weight(.semibold))
             Text("Convert images and PDFs, or reduce their file size.")
                 .foregroundStyle(.secondary)
             Button("Choose Files") { isImporting = true }.buttonStyle(.borderedProminent)
