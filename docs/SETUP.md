@@ -185,6 +185,7 @@ Only these test variables exist; nothing configures the app itself through the e
 
 | Date | Milestone | Tests | Whole-app coverage | Notes |
 | --- | --- | --- | --- | --- |
+| 2026-10-12 | F6 JPEG skip re-encode (Release, arm64) | 240 run, 239 pass, 1 skipped | 81.06% (8112/10008) | IJG estimates at 50/70/85/95, 16-bit, chroma and SOF-mapped tables, Remove metadata still re-encodes, corrupt headers, ImageIO equivalent, skip and re-encode paths, action message |
 | 2026-10-12 | F5 palette PNG (Release, arm64) | 230 run, 229 pass, 1 skipped | 80.80% (8018/9923) | Real pngquant helper: palette output, skip below quality floor, optimizer and target-size integration |
 | 2026-10-12 | F1 target size HEIC/PNG (Release, arm64) | 224 run, 223 pass, 1 skipped | 80.63% (7919/9821) | HEIC/PNG formats, Oxipng candidates, opaque PNG |
 | 2026-10-12 | F4 rule templates (Release, arm64) | 219 run, 218 pass, 1 skipped | 80.58% (7896/9799) | Template validity, matching, editor render, rule insertion order |

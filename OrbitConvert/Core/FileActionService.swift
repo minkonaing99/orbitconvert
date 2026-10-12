@@ -101,8 +101,9 @@ struct FileActionService: Sendable {
             case .saved(let result):
                 return FileActionReport(outputURLs: [result.outputURL],
                                         message: "Optimized \(result.outputURL.lastPathComponent)", compression: result)
-            case .noReduction:
-                return FileActionReport(outputURLs: [], message: "No useful size reduction. Original kept.", compression: nil)
+            case .noReduction(_, _, let estimate):
+                let reason = estimate.map { "Already compressed at about \($0)% quality." } ?? "No useful size reduction."
+                return FileActionReport(outputURLs: [], message: reason + " Original kept.", compression: nil)
             }
         }
     }

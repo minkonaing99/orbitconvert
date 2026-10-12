@@ -133,7 +133,7 @@ Constants: activity limit 200; popup shows 3, Settings shows 5; clipboard poll 6
 - **ConversionResult / CompressionResult:** source and output URLs, original and result byte counts. No output URL until publication succeeds. Savings derived; zero-byte input handled.
 - **FileAction:** kind, category (conversion or tool), ID, title. `FileAction.common` intersects selections. `FileActionSettings.resizeOptions` defaults to 50%.
 - **ResizeOptions:** preset or custom bounds; `dimensions` computes aspect-fit without enlargement.
-- **OptimizationOutcome:** smaller validated output or a no-reduction result.
+- **OptimizationOutcome:** smaller validated output or a no-reduction result (`estimatedJPEGQuality` set when a JPEG was skipped as already compressed).
 
 ## File and media storage
 

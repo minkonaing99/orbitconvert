@@ -33,7 +33,7 @@ struct CompressionResult: Sendable {
 
 enum OptimizationOutcome: Sendable {
     case saved(CompressionResult)
-    case noReduction(originalBytes: Int64, candidateBytes: Int64)
+    case noReduction(originalBytes: Int64, candidateBytes: Int64, estimatedJPEGQuality: Int? = nil)
 }
 
 enum OptimizationError: Error, LocalizedError, Equatable, Sendable {

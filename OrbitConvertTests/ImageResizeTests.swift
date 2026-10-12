@@ -164,7 +164,7 @@ final class ImageResizeTests: XCTestCase {
         let original = try Data(contentsOf: source)
         let item = try XCTUnwrap(FileTypeService().inspect([source]).files.first)
         let outcome = try ImageResizeService().resize(item, in: folder, options: ResizeOptions(preset: .edge1920))
-        guard case .noReduction(let bytes, let candidate) = outcome else { return XCTFail("Larger candidate must be skipped") }
+        guard case .noReduction(let bytes, let candidate, _) = outcome else { return XCTFail("Larger candidate must be skipped") }
         XCTAssertEqual(bytes, Int64(original.count))
         XCTAssertGreaterThanOrEqual(candidate, bytes)
         XCTAssertEqual(try Data(contentsOf: source), original)

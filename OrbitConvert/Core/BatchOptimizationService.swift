@@ -53,7 +53,7 @@ struct BatchOptimizationService: Sendable {
                     saved.append(result)
                     originalBytes += result.originalBytes
                     outputBytes += result.outputBytes
-                case .noReduction(let original, _):
+                case .noReduction(let original, _, _):
                     skipped += 1
                     originalBytes += original
                     outputBytes += original

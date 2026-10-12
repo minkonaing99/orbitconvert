@@ -87,11 +87,12 @@ struct AutoOptimizationService: Sendable {
                 )
             }
             switch outcome {
-            case .noReduction(let original, _):
+            case .noReduction(let original, _, let estimate):
                 return WatchJobResult(activity: WatchActivity(
                     fileName: file.fileName, outcome: .skipped,
                     originalBytes: original, outputBytes: original,
-                    message: "No useful reduction"), outputURL: nil, retryable: false)
+                    message: estimate.map { "Already compressed (about \($0)% quality)" } ?? "No useful reduction"),
+                    outputURL: nil, retryable: false)
             case .saved(let result):
                 try Task.checkCancellation()
                 await progress(.validating)

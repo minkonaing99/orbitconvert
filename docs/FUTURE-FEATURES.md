@@ -15,7 +15,7 @@ Rules for every feature: TDD, code review (fix CRITICAL/HIGH), security review b
 | F3 | Lifetime "Saved X MB" counter | Both | 0.5 day | - | Done 2026-10-12 |
 | F4 | Rule templates | Automation | 1 day | - | Done 2026-10-12 |
 | F5 | Palette PNG option (pngquant) | Both | 1-2 days | License check | Done 2026-10-12 |
-| F6 | JPEG: skip re-encoding already-compressed files | Both | 1 day | - | Proposed |
+| F6 | JPEG: skip re-encoding already-compressed files | Both | 1 day | - | Done 2026-10-12 |
 | F7 | JPEG lossless optimization (mozjpeg jpegtran) | Both | 1-2 days | Binary/license check | Proposed |
 | F8 | Palette PNG levels: Safe and Smaller | Both | 0.5 day | F5 | Proposed |
 
@@ -139,6 +139,8 @@ New rules without a Move action are inserted above existing Move rules, so sort 
 **Tests:** screenshot and gradient fixtures shrink; transparency visually kept; exit 99 skipped; corrupt output rejected; missing helper reported; timeout and cancellation; option off = current lossless behavior unchanged.
 
 ## F6. JPEG: skip re-encoding already-compressed files
+
+**Done 2026-10-12.** `Images/JPEGQualityEstimator.swift`. Finding: ImageIO quality is not IJG quality (0.85 ~ IJG 95, 0.70 ~ IJG 91), so the comparison uses the IJG-equivalent of the ImageIO quality, measured at runtime, not the preset number. In practice Balanced now keeps most JPEGs below about IJG 95 untouched (re-encoding them measured 130-192% of the source). With Remove metadata on, the skip does not apply (privacy over size); lossless metadata removal comes with F7.
 
 **Goal:** stop making JPEGs bigger and worse. Today Compress re-encodes every JPEG at 0.85 (Balanced) or 0.70 (Maximum), even when the file is already at a lower quality. Clop's `jpegoptim --max 85` only re-encodes when the estimated quality is above the cap.
 

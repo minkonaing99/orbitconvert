@@ -27,6 +27,7 @@ Entry format: `- **Headline** - what changed + why it matters to the user. (#iss
 
 ### New Features
 
+- **Smarter JPEG compression** (2026-10-12) - Compress no longer re-encodes JPEGs that are already at or below the chosen quality, which used to make them bigger and slightly worse. They are kept as they are and reported as "Already compressed at about N% quality". Applies everywhere JPEGs are compressed except Compress to Size, and not when Remove metadata is on.
 - **Smaller PNG screenshots** (2026-10-12) - Turn on "Reduce PNG colors" in General settings to shrink screenshots and graphics much further (often 50-80%) when quality stays high. Works with Compress, Compress to Size and the Finder Quick Action. Colors are converted to sRGB and hidden file details are removed; off by default.
 - **Compress to Size for HEIC and PNG** (2026-10-12) - Compress to Size now works on HEIC and PNG as well as JPEG, and keeps each file's format. PNGs are optimized losslessly first; screenshot PNGs often cannot reach small targets yet, which palette reduction will address.
 - **Rule templates** (2026-10-12) - Add Rule now offers ready-made rules: rename and compress screenshots, make smaller copies of large JPEG photos, add dates to PDFs and compress them, and sort downloads into folders by type. Each opens in the editor for review before saving, and new rules are placed above sorting rules so they are not skipped.

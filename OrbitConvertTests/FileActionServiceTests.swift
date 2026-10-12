@@ -61,6 +61,20 @@ final class FileActionServiceTests: XCTestCase {
         XCTAssertEqual(try Data(contentsOf: image.url), original)
     }
 
+    @MainActor
+    func testCompressExplainsAlreadyCompressedJPEG() async throws {
+        let folder = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let image = try inspect(writeJPEG(in: folder, name: "small.jpg", quality: 0.5))
+        let estimate = try XCTUnwrap(JPEGQualityEstimator.imageIOEquivalent(0.5))
+
+        let report = try await FileActionService().execute(FileAction(.compress), for: image, selection: [image],
+                                                            in: folder, settings: makeSettings())
+
+        XCTAssertEqual(report.message, "Already compressed at about \(estimate)% quality. Original kept.")
+        XCTAssertTrue(report.outputURLs.isEmpty)
+    }
+
     private func makeSettings(preset: CompressionPreset = .balanced) -> FileActionSettings {
         FileActionSettings(jpegQuality: 0.9, stripMetadata: false, compressionPreset: preset,
                            pdfDPI: 72, pdfLayout: .fit, pageSelection: "all")

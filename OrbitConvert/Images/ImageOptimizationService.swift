@@ -40,6 +40,11 @@ struct ImageOptimizationService: Sendable {
               let originalSize = try? file.url.resourceValues(forKeys: [.fileSizeKey]).fileSize else {
             throw OptimizationError.unsupportedInput
         }
+        if format == .jpeg, !removeMetadata, let quality, let estimate = JPEGQualityEstimator.estimate(contentsOf: file.url),
+           let target = JPEGQualityEstimator.imageIOEquivalent(quality), estimate <= target {
+            return .noReduction(originalBytes: Int64(originalSize), candidateBytes: Int64(originalSize),
+                                estimatedJPEGQuality: estimate)
+        }
         let temporary = try output.makeTemporaryFile(in: directory)
         defer { output.removeTemporaryFile(temporary) }
         if format == .png {

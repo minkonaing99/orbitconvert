@@ -140,13 +140,14 @@ Next:
 
 ### Backlog
 
-- [ ] F6-F8 Clop-parity compression (JPEG skip re-encode, jpegtran lossless, palette levels) in [FUTURE-FEATURES](FUTURE-FEATURES.md) - owner TBD
+- [ ] F7-F8 Clop-parity compression (jpegtran lossless, palette levels) in [FUTURE-FEATURES](FUTURE-FEATURES.md) - owner TBD
 - [ ] Stage 0 benchmark fixtures - owner TBD
 - [ ] Stage 6 (Markdown math and Mermaid) - owner TBD
 - [ ] Large-image and large-PDF memory profiling - owner TBD
 
 ### Done
 
+- [x] F6 JPEG skip re-encode for already-compressed files - 2026-10-12
 - [x] F5 palette PNG (pngquant), opt-in - 2026-10-12
 - [x] F1 Compress to Size for HEIC and PNG - 2026-10-12
 - [x] F4 rule templates - 2026-10-12
