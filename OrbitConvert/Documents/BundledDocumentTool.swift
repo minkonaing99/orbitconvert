@@ -23,7 +23,7 @@ struct BundledDocumentTool: Sendable {
     nonisolated func run(_ name: String, arguments: [String], in directory: URL,
                          timeout: Duration = .seconds(60), acceptedStatuses: Set<Int32> = [0]) throws -> Int32 {
         let executable = Bundle.main.bundleURL.appendingPathComponent("Contents/Helpers/" + name)
-        guard ["pandoc", "gs", "pngquant"].contains(name), FileManager.default.isExecutableFile(atPath: executable.path) else {
+        guard ["pandoc", "gs", "pngquant", "jpegtran"].contains(name), FileManager.default.isExecutableFile(atPath: executable.path) else {
             throw DocumentConversionError.unavailableTool
         }
         try Task.checkCancellation()

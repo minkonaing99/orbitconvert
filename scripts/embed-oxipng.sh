@@ -12,8 +12,8 @@ else
     /usr/bin/codesign --force --sign - "$helper"
 fi
 
-for tool in pandoc gs pngquant; do
-    case "$tool" in pandoc) package=pandoc ;; gs) package=ghostscript ;; pngquant) package=pngquant ;; esac
+for tool in pandoc gs pngquant jpegtran; do
+    case "$tool" in pandoc) package=pandoc ;; gs) package=ghostscript ;; pngquant) package=pngquant ;; jpegtran) package=mozjpeg ;; esac
     destination="${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/Helpers/$tool"
     /usr/bin/gunzip -c "${SRCROOT}/ThirdParty/$package/$tool.gz" > "$destination"
     chmod 755 "$destination"

@@ -64,6 +64,27 @@ cd "$repositoryRoot"
 
 pngquant.org publishes no separate checksum; the hashes above were recorded on 2026-10-12. If upstream updates the unversioned download, verification fails; re-inspect the new binary (`lipo -archs`, `otool -L`, `codesign -dv`) before updating the hashes.
 
+The lossless JPEG helper (mozjpeg 4.1.1 `jpegtran`, BSD/IJG) is committed as `ThirdParty/mozjpeg/jpegtran.gz`; nothing to download. mozjpeg publishes source only, so it was built once (needs `brew install cmake nasm`):
+
+```sh
+curl --fail --location --output mozjpeg-4.1.1.tar.gz https://github.com/mozilla/mozjpeg/archive/refs/tags/v4.1.1.tar.gz
+printf '%s  %s\n' 66b1b8d6b55d263f35f27f55acaaa3234df2a401232de99b6d099e2bb0a9d196 mozjpeg-4.1.1.tar.gz | shasum -a 256 -c -
+tar -xzf mozjpeg-4.1.1.tar.gz
+for arch in arm64 x86_64; do
+  cmake -S mozjpeg-4.1.1 -B build-$arch -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_OSX_ARCHITECTURES=$arch -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0 -DENABLE_SHARED=FALSE -DENABLE_STATIC=TRUE \
+    -DPNG_SUPPORTED=FALSE -DWITH_TURBOJPEG=FALSE $( [ $arch = x86_64 ] && echo -DCMAKE_SYSTEM_PROCESSOR=x86_64 )
+  cmake --build build-$arch --target jpegtran-static -j8
+done
+lipo -create build-arm64/jpegtran-static build-x86_64/jpegtran-static -output jpegtran
+strip -x jpegtran
+otool -L jpegtran   # only /usr/lib/libSystem.B.dylib
+gzip -9 -n -c jpegtran > "$repositoryRoot/ThirdParty/mozjpeg/jpegtran.gz"
+{ cat mozjpeg-4.1.1/LICENSE.md; printf '\n\n---- README.ijg ----\n\n'; cat mozjpeg-4.1.1/README.ijg; } > "$repositoryRoot/ThirdParty/mozjpeg/LICENSE"
+```
+
+The build embeds its date in the version string, so a rebuild differs from the recorded hash.
+
 If any command fails, stop rather than continuing with partial assets. Xcode builds decompress and sign the helpers inside the app. Remove the temporary workspace after success; keep upstream source if preparing a distribution. A locally rebuilt executable can differ from the recorded hash. Provenance is in [TECH](TECH.md#bundled-helpers).
 
 This setup is for personal builds. It does not establish license compliance for distributing a built app; review GPL/AGPL source and notice obligations first ([GNU license FAQ](https://www.gnu.org/licenses/gpl-faq.en.html), [Ghostscript license](https://ghostscript.com/faq/)).
@@ -185,6 +206,7 @@ Only these test variables exist; nothing configures the app itself through the e
 
 | Date | Milestone | Tests | Whole-app coverage | Notes |
 | --- | --- | --- | --- | --- |
+| 2026-10-12 | F7 lossless JPEG (Release, arm64) | 247 run, 246 pass, 1 skipped | 81.16% (8189/10090) | Real jpegtran helper: smaller baseline pixel-identical output, metadata kept/stripped with ICC kept, no gain skipped, truncated/invalid input skipped, optimizer integration (skip path, re-encode path, rotated photo) |
 | 2026-10-12 | F6 JPEG skip re-encode (Release, arm64) | 240 run, 239 pass, 1 skipped | 81.06% (8112/10008) | IJG estimates at 50/70/85/95, 16-bit, chroma and SOF-mapped tables, Remove metadata still re-encodes, corrupt headers, ImageIO equivalent, skip and re-encode paths, action message |
 | 2026-10-12 | F5 palette PNG (Release, arm64) | 230 run, 229 pass, 1 skipped | 80.80% (8018/9923) | Real pngquant helper: palette output, skip below quality floor, optimizer and target-size integration |
 | 2026-10-12 | F1 target size HEIC/PNG (Release, arm64) | 224 run, 223 pass, 1 skipped | 80.63% (7919/9821) | HEIC/PNG formats, Oxipng candidates, opaque PNG |

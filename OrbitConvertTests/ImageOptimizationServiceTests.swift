@@ -31,37 +31,6 @@ final class ImageOptimizationServiceTests: XCTestCase {
         }
     }
 
-    func testJPEGAtOrBelowPresetQualityIsNotReencoded() throws {
-        let folder = try temporaryDirectory()
-        defer { try? FileManager.default.removeItem(at: folder) }
-        let source = folder.appendingPathComponent("small.jpg")
-        try makeImage(at: source, type: .jpeg, quality: 0.5)
-        let item = try XCTUnwrap(FileTypeService().inspect([source]).files.first)
-        let size = Int64(try Data(contentsOf: source).count)
-
-        let outcome = try ImageOptimizationService().optimize(item, in: folder, preset: .balanced)
-
-        guard case .noReduction(let original, let candidate, let estimate) = outcome else {
-            return XCTFail("Already-compressed JPEG must not be re-encoded")
-        }
-        XCTAssertEqual(original, size)
-        XCTAssertEqual(candidate, size)
-        XCTAssertEqual(estimate, JPEGQualityEstimator.imageIOEquivalent(0.5))
-        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: folder.path), ["small.jpg"])
-    }
-
-    func testRemoveMetadataStillReencodesAlreadyCompressedJPEG() throws {
-        let folder = try temporaryDirectory()
-        defer { try? FileManager.default.removeItem(at: folder) }
-        let source = folder.appendingPathComponent("small.jpg")
-        try makeImage(at: source, type: .jpeg, quality: 0.5)
-        let item = try XCTUnwrap(FileTypeService().inspect([source]).files.first)
-
-        let outcome = try ImageOptimizationService().optimize(item, in: folder, preset: .balanced, removeMetadata: true)
-
-        if case .noReduction(_, _, let estimate) = outcome { XCTAssertNil(estimate) }
-    }
-
     func testJPEGAboveCustomQualityIsStillReencoded() throws {
         let folder = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: folder) }

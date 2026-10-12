@@ -40,16 +40,17 @@ struct ImageOptimizationService: Sendable {
               let originalSize = try? file.url.resourceValues(forKeys: [.fileSizeKey]).fileSize else {
             throw OptimizationError.unsupportedInput
         }
-        if format == .jpeg, !removeMetadata, let quality, let estimate = JPEGQualityEstimator.estimate(contentsOf: file.url),
-           let target = JPEGQualityEstimator.imageIOEquivalent(quality), estimate <= target {
-            return .noReduction(originalBytes: Int64(originalSize), candidateBytes: Int64(originalSize),
-                                estimatedJPEGQuality: estimate)
-        }
         let temporary = try output.makeTemporaryFile(in: directory)
         defer { output.removeTemporaryFile(temporary) }
         if format == .png {
             try encodePNG(file.url, source: source, to: temporary, preset: preset,
                           removeMetadata: removeMetadata, palette: palette)
+        } else if format == .jpeg, let quality {
+            if let estimate = try encodeJPEG(file.url, source: source, to: temporary, quality: quality,
+                                             removeMetadata: removeMetadata) {
+                return .noReduction(originalBytes: Int64(originalSize), candidateBytes: Int64(originalSize),
+                                    estimatedJPEGQuality: estimate)
+            }
         } else {
             try encode(source, to: temporary, format: format, quality: quality, removeMetadata: removeMetadata)
         }
@@ -83,6 +84,36 @@ struct ImageOptimizationService: Sendable {
         } else {
             try OxipngService().optimize(source: url, destination: temporary, preset: preset)
         }
+    }
+
+    // Returns the source quality estimate when the JPEG is already compressed and no lossless rewrite helps.
+    // Otherwise writes the smallest of: ImageIO re-encode, its lossless rewrite, the source's lossless rewrite.
+    // Lossless metadata removal drops the EXIF orientation, so rotated photos are re-encoded instead.
+    nonisolated private func encodeJPEG(_ url: URL, source: CGImageSource, to temporary: URL,
+                                        quality: Double, removeMetadata: Bool) throws -> Int? {
+        let jpegtran = JpegtranService()
+        let lossless = !removeMetadata || Self.isUpright(source)
+        if lossless, let estimate = JPEGQualityEstimator.estimate(contentsOf: url),
+           let target = JPEGQualityEstimator.imageIOEquivalent(quality), estimate <= target {
+            return try jpegtran.optimize(url, to: temporary, keepMetadata: !removeMetadata) ? nil : estimate
+        }
+        let work = temporary.deletingLastPathComponent()
+        let reencoded = work.appendingPathComponent("reencoded.jpg")
+        let rewritten = work.appendingPathComponent("reencoded-lossless.jpg")
+        let fromSource = work.appendingPathComponent("source-lossless.jpg")
+        try encode(source, to: reencoded, format: .jpeg, quality: quality, removeMetadata: removeMetadata)
+        let rewrote = try jpegtran.optimize(reencoded, to: rewritten, keepMetadata: true)
+        let sourceRewrote = try lossless && jpegtran.optimize(url, to: fromSource, keepMetadata: !removeMetadata)
+        let candidates = [reencoded] + (rewrote ? [rewritten] : []) + (sourceRewrote ? [fromSource] : [])
+        let sizes = candidates.map { (try? $0.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? .max }
+        let best = candidates[sizes.firstIndex(of: sizes.min() ?? .max) ?? 0]
+        try FileManager.default.moveItem(at: best, to: temporary)
+        return nil
+    }
+
+    nonisolated private static func isUpright(_ source: CGImageSource) -> Bool {
+        let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [String: Any]
+        return (properties?[kCGImagePropertyOrientation as String] as? Int ?? 1) == 1
     }
 
     // Palette output drops metadata, so content credentials still require an explicit Remove metadata choice.

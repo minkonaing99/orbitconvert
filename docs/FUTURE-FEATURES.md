@@ -16,7 +16,7 @@ Rules for every feature: TDD, code review (fix CRITICAL/HIGH), security review b
 | F4 | Rule templates | Automation | 1 day | - | Done 2026-10-12 |
 | F5 | Palette PNG option (pngquant) | Both | 1-2 days | License check | Done 2026-10-12 |
 | F6 | JPEG: skip re-encoding already-compressed files | Both | 1 day | - | Done 2026-10-12 |
-| F7 | JPEG lossless optimization (mozjpeg jpegtran) | Both | 1-2 days | Binary/license check | Proposed |
+| F7 | JPEG lossless optimization (mozjpeg jpegtran) | Both | 1-2 days | Binary/license check | Done 2026-10-12 |
 | F8 | Palette PNG levels: Safe and Smaller | Both | 0.5 day | F5 | Proposed |
 
 Suggested order: F3 (smallest, visible daily) -> F2 -> F4 -> F5 -> F1 (PNG part benefits from F5).
@@ -156,6 +156,8 @@ New rules without a Move action are inserted above existing Move rules, so sort 
 **Tests:** estimates within a few points for JPEGs written at 50/70/85/95; already-low JPEG is not re-encoded and reports why; high-quality JPEG still compresses; corrupt/missing tables fall back to today's behavior.
 
 ## F7. JPEG lossless optimization (mozjpeg jpegtran)
+
+**Done 2026-10-12.** `Images/JpegtranService.swift`; mozjpeg 4.1.1 built from source (static universal, committed gz, see SETUP). Decisions: every JPEG (skipped ones plus re-encodes, smallest wins); baseline instead of progressive, because macOS renders 4:2:0 progressive JPEGs slightly differently (owner choice after measurement); Remove metadata strips losslessly with `-copy icc` for upright photos, which re-enables the F6 skip there.
 
 **Goal:** 5-15% smaller JPEGs with zero quality change, for every JPEG (including ones F6 skips).
 

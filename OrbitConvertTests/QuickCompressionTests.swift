@@ -117,7 +117,8 @@ final class QuickCompressionTests: XCTestCase {
     func testNoReductionKeepsBytesAndCancellationSkipsAllFiles() async throws {
         let folder = try directory()
         defer { try? FileManager.default.removeItem(at: folder) }
-        let source = try jpeg(in: folder, quality: 0)
+        let source = folder.appendingPathComponent("optimized.jpg")
+        XCTAssertTrue(try JpegtranService().optimize(try jpeg(in: folder, quality: 0), to: source, keepMetadata: true))
         let before = try Data(contentsOf: source)
         let results = QuickCompressionService().run([source], mode: .replaceOriginal, settings: .init())
         XCTAssertNil(results[0].compression)

@@ -213,6 +213,8 @@
 				"$(SRCROOT)/ThirdParty/ghostscript/THIRD-PARTY-NOTICES.txt",
 				"$(SRCROOT)/ThirdParty/pngquant/pngquant.gz",
 				"$(SRCROOT)/ThirdParty/pngquant/LICENSE",
+				"$(SRCROOT)/ThirdParty/mozjpeg/jpegtran.gz",
+				"$(SRCROOT)/ThirdParty/mozjpeg/LICENSE",
 			);
 			name = "Embed PNG optimizer";
 			outputPaths = (
@@ -230,6 +232,9 @@
 				"$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Helpers/pngquant",
 				"$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Helpers/pngquant.cstemp",
 				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/pngquant-LICENSE.txt",
+				"$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Helpers/jpegtran",
+				"$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Helpers/jpegtran.cstemp",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/mozjpeg-LICENSE.txt",
 			);
 			shellPath = /bin/sh;
 			shellScript = (

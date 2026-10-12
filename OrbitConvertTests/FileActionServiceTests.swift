@@ -65,7 +65,9 @@ final class FileActionServiceTests: XCTestCase {
     func testCompressExplainsAlreadyCompressedJPEG() async throws {
         let folder = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: folder) }
-        let image = try inspect(writeJPEG(in: folder, name: "small.jpg", quality: 0.5))
+        let raw = try writeJPEG(in: folder, name: "raw.jpg", quality: 0.5)
+        let optimized = folder.appendingPathComponent("small.jpg")
+        let image = try inspect(try JpegtranService().optimize(raw, to: optimized, keepMetadata: true) ? optimized : raw)
         let estimate = try XCTUnwrap(JPEGQualityEstimator.imageIOEquivalent(0.5))
 
         let report = try await FileActionService().execute(FileAction(.compress), for: image, selection: [image],
