@@ -13,6 +13,8 @@ final class WatchedFoldersController {
     var folders: [WatchedFolder] = []
     var activity: [WatchActivity] = []
     private(set) var sessionStatistics = SessionStatistics()
+    private(set) var lifetimeSavings = LifetimeSavings()
+    @ObservationIgnored private var lifetimeObserver: NSObjectProtocol?
     private var activePhase = OptimizationJobPhase.checkingFile
     var paused = false
     var currentFileName: String?
@@ -83,6 +85,11 @@ final class WatchedFoldersController {
            let stored = try? JSONDecoder().decode([WatchActivity].self, from: data) {
             activity = stored
         }
+        lifetimeSavings = LifetimeSavings.load(from: defaults, seedingFrom: activity)
+        lifetimeObserver = NotificationCenter.default.addObserver(forName: LifetimeSavings.didChange, object: defaults,
+                                                                  queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.reloadLifetimeSavings() }
+        }
         paused = defaults.bool(forKey: "watchingPaused")
         if !paused { for folder in folders where folder.isEnabled { start(folder) } }
         if startClipboard {
@@ -133,8 +140,23 @@ final class WatchedFoldersController {
     private func record(_ result: WatchActivity) {
         checkpoints = checkpoints.filter { key, _ in activity.prefix(199).contains { $0.id == key } || key == result.id }
         sessionStatistics = sessionStatistics.recording(result)
+        // UserDefaults is the source of truth so manual results recorded elsewhere are never overwritten.
+        let lifetime = LifetimeSavings.load(from: defaults, seedingFrom: []).adding(result.savingsBytes)
+        if lifetime != lifetimeSavings {
+            lifetime.save(to: defaults)
+            lifetimeSavings = lifetime
+        }
         activity = Array(([result] + activity).prefix(200))
         if let data = try? JSONEncoder().encode(activity) { defaults.set(data, forKey: "watchedActivity") }
+    }
+
+    func resetLifetimeSavings() {
+        lifetimeSavings = LifetimeSavings()
+        lifetimeSavings.save(to: defaults)
+    }
+
+    private func reloadLifetimeSavings() {
+        lifetimeSavings = LifetimeSavings.load(from: defaults, seedingFrom: [])
     }
 
     func add(_ urls: [URL], optimizeExisting: Bool, automation: Bool = false) throws {

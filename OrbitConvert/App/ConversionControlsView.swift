@@ -320,6 +320,7 @@ struct ConversionControlsView: View {
                 entries = results
                 resultURLs = results.flatMap { $0.report?.outputURLs ?? [] }
                 compression = results.count == 1 ? results.first?.report?.compression : nil
+                LifetimeSavings.record(results.compactMap { $0.report?.compression })
                 isError = results.contains { $0.errorMessage != nil }
                 message = results.count == 1 ? (results.first?.report?.message ?? results.first?.errorMessage)
                     : "\(results.count) of \(files.count) files processed."

@@ -12,7 +12,7 @@ Rules for every feature: TDD, code review (fix CRITICAL/HIGH), security review b
 | --- | --- | --- | --- | --- | --- |
 | F1 | Compress to Size for HEIC and PNG | Converter | 1-2 days | F5 for PNG beyond lossless | Proposed |
 | F2 | Drag a folder onto the main window | Converter | 0.5-1 day | - | Proposed |
-| F3 | Lifetime "Saved X MB" counter | Both | 0.5 day | - | Proposed |
+| F3 | Lifetime "Saved X MB" counter | Both | 0.5 day | - | Done 2026-10-12 |
 | F4 | Rule templates | Automation | 1 day | - | Proposed |
 | F5 | Palette PNG option (pngquant) | Both | 1-2 days | License check | Proposed |
 
@@ -56,6 +56,8 @@ Suggested order: F3 (smallest, visible daily) -> F2 -> F4 -> F5 -> F1 (PNG part 
 **Tests:** folder with mixed files, nested folder (flat vs recursive), hidden/symlink/package skipped, limit reached, empty folder message, sandbox access kept for expanded files.
 
 ## F3. Lifetime "Saved X MB" counter
+
+**Done 2026-10-12.** `Watch/LifetimeSavings.swift` stores the total in UserDefaults (seeded once from history). Automatic jobs add through `WatchedFoldersController.record`; the main window and Finder Quick Action add through `LifetimeSavings.record`, which notifies the controller. The menu bar popup and Watched Folders settings show "Total saved: X across N files"; settings has a two-step Reset. Decisions: manual results count; seeding from history on first launch.
 
 **Goal:** see total space saved, kept across launches.
 

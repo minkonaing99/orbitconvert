@@ -134,7 +134,7 @@ Next:
 
 ### In Progress
 
-- [ ] Next: features F1-F5 in [FUTURE-FEATURES](FUTURE-FEATURES.md) (suggested order F3, F2, F4, F5, F1) - owner TBD
+- [ ] Next: F2, F4, F5, F1 in [FUTURE-FEATURES](FUTURE-FEATURES.md) - owner TBD
 
 ### Backlog
 
@@ -144,6 +144,7 @@ Next:
 
 ### Done
 
+- [x] F3 lifetime savings counter - 2026-10-12
 - [x] Installed-app checks on the 2.0 build (owner-verified) and product direction decided - 2026-10-12
 - [x] Cleanups: README limitations, folder automation release note, rename follow-ups (case-only rename, post-rename identity check, source access, unsupported-volume message) - 2026-10-11
 - [x] Folder automation rules - 2026-10-11

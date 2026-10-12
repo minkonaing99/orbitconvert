@@ -31,6 +31,10 @@ struct WatchMenuView: View {
                 }.frame(height: min(jobsHeight, 190))
             }
             session
+            if watcher.lifetimeSavings.bytes > 0 {
+                Text(watcher.lifetimeSavings.summary)
+                    .font(.caption).foregroundStyle(.secondary)
+            }
             if !watcher.activity.isEmpty {
                 Divider()
                 Text("Recent Activity").font(.subheadline.bold())

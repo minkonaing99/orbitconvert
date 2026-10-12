@@ -199,6 +199,7 @@ import UniformTypeIdentifiers
         XCTAssertEqual(controller.statusTitle, "1")
         await fulfillment(of: [done], timeout: 2)
         XCTAssertEqual(controller.sessionStatistics.bytesSaved, 80)
+        XCTAssertEqual(controller.lifetimeSavings, LifetimeSavings(bytes: 80, files: 1))
         XCTAssertEqual(controller.outstandingJobCount, 0)
     }
 

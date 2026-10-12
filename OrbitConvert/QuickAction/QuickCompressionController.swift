@@ -73,6 +73,7 @@ final class QuickCompressionController: NSObject, NSWindowDelegate {
             } onCancel: {
                 worker.cancel()
             }
+            LifetimeSavings.record(results.compactMap(\.compression), in: defaults)
             status = Task.isCancelled ? "Stopped. Completed files are listed below." : "Finished"
         }
     }

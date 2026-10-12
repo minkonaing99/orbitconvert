@@ -8,6 +8,7 @@ struct WatchedFoldersSettingsView: View {
     @State private var issue: String?
     @State private var editingFolder: WatchedFolder?
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
+    @State private var confirmingReset = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -56,6 +57,22 @@ struct WatchedFoldersSettingsView: View {
         }
     }
 
+    private var lifetimeTotal: some View {
+        HStack {
+            Text(watcher.lifetimeSavings.summary).font(.callout)
+            Spacer()
+            if confirmingReset {
+                Button("Cancel") { confirmingReset = false }
+                Button("Reset Total", role: .destructive) {
+                    watcher.resetLifetimeSavings()
+                    confirmingReset = false
+                }
+            } else {
+                Button("Reset...") { confirmingReset = true }
+            }
+        }.controlSize(.small)
+    }
+
     private var recentActivity: some View {
         VStack(alignment: .leading, spacing: 12) {
             Divider()
@@ -65,6 +82,7 @@ struct WatchedFoldersSettingsView: View {
                 Button("View All Activity") { openWindow(id: "activity") }
                     .disabled(watcher.activity.isEmpty)
             }
+            if watcher.lifetimeSavings.bytes > 0 { lifetimeTotal }
             Text("Last 200 watched-folder and clipboard results, saved on this Mac.")
                 .font(.caption).foregroundStyle(.secondary)
             if watcher.activity.isEmpty {
