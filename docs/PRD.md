@@ -75,11 +75,15 @@ Public distribution is not prepared. Bundled GPL/AGPL helpers need a separate li
 - Personal use. GPL (Pandoc) and AGPL (Ghostscript) obligations apply before any redistribution.
 - Coverage target 80%; current whole-app coverage is 80.67%.
 
+### Scope rule
+
+Decided 2026-10-12: OrbitConvert is **personal use only** (no distribution, no notarization or license work for sharing) and is both a **manual converter** and a **folder automation tool**. New features must serve one of these; planned work is in [FUTURE-FEATURES](FUTURE-FEATURES.md). Excluded unless this rule changes: public distribution, Intel/macOS 14 support work, deletion or script actions in rules.
+
 ### Open questions and assumptions
 
 - Recovery retention for Undo: proposed seven days, 100 entries, 1 GB (see [PLAN](PLAN.md)).
 - Whether Intel document helpers are needed.
-- Whether to pursue public distribution (Developer ID, notarization, permanent bundle identifier `com.example.*` replacement).
+- Whether automation should react to modified files or schedules (see [FUTURE-FEATURES](FUTURE-FEATURES.md#open-watch-folder-changes)).
 - Assumption: the app stays running to watch folders and the clipboard.
 
 ## App flow

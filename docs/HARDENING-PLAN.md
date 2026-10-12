@@ -1,6 +1,6 @@
 # Hardening Plan
 
-Status: In progress. Steps 0-2 closed, step 3 dropped 2026-10-11. Steps 4-5 done. Remaining: 6.
+Status: Complete. Steps 0-2 closed, step 3 dropped 2026-10-11. Steps 4-6 done. Hardening complete; next work in FUTURE-FEATURES.md.
 
 Goal: make existing features safe and verified before adding new ones. Order follows risk: data safety first, real-environment verification second, coverage third, cleanup last. The feature freeze lasts until the step 6 direction decision.
 
@@ -25,7 +25,7 @@ Related: [PLAN](PLAN.md) (roadmap and task lists), [TECH](TECH.md) (architecture
 | 3 | Restore Original (Undo) | - | - | Dropped 2026-10-11 (owner decision) |
 | 4 | Coverage to 80% | ~1 week | 1 | Done 2026-10-11 (80.67%) |
 | 5 | Source structure | 0.5 day | 1 | Done 2026-10-11 |
-| 6 | Product direction decision | Decision | - (before any new feature) | Not started |
+| 6 | Product direction decision | Decision | - (before any new feature) | Done 2026-10-12 |
 
 ```
 0 -> 1 -> 2 (done)    3 dropped
@@ -229,6 +229,10 @@ Options:
 
 Output: a "Scope rule" section in [PRD](PRD.md) and a reordered roadmap in [PLAN](PLAN.md).
 
+### Step 6 results (2026-10-12)
+
+Decision: personal use only; both manual converter and folder automation. Recorded as the [PRD scope rule](PRD.md#scope-rule). Next features are in [FUTURE-FEATURES](FUTURE-FEATURES.md); the feature freeze ends.
+
 ## Risks
 
 | Risk | Mitigation |
@@ -246,4 +250,4 @@ Output: a "Scope rule" section in [PRD](PRD.md) and a reordered roadmap in [PLAN
 - [x] Step 3: dropped (owner decision 2026-10-11)
 - [x] Step 4: coverage at 80% (80.67%)
 - [x] Step 5: source structure
-- [ ] Step 6: product direction decision
+- [x] Step 6: product direction decision

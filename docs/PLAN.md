@@ -2,7 +2,7 @@
 
 Keep updated. Claude reads this before starting work.
 
-**Current status:** Phases 1-5 and 8-9 delivered; folder automation landed 2026-10-11 (commit `26207d8`). Active focus: [Hardening Plan](HARDENING-PLAN.md) (proposed 2026-10-11): feature freeze, safety fixes, installed-app verification, Restore Original, coverage to 80%. Restore Original was dropped 2026-10-11; new features wait for the step 6 product direction decision.
+**Current status:** Phases 1-5 and 8-9 delivered; folder automation 2026-10-11; [hardening](HARDENING-PLAN.md) complete and version 2.0 set 2026-10-12. Direction: personal use, manual converter + folder automation ([PRD scope rule](PRD.md#scope-rule)). Next: [FUTURE-FEATURES](FUTURE-FEATURES.md) F1-F5.
 
 ## Phases
 
@@ -134,17 +134,17 @@ Next:
 
 ### In Progress
 
-- [ ] Itemized installed-app checks still unrecorded (owner reported all working 2026-10-11): in-sandbox Trash on Move, Quick Action cold start / Replace Original / originals kept, read-only destination, VoiceOver, keyboard - owner TBD, before relying on Replace Original for important folders
+- [ ] Next: features F1-F5 in [FUTURE-FEATURES](FUTURE-FEATURES.md) (suggested order F3, F2, F4, F5, F1) - owner TBD
 
 ### Backlog
 
 - [ ] Stage 0 benchmark fixtures - owner TBD
-- [ ] macOS 14 and Intel runtime validation - owner TBD
-- [ ] Stage 3, stage 4 remainder, stage 6 - owner TBD
+- [ ] Stage 6 (Markdown math and Mermaid) - owner TBD
 - [ ] Large-image and large-PDF memory profiling - owner TBD
 
 ### Done
 
+- [x] Installed-app checks on the 2.0 build (owner-verified) and product direction decided - 2026-10-12
 - [x] Cleanups: README limitations, folder automation release note, rename follow-ups (case-only rename, post-rename identity check, source access, unsupported-volume message) - 2026-10-11
 - [x] Folder automation rules - 2026-10-11
 - [x] Finder Quick Action - 2026-10-10
