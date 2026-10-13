@@ -45,6 +45,26 @@ final class MarkdownConversionTests: XCTestCase {
     }
 
     @MainActor
+    func testDOCXMathBecomesNativeWordEquationsAndPricesStayText() async throws {
+        let job = try BundledDocumentTool.workspace()
+        defer { try? FileManager.default.removeItem(at: job) }
+        let url = job.appendingPathComponent("math.md")
+        try Data("Euler: $e^{i\\pi}+1=0$\n\n$$\\int_0^1 x^2\\,dx = \\frac{1}{3}$$\n\nPrice $5 and $10.\n".utf8).write(to: url)
+        let file = try XCTUnwrap(FileTypeService().inspect([url]).files.first)
+
+        let word = try await MarkdownConversionService().convert(file, toDOCX: true, in: job)
+
+        let docx = try XCTUnwrap(word.outputURLs.first)
+        try FileManager.default.copyItem(at: docx, to: job.appendingPathComponent("check.docx"))
+        try BundledDocumentTool().run("pandoc", arguments: ["--sandbox", "--from=docx", "--to=json",
+                                                            "--output=check.json", "check.docx"], in: job)
+        let json = String(decoding: try Data(contentsOf: job.appendingPathComponent("check.json")), as: UTF8.self)
+        XCTAssertTrue(json.contains("\"InlineMath\""), "Inline math must be a Word equation")
+        XCTAssertTrue(json.contains("\"DisplayMath\""), "Display math must be a Word equation")
+        XCTAssertTrue(json.contains("\"$5\""), "Currency must stay plain text")
+    }
+
+    @MainActor
     func testPDFLinksRemainClickable() async throws {
         let job = try BundledDocumentTool.workspace()
         defer { try? FileManager.default.removeItem(at: job) }

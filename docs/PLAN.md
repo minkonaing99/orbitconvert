@@ -62,7 +62,7 @@ Constraints: keep current engines, the action UI, scoped access and the single s
 | 3 | Opt-in palette PNG reduction (pngquant) | Not started; license gate |
 | 4 | Target file size | Partly done: JPEG Compress to Size (different search than proposed). HEIC/PNG, quality floor and Save Best Copy not done |
 | 5 | Per-folder rules | Superseded by folder automation (2026-10-11) |
-| 6 | DOCX equations, then offline PDF math/Mermaid | Not started |
+| 6 | DOCX equations, then offline PDF math/Mermaid | 6A done 2026-10-13 (already supported by Pandoc 3.12 gfm; regression test added). 6B/6C not started |
 
 ### Stage 0: Honest comparison
 
@@ -90,7 +90,7 @@ Extend to HEIC; consider a quality floor (proposed 0.70), optional minimum edge 
 
 ### Stage 6: Equations and diagrams
 
-6A: enable Pandoc math (`tex_math_dollars`) for native DOCX OMML; verify `m:oMath` in `word/document.xml`. 6B: reproduce the WebKit startup failure in a signed installed app before any renderer. 6C (only after 6B): pinned local KaTeX + Mermaid strict mode, bounded inputs (8 KiB per equation, 64 KiB per diagram, 100 objects, 4096 px edges), no network or file access, fallback to source text with warnings. No Node, Chromium or TeX without a separate decision.
+6A (done 2026-10-13): no change needed; the bundled Pandoc 3.12 `gfm` reader already parses `$...$` and `$$...$$` as math, so DOCX gets native OMML (`m:oMath`, `m:oMathPara`); `$5`-style currency stays text. Regression test reads the DOCX back with Pandoc and checks InlineMath/DisplayMath. PDF today: simple inline math renders as styled RTF text (italics, superscripts, Greek), but fractions, integrals and other complex TeX fall back to raw TeX text (Pandoc warns "Could not convert TeX math"). 6B: reproduce the WebKit startup failure in a signed installed app before any renderer. 6C (only after 6B): pinned local KaTeX + Mermaid strict mode, bounded inputs (8 KiB per equation, 64 KiB per diagram, 100 objects, 4096 px edges), no network or file access, fallback to source text with warnings. No Node, Chromium or TeX without a separate decision.
 
 ## Document roadmap
 
@@ -134,7 +134,7 @@ Next:
 
 ### In Progress
 
-- [ ] F11 Markdown math (stage 6A DOCX equations first; 6B/6C need a separate go-ahead) - next
+- [ ] F11 6B/6C: PDF math and Mermaid (6B WebKit feasibility in signed installed app first) - needs go-ahead
 - [ ] Optional: palette PNG for clipboard compression - owner TBD
 - [ ] Installed-app check: Choose Files with a folder, then convert a file from it (sandbox access for folder contents) - owner
 
@@ -146,6 +146,7 @@ Next:
 
 ### Done
 
+- [x] F11 6A DOCX native equations (verified existing behavior, regression test) - 2026-10-13
 - [x] F10 faster Compress to Size quality search - 2026-10-13
 - [x] F9 palette PNG in rule Compress actions - 2026-10-13
 - [x] Rename brace date tokens {yyyy} {yy} {MM} {dd} {HH} {mm} {ss} - 2026-10-13

@@ -27,6 +27,7 @@ Entry format: `- **Headline** - what changed + why it matters to the user. (#iss
 
 ### New Features
 
+- **Equations in Word export** (2026-10-13) - Confirmed and now tested: `$...$` and `$$...$$` math in Markdown becomes real, editable Word equations in DOCX export. Dollar amounts like `$5` stay as text. PDF export shows simple formulas but not yet fractions or integrals.
 - **Faster Compress to Size** (2026-10-13) - JPEG and HEIC targets are found with at most 6 trial encodes per size instead of up to 21, so large HEIC photos finish much sooner. Results are the same in normal cases.
 - **Smaller screenshots from folder rules** (2026-10-13) - A rule's Compress action now has a "PNG colors" option (Off, Safe, Smaller), so watched-folder rules can shrink screenshots as much as manual Compress. Existing rules stay Off.
 - **Date tokens in rename rules** (2026-10-13) - Rename patterns now have separate `{yyyy}`, `{yy}`, `{MM}`, `{dd}`, `{HH}`, `{mm}` and `{ss}` tokens (with buttons in the rule editor), so you can arrange date and time parts any way you like, for example `{dd}-{MM}-{yyyy}`. Existing patterns keep working.
