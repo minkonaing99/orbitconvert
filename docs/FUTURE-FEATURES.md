@@ -18,7 +18,7 @@ Rules for every feature: TDD, code review (fix CRITICAL/HIGH), security review b
 | F6 | JPEG: skip re-encoding already-compressed files | Both | 1 day | - | Done 2026-10-12 |
 | F7 | JPEG lossless optimization (mozjpeg jpegtran) | Both | 1-2 days | Binary/license check | Done 2026-10-12 |
 | F8 | Palette PNG levels: Safe and Smaller | Both | 0.5 day | F5 | Done 2026-10-13 |
-| F9 | Palette PNG in rule Compress actions | Automation | 0.5 day | F8 | Planned 2026-10-13 |
+| F9 | Palette PNG in rule Compress actions | Automation | 0.5 day | F8 | Done 2026-10-13 |
 | F10 | Faster Compress to Size quality search | Converter | 0.5 day | - | Planned 2026-10-13 |
 | F11 | Markdown math and diagrams (PLAN stage 6) | Converter | 6A 0.5-1 day; 6B-6C several days | 6B before 6C | Planned 2026-10-13 |
 
@@ -185,6 +185,8 @@ New rules without a Move action are inserted above existing Move rules, so sort 
 **Tests:** Smaller produces a palette file where Safe skips (fixture between the two floors); migration from the old Bool; Off unchanged.
 
 ## F9. Palette PNG in rule Compress actions
+
+**Done 2026-10-13.** Optional `palette` field on `AutomationAction`, "PNG colors" picker in the Compress action, passed to `ImageOptimizationService`.
 
 **Goal:** the screenshot-folder rule gets palette savings (often 50-80%) instead of lossless only (about 40%).
 

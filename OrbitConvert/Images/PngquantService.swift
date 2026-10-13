@@ -1,8 +1,13 @@
 import Foundation
 
 // Opt-in palette level. Safe keeps pngquant's 80 quality floor; Smaller accepts 60.
-nonisolated enum PaletteLevel: String, CaseIterable, Sendable {
+nonisolated enum PaletteLevel: String, CaseIterable, Codable, Sendable {
     case off, safe, smaller
+
+    // Unknown stored values (from a newer build) decode as Off instead of failing the whole watched-folder list.
+    init(from decoder: Decoder) throws {
+        self = PaletteLevel(rawValue: try decoder.singleValueContainer().decode(String.self)) ?? .off
+    }
 
     static let storageKey = "paletteLevel"
     static let legacyKey = "paletteReduction"

@@ -95,7 +95,7 @@ Add new files to the matching feature folder; new folders are picked up automati
 
 ### Palette PNG: pngquant
 
-- Opt-in (`paletteLevel`: Off / Safe / Smaller, off by default) for manual Compress, Compress to Size and the Finder Quick Action; watched folders and clipboard stay lossless. Safe uses `--quality=80-100`, Smaller `--quality=60-100` (accepts visible but slight color changes; measured: a gradient with +-6 noise is rejected by Safe and goes from 122 KB to 26 KB with Smaller). The old Bool `paletteReduction` maps on to Safe (migrated at launch).
+- Opt-in (`paletteLevel`: Off / Safe / Smaller, off by default) for manual Compress, Compress to Size and the Finder Quick Action. Rule Compress actions have their own per-action level (`AutomationAction.palette`, default Off, F9). Clipboard stays lossless. Safe uses `--quality=80-100`, Smaller `--quality=60-100` (accepts visible but slight color changes; measured: a gradient with +-6 noise is rejected by Safe and goes from 122 KB to 26 KB with Smaller). The old Bool `paletteReduction` maps on to Safe (migrated at launch).
 - `PngquantService` runs the bundled helper through `BundledDocumentTool` in a private job directory with generated names: `--quality=<level range> --speed 3 --skip-if-larger`. Exit 99 (quality floor not met) and 98 (not smaller) mean skipped; the lossless Oxipng path then runs.
 - The palette result is optimized with Oxipng and validated like any PNG candidate. Measured on a 1200 x 800 screenshot-like PNG: 29.8 KB to 6.7 KB.
 - Inputs over 256 MB or 100 megapixels (checked from IHDR before the helper runs), helper failures and a missing helper all count as "skipped" and fall back to lossless; cancellation still stops the job.

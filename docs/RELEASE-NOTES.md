@@ -27,6 +27,7 @@ Entry format: `- **Headline** - what changed + why it matters to the user. (#iss
 
 ### New Features
 
+- **Smaller screenshots from folder rules** (2026-10-13) - A rule's Compress action now has a "PNG colors" option (Off, Safe, Smaller), so watched-folder rules can shrink screenshots as much as manual Compress. Existing rules stay Off.
 - **Date tokens in rename rules** (2026-10-13) - Rename patterns now have separate `{yyyy}`, `{yy}`, `{MM}`, `{dd}`, `{HH}`, `{mm}` and `{ss}` tokens (with buttons in the rule editor), so you can arrange date and time parts any way you like, for example `{dd}-{MM}-{yyyy}`. Existing patterns keep working.
 - **PNG color levels** (2026-10-13) - "Reduce PNG colors" is now Off, Safe or Smaller. Safe works as before; Smaller also shrinks images where a slight color change is acceptable. If you had it on, it is set to Safe.
 - **Lossless JPEG shrinking** (2026-10-12) - Compress now also shrinks JPEGs without any quality change (often 5-20%), including ones that are already compressed. Remove metadata strips location and camera details without re-encoding upright photos. Pixels are checked to be identical before a file is saved.

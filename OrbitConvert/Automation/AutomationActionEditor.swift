@@ -74,8 +74,17 @@ struct AutomationActionEditor: View {
                     }) { Text($0.label).tag($0) }
                 }
             }
+            Picker("PNG colors", selection: Binding(get: { action.palette ?? .off },
+                                                    set: { var next = action; next.palette = $0; action = next })) {
+                ForEach(PaletteLevel.allCases, id: \.self) { Text($0.label).tag($0) }
+            }.fixedSize()
             Text("Supports JPEG, PNG, HEIC and PDF. Lossless is unavailable for JPEG and HEIC.")
                 .font(.caption).foregroundStyle(.secondary)
+            if (action.palette ?? .off) != .off {
+                Text("PNG colors: a limited palette makes screenshots much smaller; colors become sRGB and hidden file details are removed. Falls back to lossless when quality would drop too far.")
+                    .font(.caption).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             let note = Self.replacementNote(action.replacement)
             Label(note.text, systemImage: note.warning ? "exclamationmark.triangle" : "info.circle")
                 .font(.caption).foregroundStyle(note.warning ? .orange : .secondary)

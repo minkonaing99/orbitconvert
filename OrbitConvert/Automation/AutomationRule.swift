@@ -40,6 +40,8 @@ nonisolated struct AutomationAction: Identifiable, Codable, Equatable, Sendable 
     var destinationName = "Choose a folder"
     var preset: CompressionPreset = .balanced
     var replacement: ReplacementBehavior = .keepBoth
+    // Optional so rules saved before palette support still decode (missing means Off).
+    var palette: PaletteLevel?
     var format = "jpeg"
     var width = 1920
     var height = 1080

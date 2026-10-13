@@ -78,6 +78,7 @@ Derived: `effectiveRules` returns `rules`, or, when nil, one "Compress new files
 | destinationName | String | "Choose a folder" | Display only |
 | preset | CompressionPreset | `.balanced` | Not `.custom` |
 | replacement | ReplacementBehavior | `.keepBoth` | Compress only |
+| palette | PaletteLevel? | nil (Off) | Compress only, PNG only; optional so rules saved before 2026-10-13 decode; unknown stored values decode as Off so the watched-folder list never fails to load |
 | format | String | `jpeg` | `jpeg`, `png`, `heic`, `tiff`, `pdf` |
 | width / height | Int | 1920 / 1080 | 1-100,000 |
 | quality | Double | 0.9 | finite, 0...1 |

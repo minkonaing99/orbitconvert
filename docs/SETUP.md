@@ -206,6 +206,7 @@ Only these test variables exist; nothing configures the app itself through the e
 
 | Date | Milestone | Tests | Whole-app coverage | Notes |
 | --- | --- | --- | --- | --- |
+| 2026-10-13 | F9 rule palette PNG (Release, arm64) | 253 run, 252 pass, 1 skipped | 81.35% (8265/10160) | Old rule JSON without palette decodes, unknown value decodes as Off, level round-trips, rule Compress palette vs lossless, Replace Original, noisy fallback |
 | 2026-10-13 | Rename brace date tokens (Release, arm64) | 250 run, 249 pass, 1 skipped | 81.19% (8224/10129) | Individual {yyyy}..{ss} tokens, legacy bare codes, unknown tokens rejected |
 | 2026-10-13 | F8 palette levels (Release, arm64) | 249 run, 248 pass, 1 skipped | 81.18% (8219/10124) | Smaller quantizes a fixture Safe rejects, Off never runs pngquant, legacy Bool fallback and migration, Quick Action reads the level |
 | 2026-10-12 | F7 lossless JPEG (Release, arm64) | 247 run, 246 pass, 1 skipped | 81.16% (8189/10090) | Real jpegtran helper: smaller baseline pixel-identical output, metadata kept/stripped with ICC kept, no gain skipped, truncated/invalid input skipped, optimizer integration (skip path, re-encode path, rotated photo) |

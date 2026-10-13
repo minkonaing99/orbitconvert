@@ -36,7 +36,7 @@ nonisolated struct AutomationMediaService: Sendable {
                           willPublish: @escaping @Sendable (URL) async throws -> Void) async throws -> AutomationActionOutput {
         let outcome = try file.isPDF
             ? PDFOptimizationService().optimize(file, in: work, options: PDFOptimizationOptions(preset: action.preset))
-            : ImageOptimizationService().optimize(file, in: work, preset: action.preset)
+            : ImageOptimizationService().optimize(file, in: work, preset: action.preset, palette: action.palette ?? .off)
         switch outcome {
         case .saved(let result):
             let output: URL
