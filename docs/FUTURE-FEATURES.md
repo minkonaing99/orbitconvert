@@ -89,9 +89,9 @@ Suggested order: F3 (smallest, visible daily) -> F2 -> F4 -> F5 -> F1 (PNG part 
 
 | Template | Conditions | Actions |
 | --- | --- | --- |
-| Screenshots: rename and compress | Name starts with "Screenshot" (English macOS; edit for other languages), file type PNG, name does not contain "-optimized" | Rename `'Screenshot'_yyyy-MM-dd_HH-mm-ss.{ext}`, Compress (Keep Both) |
+| Screenshots: rename and compress | Name starts with "Screenshot" (English macOS; edit for other languages), file type PNG, name does not contain "-optimized" | Rename `'Screenshot'_{yyyy}-{MM}-{dd}_{HH}-{mm}-{ss}.{ext}`, Compress (Keep Both) |
 | Large JPEG photos: make smaller copy | File type JPEG, width greater than 2560 | Resize to fit 2560 x 2560 (separate `-resized` copy) |
-| PDFs: add date and compress | Category PDF | Rename `yyyy-MM-dd_{name}.{ext}`, Compress (Keep Both) |
+| PDFs: add date and compress | Category PDF | Rename `{yyyy}-{MM}-{dd}_{name}.{ext}`, Compress (Keep Both) |
 | Sort Downloads: Images / PDFs / Archives / Documents and text files | Category | Move (choose destination before Save) |
 
 New rules without a Move action are inserted above existing Move rules, so sort rules stay last in first-match-wins order. Known behavior: a PDF that already starts with a date gets a second date prefix.
@@ -102,10 +102,10 @@ New rules without a Move action are inserted above existing Move rules, so sort 
 
 | Template | Conditions | Actions |
 | --- | --- | --- |
-| Screenshots: rename + compress | Filename starts with "Screenshot" and category is image | Rename `'Screenshot'_yyyy-MM-dd_HH-mm-ss.{ext}`, Compress (Keep Both) |
+| Screenshots: rename + compress | Filename starts with "Screenshot" and category is image | Rename `'Screenshot'_{yyyy}-{MM}-{dd}_{HH}-{mm}-{ss}.{ext}`, Compress (Keep Both) |
 | Downloads: sort by type | Category is image / PDF / archive / document (one rule each) | Move to a chosen subfolder (destination picked in the editor) |
 | Shrink photos | Extension is jpg/heic, size greater than 5 MB | Resize 2560 px, Compress Keep Both |
-| PDF tidy | Category is PDF | Rename `yyyy-MM-dd_{name}.{ext}`, Compress Keep Both |
+| PDF tidy | Category is PDF | Rename `{yyyy}-{MM}-{dd}_{name}.{ext}`, Compress Keep Both |
 
 - Templates are plain `AutomationRule` values in code; no new storage.
 - Move templates require choosing a destination before Save (existing validation already enforces this).

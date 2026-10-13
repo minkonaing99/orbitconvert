@@ -206,6 +206,7 @@ Only these test variables exist; nothing configures the app itself through the e
 
 | Date | Milestone | Tests | Whole-app coverage | Notes |
 | --- | --- | --- | --- | --- |
+| 2026-10-13 | Rename brace date tokens (Release, arm64) | 250 run, 249 pass, 1 skipped | 81.19% (8224/10129) | Individual {yyyy}..{ss} tokens, legacy bare codes, unknown tokens rejected |
 | 2026-10-13 | F8 palette levels (Release, arm64) | 249 run, 248 pass, 1 skipped | 81.18% (8219/10124) | Smaller quantizes a fixture Safe rejects, Off never runs pngquant, legacy Bool fallback and migration, Quick Action reads the level |
 | 2026-10-12 | F7 lossless JPEG (Release, arm64) | 247 run, 246 pass, 1 skipped | 81.16% (8189/10090) | Real jpegtran helper: smaller baseline pixel-identical output, metadata kept/stripped with ICC kept, no gain skipped, truncated/invalid input skipped, optimizer integration (skip path, re-encode path, rotated photo) |
 | 2026-10-12 | F6 JPEG skip re-encode (Release, arm64) | 240 run, 239 pass, 1 skipped | 81.06% (8112/10008) | IJG estimates at 50/70/85/95, 16-bit, chroma and SOF-mapped tables, Remove metadata still re-encodes, corrupt headers, ImageIO equivalent, skip and re-encode paths, action message |

@@ -22,6 +22,17 @@ final class AutomationRenameTests: XCTestCase {
             modificationDate: nil, index: 1))
     }
 
+    func testBraceDateTokensWorkIndividually() throws {
+        XCTAssertEqual(try render("{yyyy}{MM}{dd}_{HH}{mm}{ss}"), "20261010_191615.png")
+        XCTAssertEqual(try render("{dd}-{MM}-{yy}_{name}.{ext}"), "10-10-26_Photo.png")
+        XCTAssertEqual(try render("'Shot' {HH}h{mm}"), "Shot 19h16.png")
+        XCTAssertEqual(try render("yyyy-{MM}"), "2026-10.png", "Bare codes from older rules still work")
+        XCTAssertTrue(try AutomationRenameTemplate("{ss}").usesDate)
+        for pattern in ["{YYYY}", "{m}", "{yyy}", "{M}"] {
+            XCTAssertThrowsError(try AutomationRenameTemplate(pattern), pattern)
+        }
+    }
+
     func testLiteralQuotesRepeatedNumberingAndExtensionlessNames() throws {
         XCTAssertEqual(try render("'Holiday yyyy'_{i}_{i:03}.{ext}", index: 12), "Holiday yyyy_12_012.png")
         XCTAssertEqual(try render("'Bob''s'_{name}"), "Bob's_Photo.png")

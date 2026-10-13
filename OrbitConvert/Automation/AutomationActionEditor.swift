@@ -29,7 +29,8 @@ struct AutomationActionEditor: View {
         VStack(alignment: .leading, spacing: 6) {
             TextField("Rename pattern", text: value(\.template))
             HStack(spacing: 4) {
-                ForEach(["{name}", "{ext}", "yyyy-MM-dd", "HH-mm-ss", "{i}", "{i:03}"], id: \.self) { token in
+                ForEach(["{name}", "{ext}", "{yyyy}", "{MM}", "{dd}", "{HH}", "{mm}", "{ss}", "{i}", "{i:03}"],
+                        id: \.self) { token in
                     Button(token) {
                         var next = action; next.template += token; action = next
                     }.controlSize(.small)
@@ -37,7 +38,7 @@ struct AutomationActionEditor: View {
             }
             Text(renamePreview).font(.caption).foregroundStyle(.secondary)
                 .textSelection(.enabled).lineLimit(2)
-            Text("Uses creation date (modified date if missing). MM = month; mm = minute. Quote literal text: 'Photo'. Extension stays; {i} finds the next unused number.")
+            Text("Uses creation date (modified date if missing). {MM} = month; {mm} = minute; {yy} = 2-digit year. Quote literal text: 'Photo'. Extension stays; {i} finds the next unused number.")
                 .font(.caption).foregroundStyle(.secondary)
         }
     }

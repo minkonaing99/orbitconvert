@@ -161,24 +161,24 @@ Rename tokens use the file's creation date (falling back to modification date, r
 
 | Token | Meaning | Example |
 | --- | --- | --- |
-| `yy` / `yyyy` | Year | `26` / `2026` |
-| `MM` | Month (case-sensitive) | `10` |
-| `dd` | Day | `10` |
-| `HH` | Hour 00-23 | `19` |
-| `mm` | Minute (case-sensitive) | `16` |
-| `ss` | Second | `15` |
+| `{yy}` / `{yyyy}` | Year | `26` / `2026` |
+| `{MM}` | Month (case-sensitive) | `10` |
+| `{dd}` | Day | `10` |
+| `{HH}` | Hour 00-23 | `19` |
+| `{mm}` | Minute (case-sensitive) | `16` |
+| `{ss}` | Second | `15` |
 | `{name}` | Original name without extension | `Screenshot` |
 | `{ext}` | Current extension | `png` |
 | `{i}` / `{i:03}` | First unused number / padded | `1` / `001` |
 
-Quote literal text in single quotes (`'Photo'`); double a quote to escape it. Omitting `{ext}` keeps the extension. Examples for `Screenshot.png` created 2026-10-10 19:16:15:
+Each date part is its own token, so any order and separator works (`{dd}-{MM}-{yyyy}`, `{HH}h{mm}`). Bare codes without braces (`yyyy-MM-dd`) still work for rules saved before 2026-10-13, but they also match inside plain text (`mm` in "Summary"), so new rules use braces. Quote literal text in single quotes (`'Photo'`); double a quote to escape it. Omitting `{ext}` keeps the extension. Examples for `Screenshot.png` created 2026-10-10 19:16:15:
 
 | Template | Result |
 | --- | --- |
-| `'Photo'_yyyy-MM-dd_HH-mm-ss_{i}.{ext}` | `Photo_2026-10-10_19-16-15_1.png` |
-| `yyyy-MM-dd_HH-mm-ss_{name}_{i}.{ext}` | `2026-10-10_19-16-15_Screenshot_1.png` |
+| `'Photo'_{yyyy}-{MM}-{dd}_{HH}-{mm}-{ss}_{i}.{ext}` | `Photo_2026-10-10_19-16-15_1.png` |
+| `{yyyy}{MM}{dd}_{HH}{mm}{ss}_{name}_{i}.{ext}` | `20261010_191615_Screenshot_1.png` |
 | `'Scan'_{i:03}.{ext}` | `Scan_001.png` |
-| `'Photo'_yyyy-MM-dd_{i}` | `Photo_2026-10-10_1.png` |
+| `'Photo'_{dd}-{MM}-{yyyy}_{i}` | `Photo_10-10-2026_1.png` |
 
 `{i}` starts at 1 per destination folder and advances until the full name is unused, accounting for names reserved earlier in the same batch. Repeated `{i}` tokens share one number. Without `{i}`, collisions get a numeric suffix. Preview names are provisional; history shows the actual final name.
 

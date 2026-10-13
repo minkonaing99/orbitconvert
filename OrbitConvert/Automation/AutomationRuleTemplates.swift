@@ -53,11 +53,11 @@ nonisolated enum AutomationRuleTemplate: String, CaseIterable, Identifiable, Sen
     private var actions: [AutomationAction] {
         switch self {
         case .screenshots:
-            [AutomationAction(kind: .rename, template: "'Screenshot'_yyyy-MM-dd_HH-mm-ss.{ext}"),
+            [AutomationAction(kind: .rename, template: "'Screenshot'_{yyyy}-{MM}-{dd}_{HH}-{mm}-{ss}.{ext}"),
              AutomationAction(kind: .compress, replacement: .keepBoth)]
         case .shrinkPhotos: [AutomationAction(kind: .resize, width: 2560, height: 2560)]
         case .tidyPDFs:
-            [AutomationAction(kind: .rename, template: "yyyy-MM-dd_{name}.{ext}"),
+            [AutomationAction(kind: .rename, template: "{yyyy}-{MM}-{dd}_{name}.{ext}"),
              AutomationAction(kind: .compress, replacement: .keepBoth)]
         case .sortImages, .sortPDFs, .sortArchives, .sortDocuments: [AutomationAction(kind: .move)]
         }

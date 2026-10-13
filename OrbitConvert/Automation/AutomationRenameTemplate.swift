@@ -2,6 +2,7 @@ import Foundation
 
 nonisolated struct AutomationRenameTemplate: Sendable {
     private enum Part: Sendable { case literal(String), date(String), name, ext, increment(Int) }
+    static let dateTokens = ["yyyy", "yy", "MM", "dd", "HH", "mm", "ss"]
     private let parts: [Part]
     var usesIncrement: Bool { parts.contains { if case .increment = $0 { true } else { false } } }
     var usesDate: Bool { parts.contains { if case .date = $0 { true } else { false } } }
@@ -34,7 +35,8 @@ nonisolated struct AutomationRenameTemplate: Sendable {
                 rest = rest[rest.index(after: end)...]; continue
             }
             if rest.first == "}" { throw AutomationError.invalid("Unexpected } in the rename pattern.") }
-            if let token = ["yyyy", "yy", "MM", "dd", "HH", "mm", "ss"].first(where: { rest.hasPrefix($0) }) {
+            // Bare date codes (without braces) are kept for rules saved before brace tokens existed.
+            if let token = Self.dateTokens.first(where: { rest.hasPrefix($0) }) {
                 result.append(.date(token)); rest = rest.dropFirst(token.count)
             } else {
                 result.append(.literal(String(rest.removeFirst())))
@@ -49,11 +51,12 @@ nonisolated struct AutomationRenameTemplate: Sendable {
         case "name": return .name
         case "ext": return .ext
         case "i": return .increment(1)
+        case _ where dateTokens.contains(token): return .date(token)
         default:
             if token.hasPrefix("i:0"), let width = Int(token.dropFirst(3)), (1...9).contains(width) {
                 return .increment(width)
             }
-            throw AutomationError.invalid("Unknown rename token {\(token)}. Use name, ext, i, or i:03.")
+            throw AutomationError.invalid("Unknown rename token {\(token)}. Use name, ext, yyyy, yy, MM, dd, HH, mm, ss, i, or i:03.")
         }
     }
 

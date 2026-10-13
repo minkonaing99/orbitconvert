@@ -146,6 +146,7 @@ Next:
 
 ### Done
 
+- [x] Rename brace date tokens {yyyy} {yy} {MM} {dd} {HH} {mm} {ss} - 2026-10-13
 - [x] F8 palette PNG levels Off/Safe/Smaller - 2026-10-13
 - [x] F7 lossless JPEG optimization (mozjpeg jpegtran, baseline) - 2026-10-12
 - [x] F6 JPEG skip re-encode for already-compressed files - 2026-10-12
