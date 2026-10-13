@@ -1,6 +1,6 @@
 # Future Features
 
-Status: Proposed 2026-10-12. Nothing here is implemented yet.
+Status: F1-F8 done; F9-F11 planned 2026-10-13. Order: F9 -> F10 -> F11 (6A first).
 
 Product direction (decided 2026-10-12, see [PRD scope rule](PRD.md#scope-rule)): OrbitConvert stays **personal use only** and is both a **manual converter** and a **folder automation tool** (watched folders run rules). Features below serve one or both sides.
 
@@ -18,6 +18,9 @@ Rules for every feature: TDD, code review (fix CRITICAL/HIGH), security review b
 | F6 | JPEG: skip re-encoding already-compressed files | Both | 1 day | - | Done 2026-10-12 |
 | F7 | JPEG lossless optimization (mozjpeg jpegtran) | Both | 1-2 days | Binary/license check | Done 2026-10-12 |
 | F8 | Palette PNG levels: Safe and Smaller | Both | 0.5 day | F5 | Done 2026-10-13 |
+| F9 | Palette PNG in rule Compress actions | Automation | 0.5 day | F8 | Planned 2026-10-13 |
+| F10 | Faster Compress to Size quality search | Converter | 0.5 day | - | Planned 2026-10-13 |
+| F11 | Markdown math and diagrams (PLAN stage 6) | Converter | 6A 0.5-1 day; 6B-6C several days | 6B before 6C | Planned 2026-10-13 |
 
 Suggested order: F3 (smallest, visible daily) -> F2 -> F4 -> F5 -> F1 (PNG part benefits from F5).
 
@@ -180,6 +183,46 @@ New rules without a Move action are inserted above existing Move rules, so sort 
 **Files:** `Images/PngquantService.swift` (quality parameter), settings view, `QuickCompressionSettings`, `FileActionSettings`, `docs/SCHEMA.md`.
 
 **Tests:** Smaller produces a palette file where Safe skips (fixture between the two floors); migration from the old Bool; Off unchanged.
+
+## F9. Palette PNG in rule Compress actions
+
+**Goal:** the screenshot-folder rule gets palette savings (often 50-80%) instead of lossless only (about 40%).
+
+**Today:** rule Compress calls `ImageOptimizationService.optimize(file, in:, preset:)` without `palette`, so rules are always lossless for PNG. The JPEG improvements (F6, F7) already apply to rules.
+
+**Behavior:**
+
+- Compress action gets a "PNG colors" picker: Off / Safe / Smaller, default Off. Per rule, independent of the app-wide setting.
+- Only PNGs are affected; JPEG/HEIC/PDF ignore it.
+- Same fallbacks as F5: pngquant skip falls back to lossless; content-credential PNGs are still refused (the action reports the error); palette output is sRGB without metadata, and the caption says so.
+- Replace Original keeps its warning; Keep Both remains the template default.
+- The Screenshots template stays Off (owner turns it on per rule).
+
+**Data compatibility (critical):** rules are stored as JSON inside `watchedFolders` and decoded with synthesized `Codable` and `try?`. A new non-optional field would make old data fail to decode and every watched folder would disappear. So the field is `palette: PaletteLevel?` (missing = Off), and `PaletteLevel` becomes `Codable`.
+
+**Files:** `Automation/AutomationRule.swift` (field), `Automation/AutomationMediaService.swift` (pass level), `Automation/AutomationActionEditor.swift` (picker, caption), `Images/PngquantService.swift` (`Codable`), `docs/SCHEMA.md`.
+
+**Tests:** old rule JSON without the key decodes (palette Off) and a stored `smaller` round-trips; rule Compress with Safe on a screenshot-like PNG publishes a palette PNG (PLTE chunk); Off stays lossless; noisy PNG below the floor falls back to lossless; Replace Original with palette replaces in place.
+
+## F10. Faster Compress to Size quality search
+
+**Goal:** Compress to Size on large HEIC (and JPEG) files finishes in seconds instead of trying up to 21 quality steps per size level.
+
+**Today:** `TargetSizeCompressionService.findCandidate` encodes quality 100, 95, ... 0 until one fits: up to 21 full encodes per size level, then again for each downscale level. HEIC encodes are slow.
+
+**Behavior:**
+
+- Binary search over the same 5-point grid (100 to 0): about 5 encodes per size level. Pick the highest quality that fits.
+- Output size is not strictly monotonic in quality, so the chosen candidate is always the last measured one that fit (never assumed). Rarely, a slightly higher fitting quality may be missed; acceptable and documented.
+- PNG unchanged (one candidate per level). Messages, guarantees and output naming unchanged.
+
+**Files:** `Images/TargetSizeCompressionService.swift`, tests in `TargetSizeCompressionTests.swift`.
+
+**Tests:** same results as today for the existing JPEG/HEIC fixtures (quality chosen is the highest fitting step); encode count per size level at most 6 (counted through an injected encode closure or by measuring calls in a test helper); unreachable target still errors; cancellation still stops.
+
+## F11. Markdown math and diagrams
+
+Already planned as [PLAN stage 6](PLAN.md#stage-6-equations-and-diagrams). Order: 6A first (Pandoc `tex_math_dollars` so DOCX gets native Word equations; verify `m:oMath` in `word/document.xml`), small and self-contained. 6B (reproduce the WebKit startup failure in a signed installed app) decides whether 6C (offline KaTeX and Mermaid for PDF) is feasible; 6C needs a separate go-ahead.
 
 ## Open: "watch folder changes"
 

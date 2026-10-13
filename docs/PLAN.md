@@ -2,7 +2,7 @@
 
 Keep updated. Claude reads this before starting work.
 
-**Current status:** Phases 1-5 and 8-9 delivered; folder automation 2026-10-11; [hardening](HARDENING-PLAN.md) complete and version 2.0 set 2026-10-12. Direction: personal use, manual converter + folder automation ([PRD scope rule](PRD.md#scope-rule)). Next: [FUTURE-FEATURES](FUTURE-FEATURES.md) F1-F5.
+**Current status:** Phases 1-5 and 8-9 delivered; folder automation 2026-10-11; [hardening](HARDENING-PLAN.md) complete and version 2.0 set 2026-10-12. Direction: personal use, manual converter + folder automation ([PRD scope rule](PRD.md#scope-rule)). F1-F8 done 2026-10-13. Next: [FUTURE-FEATURES](FUTURE-FEATURES.md) F9 -> F10 -> F11.
 
 ## Phases
 
@@ -134,8 +134,10 @@ Next:
 
 ### In Progress
 
-- [ ] Optional: palette PNG for watched-folder and clipboard compression (currently manual only) - owner TBD
-- [ ] Faster HEIC quality search in Compress to Size (up to 21 encodes per size level) - owner TBD
+- [ ] F9 palette PNG in rule Compress actions ([FUTURE-FEATURES](FUTURE-FEATURES.md#f9-palette-png-in-rule-compress-actions)) - next
+- [ ] F10 faster Compress to Size quality search (binary search, about 5 encodes per size level) - after F9
+- [ ] F11 Markdown math (stage 6A DOCX equations first; 6B/6C need a separate go-ahead) - after F10
+- [ ] Optional: palette PNG for clipboard compression - owner TBD
 - [ ] Installed-app check: Choose Files with a folder, then convert a file from it (sandbox access for folder contents) - owner
 
 ### Backlog
