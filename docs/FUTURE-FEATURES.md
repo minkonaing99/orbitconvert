@@ -19,7 +19,7 @@ Rules for every feature: TDD, code review (fix CRITICAL/HIGH), security review b
 | F7 | JPEG lossless optimization (mozjpeg jpegtran) | Both | 1-2 days | Binary/license check | Done 2026-10-12 |
 | F8 | Palette PNG levels: Safe and Smaller | Both | 0.5 day | F5 | Done 2026-10-13 |
 | F9 | Palette PNG in rule Compress actions | Automation | 0.5 day | F8 | Done 2026-10-13 |
-| F10 | Faster Compress to Size quality search | Converter | 0.5 day | - | Planned 2026-10-13 |
+| F10 | Faster Compress to Size quality search | Converter | 0.5 day | - | Done 2026-10-13 |
 | F11 | Markdown math and diagrams (PLAN stage 6) | Converter | 6A 0.5-1 day; 6B-6C several days | 6B before 6C | Planned 2026-10-13 |
 
 Suggested order: F3 (smallest, visible daily) -> F2 -> F4 -> F5 -> F1 (PNG part benefits from F5).
@@ -207,6 +207,8 @@ New rules without a Move action are inserted above existing Move rules, so sort 
 **Tests:** old rule JSON without the key decodes (palette Off) and a stored `smaller` round-trips; rule Compress with Safe on a screenshot-like PNG publishes a palette PNG (PLTE chunk); Off stays lossless; noisy PNG below the floor falls back to lossless; Replace Original with palette replaces in place.
 
 ## F10. Faster Compress to Size quality search
+
+**Done 2026-10-13.** `TargetSizeCompressionService.highestFittingQuality` (binary search, at most 6 encodes per size level). Encode count is tested through the search function directly; the real-JPEG test checks it picks the same quality as a full scan.
 
 **Goal:** Compress to Size on large HEIC (and JPEG) files finishes in seconds instead of trying up to 21 quality steps per size level.
 

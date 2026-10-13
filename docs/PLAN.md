@@ -134,8 +134,7 @@ Next:
 
 ### In Progress
 
-- [ ] F10 faster Compress to Size quality search (binary search, about 5 encodes per size level) - next
-- [ ] F11 Markdown math (stage 6A DOCX equations first; 6B/6C need a separate go-ahead) - after F10
+- [ ] F11 Markdown math (stage 6A DOCX equations first; 6B/6C need a separate go-ahead) - next
 - [ ] Optional: palette PNG for clipboard compression - owner TBD
 - [ ] Installed-app check: Choose Files with a folder, then convert a file from it (sandbox access for folder contents) - owner
 
@@ -147,6 +146,7 @@ Next:
 
 ### Done
 
+- [x] F10 faster Compress to Size quality search - 2026-10-13
 - [x] F9 palette PNG in rule Compress actions - 2026-10-13
 - [x] Rename brace date tokens {yyyy} {yy} {MM} {dd} {HH} {mm} {ss} - 2026-10-13
 - [x] F8 palette PNG levels Off/Safe/Smaller - 2026-10-13

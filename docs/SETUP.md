@@ -206,6 +206,7 @@ Only these test variables exist; nothing configures the app itself through the e
 
 | Date | Milestone | Tests | Whole-app coverage | Notes |
 | --- | --- | --- | --- | --- |
+| 2026-10-13 | F10 faster target search (Release, arm64) | 256 run, 255 pass, 1 skipped | 81.41% (8296/10191) | Highest fitting step for every threshold within 6 calls, nothing fits in 1 call, errors propagate, same quality as full scan on a real JPEG |
 | 2026-10-13 | F9 rule palette PNG (Release, arm64) | 253 run, 252 pass, 1 skipped | 81.35% (8265/10160) | Old rule JSON without palette decodes, unknown value decodes as Off, level round-trips, rule Compress palette vs lossless, Replace Original, noisy fallback |
 | 2026-10-13 | Rename brace date tokens (Release, arm64) | 250 run, 249 pass, 1 skipped | 81.19% (8224/10129) | Individual {yyyy}..{ss} tokens, legacy bare codes, unknown tokens rejected |
 | 2026-10-13 | F8 palette levels (Release, arm64) | 249 run, 248 pass, 1 skipped | 81.18% (8219/10124) | Smaller quantizes a fixture Safe rejects, Off never runs pngquant, legacy Bool fallback and migration, Quick Action reads the level |

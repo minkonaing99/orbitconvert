@@ -119,23 +119,50 @@ struct TargetSizeCompressionService: Sendable {
 
     nonisolated private func findCandidate(_ image: CGImage, properties: [String: Any], targetBytes: Int64,
         format: ConversionFormat, palette: PaletteLevel, at url: URL) throws -> (bytes: Int64, quality: Int?, palette: Bool)? {
-        // shortcut: quality is sampled in 5-point steps; refine only if finer control is needed.
-        let qualities: [Int?] = format == .png ? [nil] : Array(stride(from: 100, through: 0, by: -5))
-        for quality in qualities {
+        if format == .png {
             try Task.checkCancellation()
-            var usedPalette = false
-            if format == .png {
-                usedPalette = try encodeOptimizedPNG(image, properties: properties, palette: palette, to: url)
-            } else {
-                try ImageOptimizationService().encodeResized(image, properties: properties, format: format,
-                    preset: .custom, jpegQuality: quality.map { Double($0) / 100 }, to: url)
-            }
-            guard let size = try FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int64, size > 0 else {
-                throw OptimizationError.cannotEncode
-            }
-            if size <= targetBytes { return (Int64(size), quality, usedPalette) }
+            let usedPalette = try encodeOptimizedPNG(image, properties: properties, palette: palette, to: url)
+            let size = try measuredSize(url)
+            return size <= targetBytes ? (size, nil, usedPalette) : nil
         }
-        return nil
+        // Each quality gets its own file so the winner is moved into place instead of encoded again.
+        let folder = url.deletingLastPathComponent()
+        let file = { (quality: Int) in folder.appendingPathComponent("q\(quality)-" + url.lastPathComponent) }
+        var sizes: [Int: Int64] = [:]
+        defer { sizes.keys.forEach { try? FileManager.default.removeItem(at: file($0)) } }
+        let best = try Self.highestFittingQuality { quality in
+            try Task.checkCancellation()
+            try ImageOptimizationService().encodeResized(image, properties: properties, format: format,
+                preset: .custom, jpegQuality: Double(quality) / 100, to: file(quality))
+            let size = try measuredSize(file(quality))
+            sizes[quality] = size
+            return size <= targetBytes
+        }
+        guard let best, let size = sizes[best] else { return nil }
+        try? FileManager.default.removeItem(at: url)
+        try FileManager.default.moveItem(at: file(best), to: url)
+        return (size, best, false)
+    }
+
+    /// Highest quality on the 100...0 grid (5-point steps) for which `fits` is true, by binary search: at most
+    /// 6 calls instead of 21. Size is not strictly monotonic in quality, so a slightly higher fitting step can
+    /// rarely be missed; the returned step itself always fit.
+    nonisolated static func highestFittingQuality(_ fits: (Int) throws -> Bool) rethrows -> Int? {
+        let steps = Array(stride(from: 100, through: 0, by: -5))
+        guard try fits(steps[steps.count - 1]) else { return nil }
+        var low = 0, high = steps.count - 1
+        while low < high {
+            let middle = (low + high) / 2
+            if try fits(steps[middle]) { high = middle } else { low = middle + 1 }
+        }
+        return steps[high]
+    }
+
+    nonisolated private func measuredSize(_ url: URL) throws -> Int64 {
+        guard let size = try FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int64, size > 0 else {
+            throw OptimizationError.cannotEncode
+        }
+        return size
     }
 
     // ImageIO PNGs are much larger than Oxipng output, so each PNG candidate is optimized before measuring.
