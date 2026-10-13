@@ -2,7 +2,7 @@
 
 Newest first. Follows SemVer. Dates ISO 8601.
 
-No version has been released yet (the app is set to version 2.0, build 1), so all work is collected under Unreleased. When a version ships, move the entries into a block using this format and keep section order fixed, omitting empty sections:
+No version has been released yet (the app is set to version 3.1, build 1), so all work is collected under Unreleased. When a version ships, move the entries into a block using this format and keep section order fixed, omitting empty sections:
 
 ```
 ## [X.Y.Z] - YYYY-MM-DD

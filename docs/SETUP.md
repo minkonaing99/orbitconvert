@@ -206,6 +206,7 @@ Only these test variables exist; nothing configures the app itself through the e
 
 | Date | Milestone | Tests | Whole-app coverage | Notes |
 | --- | --- | --- | --- | --- |
+| 2026-10-13 | Installed app: Markdown PDF math + Mermaid (Release, locally signed, sandboxed) | Manual | - | Owner exported `math-and-diagram.md`; PDF checked: inline math on baseline, centered display integral, Mermaid flowchart, `$5` text |
 | 2026-10-13 | F11 6B/6C PDF math and Mermaid (Release, arm64) | 261 run, 260 pass, 1 skipped | 81.80% (8567/10473) | WebKit in sandboxed host, vector PDF snippets, invalid/oversized/excess fallback, hash-pinned CSP page, PDF export draws formulas and diagrams; visually checked baseline, centering, glyphs |
 | 2026-10-13 | F11 6A DOCX math (Release, arm64) | 257 run, 256 pass, 1 skipped | 81.37% (8292/10191) | DOCX read back with Pandoc has InlineMath and DisplayMath; `$5` stays text |
 | 2026-10-13 | F10 faster target search (Release, arm64) | 256 run, 255 pass, 1 skipped | 81.41% (8296/10191) | Highest fitting step for every threshold within 6 calls, nothing fits in 1 call, errors propagate, same quality as full scan on a real JPEG |

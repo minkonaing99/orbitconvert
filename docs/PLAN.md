@@ -2,7 +2,7 @@
 
 Keep updated. Claude reads this before starting work.
 
-**Current status:** Phases 1-5 and 8-9 delivered; folder automation 2026-10-11; [hardening](HARDENING-PLAN.md) complete and version 2.0 set 2026-10-12. Direction: personal use, manual converter + folder automation ([PRD scope rule](PRD.md#scope-rule)). F1-F8 done 2026-10-13. Next: [FUTURE-FEATURES](FUTURE-FEATURES.md) F9 -> F10 -> F11.
+**Current status:** Phases 1-5 and 8-9 delivered; folder automation 2026-10-11; [hardening](HARDENING-PLAN.md) complete 2026-10-12; version 3.1 set 2026-10-13. Direction: personal use, manual converter + folder automation ([PRD scope rule](PRD.md#scope-rule)). [FUTURE-FEATURES](FUTURE-FEATURES.md) F1-F11 done 2026-10-13.
 
 ## Phases
 
@@ -134,7 +134,6 @@ Next:
 
 ### In Progress
 
-- [ ] Installed-app check: Markdown PDF with math and a Mermaid block in the signed installed app - owner
 - [ ] Optional: palette PNG for clipboard compression - owner TBD
 - [ ] Installed-app check: Choose Files with a folder, then convert a file from it (sandbox access for folder contents) - owner
 
@@ -146,6 +145,7 @@ Next:
 
 ### Done
 
+- [x] Installed-app check (locally signed Release, sandboxed, network.client): Markdown PDF with inline/display math and a Mermaid flowchart renders correctly - 2026-10-13
 - [x] F11 6B/6C PDF math and Mermaid (offline KaTeX + Mermaid via WebKit, network-client entitlement) - 2026-10-13
 - [x] F11 6A DOCX native equations (verified existing behavior, regression test) - 2026-10-13
 - [x] F10 faster Compress to Size quality search - 2026-10-13
