@@ -140,13 +140,13 @@ Next:
 
 ### Backlog
 
-- [ ] F8 palette PNG levels (Safe/Smaller) in [FUTURE-FEATURES](FUTURE-FEATURES.md) - owner TBD
 - [ ] Stage 0 benchmark fixtures - owner TBD
 - [ ] Stage 6 (Markdown math and Mermaid) - owner TBD
 - [ ] Large-image and large-PDF memory profiling - owner TBD
 
 ### Done
 
+- [x] F8 palette PNG levels Off/Safe/Smaller - 2026-10-13
 - [x] F7 lossless JPEG optimization (mozjpeg jpegtran, baseline) - 2026-10-12
 - [x] F6 JPEG skip re-encode for already-compressed files - 2026-10-12
 - [x] F5 palette PNG (pngquant), opt-in - 2026-10-12

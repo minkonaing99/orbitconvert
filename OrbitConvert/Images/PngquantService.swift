@@ -1,9 +1,43 @@
 import Foundation
 
+// Opt-in palette level. Safe keeps pngquant's 80 quality floor; Smaller accepts 60.
+nonisolated enum PaletteLevel: String, CaseIterable, Sendable {
+    case off, safe, smaller
+
+    static let storageKey = "paletteLevel"
+    static let legacyKey = "paletteReduction"
+
+    var qualityRange: String? {
+        switch self {
+        case .off: nil
+        case .safe: "80-100"
+        case .smaller: "60-100"
+        }
+    }
+
+    var label: String {
+        switch self {
+        case .off: "Off"
+        case .safe: "Safe"
+        case .smaller: "Smaller"
+        }
+    }
+
+    /// The saved level; before F8 the setting was a Bool where on meant Safe.
+    static func saved(in defaults: UserDefaults) -> PaletteLevel {
+        if let raw = defaults.string(forKey: storageKey), let level = PaletteLevel(rawValue: raw) { return level }
+        return defaults.bool(forKey: legacyKey) ? .safe : .off
+    }
+
+    static func migrate(_ defaults: UserDefaults) {
+        guard defaults.string(forKey: storageKey).flatMap(PaletteLevel.init(rawValue:)) == nil else { return }
+        defaults.set(saved(in: defaults).rawValue, forKey: storageKey)
+    }
+}
+
 // Opt-in lossy palette reduction with the bundled pngquant (GPL v3, local build input only).
 // The macOS build converts colors to sRGB and drops metadata chunks; callers must allow that.
 nonisolated struct PngquantService: Sendable {
-    static let qualityRange = "80-100"
     static let maxBytes: Int64 = 256_000_000
     static let maxPixels = 100_000_000
     private static let qualityTooLow: Int32 = 99
@@ -14,22 +48,23 @@ nonisolated struct PngquantService: Sendable {
     /// Writes a palette PNG to `destination` and returns true. Returns false (skipped) when the input is too
     /// large, pngquant cannot meet the quality floor or shrink the file, or the helper fails or is missing,
     /// so callers fall back to lossless optimization. Cancellation still throws. Never overwrites `destination`.
-    func quantize(_ source: URL, to destination: URL, timeout: Duration = .seconds(60)) throws -> Bool {
+    func quantize(_ source: URL, to destination: URL, level: PaletteLevel = .safe,
+                  timeout: Duration = .seconds(60)) throws -> Bool {
         guard !FileManager.default.fileExists(atPath: destination.path) else { throw ConversionError.cannotWriteFile }
-        guard Self.withinLimits(source) else { return false }
+        guard let quality = level.qualityRange, Self.withinLimits(source) else { return false }
         do {
-            return try run(source, to: destination, timeout: timeout)
+            return try run(source, to: destination, quality: quality, timeout: timeout)
         } catch is DocumentConversionError {
             return false
         }
     }
 
-    private func run(_ source: URL, to destination: URL, timeout: Duration) throws -> Bool {
+    private func run(_ source: URL, to destination: URL, quality: String, timeout: Duration) throws -> Bool {
         let job = try BundledDocumentTool.workspace()
         defer { try? FileManager.default.removeItem(at: job) }
         try FileManager.default.copyItem(at: source, to: job.appendingPathComponent("input.png"))
         let status = try BundledDocumentTool().run("pngquant",
-            arguments: ["--quality=" + Self.qualityRange, "--speed", "3", "--skip-if-larger",
+            arguments: ["--quality=" + quality, "--speed", "3", "--skip-if-larger",
                         "--output", "output.png", "--", "input.png"],
             in: job, timeout: timeout, acceptedStatuses: [0, Self.qualityTooLow, Self.notSmaller])
         guard status == 0 else { return false }

@@ -17,7 +17,7 @@ Rules for every feature: TDD, code review (fix CRITICAL/HIGH), security review b
 | F5 | Palette PNG option (pngquant) | Both | 1-2 days | License check | Done 2026-10-12 |
 | F6 | JPEG: skip re-encoding already-compressed files | Both | 1 day | - | Done 2026-10-12 |
 | F7 | JPEG lossless optimization (mozjpeg jpegtran) | Both | 1-2 days | Binary/license check | Done 2026-10-12 |
-| F8 | Palette PNG levels: Safe and Smaller | Both | 0.5 day | F5 | Proposed |
+| F8 | Palette PNG levels: Safe and Smaller | Both | 0.5 day | F5 | Done 2026-10-13 |
 
 Suggested order: F3 (smallest, visible daily) -> F2 -> F4 -> F5 -> F1 (PNG part benefits from F5).
 
@@ -170,6 +170,8 @@ New rules without a Move action are inserted above existing Move rules, so sort 
 **Tests:** smaller with identical pixels; metadata kept/removed per setting; progressive output decodes; helper missing or failing falls back.
 
 ## F8. Palette PNG levels: Safe and Smaller
+
+**Done 2026-10-13.** `PaletteLevel` (Images/PngquantService.swift), stored as `paletteLevel`; the old Bool is migrated at launch (on = Safe). Settings shows a picker.
 
 **Goal:** let screenshots shrink further when slight color changes are acceptable.
 

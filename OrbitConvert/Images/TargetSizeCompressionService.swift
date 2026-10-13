@@ -43,11 +43,11 @@ struct TargetSizeCompressionService: Sendable {
     nonisolated init() {}
 
     nonisolated func compress(_ file: FileItem, in directory: URL, targetBytes: Int64,
-                              removeMetadata: Bool = false, palette: Bool = false) throws -> FileActionReport {
+                              removeMetadata: Bool = false, palette: PaletteLevel = .off) throws -> FileActionReport {
         guard (1...1_000_000_000).contains(targetBytes) else { throw TargetSizeError.invalidTarget }
         guard file.url.isFileURL, let format = Self.format(for: file) else { throw OptimizationError.unsupportedInput }
         // Palette output drops metadata; content-credential PNGs still need an explicit Remove metadata choice.
-        if format == .png, palette, !removeMetadata { try OxipngService().validateRewrite(of: file.url) }
+        if format == .png, palette != .off, !removeMetadata { try OxipngService().validateRewrite(of: file.url) }
         guard directory.isFileURL else { throw ConversionError.invalidDestination }
         let sourceScoped = file.url.startAccessingSecurityScopedResource()
         defer { if sourceScoped { file.url.stopAccessingSecurityScopedResource() } }
@@ -91,7 +91,7 @@ struct TargetSizeCompressionService: Sendable {
 
     nonisolated private func candidate(_ source: CGImageSource, image: CGImage, properties: [String: Any],
         displaySize: ResizeDimensions, removeMetadata: Bool, targetBytes: Int64, format: ConversionFormat,
-        palette: Bool, at url: URL) throws -> (bytes: Int64, quality: Int?, palette: Bool, dimensions: String) {
+        palette: PaletteLevel, at url: URL) throws -> (bytes: Int64, quality: Int?, palette: Bool, dimensions: String) {
         let outputProperties = removeMetadata ? properties.filter {
             [kCGImagePropertyOrientation as String, kCGImagePropertyDPIWidth as String,
              kCGImagePropertyDPIHeight as String].contains($0.key)
@@ -118,7 +118,7 @@ struct TargetSizeCompressionService: Sendable {
     }
 
     nonisolated private func findCandidate(_ image: CGImage, properties: [String: Any], targetBytes: Int64,
-        format: ConversionFormat, palette: Bool, at url: URL) throws -> (bytes: Int64, quality: Int?, palette: Bool)? {
+        format: ConversionFormat, palette: PaletteLevel, at url: URL) throws -> (bytes: Int64, quality: Int?, palette: Bool)? {
         // shortcut: quality is sampled in 5-point steps; refine only if finer control is needed.
         let qualities: [Int?] = format == .png ? [nil] : Array(stride(from: 100, through: 0, by: -5))
         for quality in qualities {
@@ -140,7 +140,7 @@ struct TargetSizeCompressionService: Sendable {
 
     // ImageIO PNGs are much larger than Oxipng output, so each PNG candidate is optimized before measuring.
     // With palette allowed, pngquant runs first; it is skipped when it cannot meet its quality floor.
-    nonisolated private func encodeOptimizedPNG(_ image: CGImage, properties: [String: Any], palette: Bool,
+    nonisolated private func encodeOptimizedPNG(_ image: CGImage, properties: [String: Any], palette: PaletteLevel,
                                                 to url: URL) throws -> Bool {
         let folder = url.deletingLastPathComponent()
         let raw = folder.appendingPathComponent(UUID().uuidString + ".png")
@@ -148,7 +148,7 @@ struct TargetSizeCompressionService: Sendable {
         defer { [raw, quantized].forEach { try? FileManager.default.removeItem(at: $0) } }
         try ImageOptimizationService().encodeResized(image, properties: properties, format: .png,
             preset: .balanced, jpegQuality: nil, to: raw)
-        let usedPalette = try palette && PngquantService().quantize(raw, to: quantized)
+        let usedPalette = try PngquantService().quantize(raw, to: quantized, level: palette)
         try? FileManager.default.removeItem(at: url)
         try OxipngService().optimize(source: usedPalette ? quantized : raw, destination: url, preset: .balanced)
         return usedPalette

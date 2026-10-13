@@ -18,7 +18,8 @@ OrbitConvert has no backend, database, network API, HTTP server or OpenAPI schem
 | UserDefaults | `clipboardPreset` | Clipboard compression preset | String |
 | UserDefaults | `clipboardShowResults`, `clipboardCollect` | Result card, in-memory collection | Bool |
 | UserDefaults | `clipboardIgnoredApps` | Ignored bundle IDs | [String] |
-| @AppStorage | `paletteReduction` | Allow lossy palette PNG (pngquant) for Compress, Compress to Size and Quick Action; default off | Bool |
+| @AppStorage | `paletteLevel` | Palette PNG (pngquant) for Compress, Compress to Size and Quick Action: `off`, `safe` (quality 80-100), `smaller` (60-100); default off | String (`PaletteLevel`) |
+| (legacy) | `paletteReduction` | Pre-F8 Bool; read only when `paletteLevel` is missing or invalid (true = safe); `PaletteLevel.migrate` copies it to `paletteLevel` at app launch | Bool |
 | UserDefaults | `quickCompressionMode` | Last Finder Quick Action save choice | String |
 | UserDefaults | `lifetimeSavedBytes` | Total bytes saved across launches (watched folders, clipboard, manual, Quick Action); seeded once from history | Int64 (NSNumber) |
 | UserDefaults | `lifetimeOptimizedCount` | Number of results that saved space | Int |

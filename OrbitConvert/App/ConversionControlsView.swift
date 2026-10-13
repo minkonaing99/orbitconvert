@@ -10,7 +10,7 @@ struct ConversionControlsView: View {
     @AppStorage("defaultCompressionPreset") private var defaultPreset = CompressionPreset.balanced.rawValue
     @AppStorage("jpegExportQuality") private var jpegQuality = 0.90
     @AppStorage("removeMetadata") private var stripMetadata = false
-    @AppStorage("paletteReduction") private var palettePNG = false
+    @AppStorage(PaletteLevel.storageKey) private var palettePNG = PaletteLevel.off
     @AppStorage("pdfImageDPI") private var pdfDPI = 150
     @State private var strongerPDFCompression = false
     @State private var pdfLayout = PDFPageLayout.fit

@@ -11,6 +11,10 @@ struct OrbitConvertApp: App {
         return WatchedFoldersController(defaults: defaults, startClipboard: !testing)
     }()
 
+    init() {
+        PaletteLevel.migrate(.standard)
+    }
+
     var body: some Scene {
         Window(AppIdentity.name, id: "main") {
             ContentView()

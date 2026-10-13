@@ -21,7 +21,7 @@ struct ImageOptimizationService: Sendable {
                               preset: CompressionPreset = .balanced,
                               jpegQuality: Double? = nil,
                               removeMetadata: Bool = false,
-                              palette: Bool = false) throws -> OptimizationOutcome {
+                              palette: PaletteLevel = .off) throws -> OptimizationOutcome {
         guard let format = ConversionFormat.sourceFormat(for: file.contentTypeIdentifier),
               [.jpeg, .png, .heic].contains(format) else { throw OptimizationError.unsupportedInput }
         guard Set(CGImageDestinationCopyTypeIdentifiers() as? [String] ?? []).contains(format.typeIdentifier) else {
@@ -75,8 +75,9 @@ struct ImageOptimizationService: Sendable {
     }
 
     nonisolated private func encodePNG(_ url: URL, source: CGImageSource, to temporary: URL,
-                                       preset: CompressionPreset, removeMetadata: Bool, palette: Bool) throws {
-        if palette, try paletteCandidate(url, to: temporary, preset: preset, removeMetadata: removeMetadata) { return }
+                                       preset: CompressionPreset, removeMetadata: Bool, palette: PaletteLevel) throws {
+        if palette != .off, try paletteCandidate(url, to: temporary, preset: preset, level: palette,
+                                                 removeMetadata: removeMetadata) { return }
         if removeMetadata {
             let stripped = temporary.deletingLastPathComponent().appendingPathComponent("stripped.png")
             try encode(source, to: stripped, format: .png, quality: nil, removeMetadata: true)
@@ -119,11 +120,11 @@ struct ImageOptimizationService: Sendable {
     // Palette output drops metadata, so content credentials still require an explicit Remove metadata choice.
     // Returns false when pngquant skips the file, so the lossless path runs instead.
     nonisolated private func paletteCandidate(_ url: URL, to temporary: URL, preset: CompressionPreset,
-                                              removeMetadata: Bool) throws -> Bool {
+                                              level: PaletteLevel, removeMetadata: Bool) throws -> Bool {
         if !removeMetadata { try OxipngService().validateRewrite(of: url) }
         let quantized = temporary.deletingLastPathComponent().appendingPathComponent("palette.png")
         defer { try? FileManager.default.removeItem(at: quantized) }
-        guard try PngquantService().quantize(url, to: quantized) else { return false }
+        guard try PngquantService().quantize(url, to: quantized, level: level) else { return false }
         try OxipngService().optimize(source: quantized, destination: temporary, preset: preset)
         return true
     }

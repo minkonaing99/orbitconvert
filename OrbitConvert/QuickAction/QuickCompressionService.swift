@@ -23,8 +23,8 @@ nonisolated enum QuickCompressionMode: String, CaseIterable, Identifiable {
 nonisolated struct QuickCompressionSettings: Sendable {
     let preset: CompressionPreset
     let removeMetadata: Bool
-    let palette: Bool
-    init(preset: CompressionPreset = .balanced, removeMetadata: Bool = false, palette: Bool = false) {
+    let palette: PaletteLevel
+    init(preset: CompressionPreset = .balanced, removeMetadata: Bool = false, palette: PaletteLevel = .off) {
         self.preset = preset
         self.removeMetadata = removeMetadata
         self.palette = palette
@@ -33,7 +33,7 @@ nonisolated struct QuickCompressionSettings: Sendable {
         let saved = CompressionPreset(rawValue: defaults.string(forKey: "defaultCompressionPreset") ?? "")
         preset = saved == .custom ? .balanced : saved ?? .balanced
         removeMetadata = defaults.bool(forKey: "removeMetadata")
-        palette = defaults.bool(forKey: "paletteReduction")
+        palette = PaletteLevel.saved(in: defaults)
     }
 }
 

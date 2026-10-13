@@ -27,6 +27,7 @@ Entry format: `- **Headline** - what changed + why it matters to the user. (#iss
 
 ### New Features
 
+- **PNG color levels** (2026-10-13) - "Reduce PNG colors" is now Off, Safe or Smaller. Safe works as before; Smaller also shrinks images where a slight color change is acceptable. If you had it on, it is set to Safe.
 - **Lossless JPEG shrinking** (2026-10-12) - Compress now also shrinks JPEGs without any quality change (often 5-20%), including ones that are already compressed. Remove metadata strips location and camera details without re-encoding upright photos. Pixels are checked to be identical before a file is saved.
 - **Smarter JPEG compression** (2026-10-12) - Compress no longer re-encodes JPEGs that are already at or below the chosen quality, which used to make them bigger and slightly worse. They are kept as they are and reported as "Already compressed at about N% quality". Applies everywhere JPEGs are compressed except Compress to Size, and not when Remove metadata is on.
 - **Smaller PNG screenshots** (2026-10-12) - Turn on "Reduce PNG colors" in General settings to shrink screenshots and graphics much further (often 50-80%) when quality stays high. Works with Compress, Compress to Size and the Finder Quick Action. Colors are converted to sRGB and hidden file details are removed; off by default.

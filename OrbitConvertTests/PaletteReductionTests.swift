@@ -36,7 +36,7 @@ final class PaletteReductionTests: XCTestCase {
         else { return XCTFail("Expected lossless reduction") }
         XCTAssertFalse(try chunks(lossless.outputURL).contains("PLTE"))
         guard case .saved(let palette) = try ImageOptimizationService().optimize(file, in: folder, preset: .balanced,
-                                                                              palette: true)
+                                                                              palette: .safe)
         else { return XCTFail("Expected palette reduction") }
         XCTAssertTrue(try chunks(palette.outputURL).contains("PLTE"))
         XCTAssertLessThan(palette.outputBytes, lossless.outputBytes)
@@ -47,7 +47,7 @@ final class PaletteReductionTests: XCTestCase {
         defer { try? FileManager.default.removeItem(at: folder) }
         let url = try writePNG(noise(), to: folder.appendingPathComponent("noise.png"))
         let file = try XCTUnwrap(FileTypeService().inspect([url]).files.first)
-        let outcome = try ImageOptimizationService().optimize(file, in: folder, preset: .balanced, palette: true)
+        let outcome = try ImageOptimizationService().optimize(file, in: folder, preset: .balanced, palette: .safe)
         switch outcome {
         case .saved(let result): XCTAssertFalse(try chunks(result.outputURL).contains("PLTE"))
         case .noReduction: break
@@ -63,9 +63,45 @@ final class PaletteReductionTests: XCTestCase {
         else { return XCTFail("Expected lossless reduction") }
         let target = lossless.outputBytes / 2
         XCTAssertThrowsError(try TargetSizeCompressionService().compress(file, in: folder, targetBytes: target))
-        let report = try TargetSizeCompressionService().compress(file, in: folder, targetBytes: target, palette: true)
+        let report = try TargetSizeCompressionService().compress(file, in: folder, targetBytes: target, palette: .safe)
         XCTAssertLessThanOrEqual(try XCTUnwrap(report.compression).outputBytes, target)
         XCTAssertTrue(report.message.contains("palette"), report.message)
+    }
+
+    func testSmallerLevelQuantizesWhereSafeSkips() throws {
+        let folder = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let source = try writePNG(noisyGradient(), to: folder.appendingPathComponent("gradient.png"))
+
+        XCTAssertFalse(try PngquantService().quantize(source, to: folder.appendingPathComponent("safe.png"), level: .safe))
+        XCTAssertFalse(try PngquantService().quantize(source, to: folder.appendingPathComponent("off.png"), level: .off))
+        let smaller = folder.appendingPathComponent("smaller.png")
+        XCTAssertTrue(try PngquantService().quantize(source, to: smaller, level: .smaller))
+        XCTAssertLessThan(try size(smaller), try size(source))
+
+        let file = try XCTUnwrap(FileTypeService().inspect([source]).files.first)
+        guard case .saved(let result) = try ImageOptimizationService().optimize(file, in: folder, preset: .balanced,
+                                                                             palette: .smaller)
+        else { return XCTFail("Expected palette reduction") }
+        XCTAssertTrue(try chunks(result.outputURL).contains("PLTE"))
+    }
+
+    func testLevelsMapToQualityFloorsAndLegacySetting() {
+        XCTAssertEqual(PaletteLevel.allCases.map(\.qualityRange), [nil, "80-100", "60-100"])
+        let name = "PaletteLevel.\(UUID())"
+        let defaults = UserDefaults(suiteName: name)!
+        defer { defaults.removePersistentDomain(forName: name) }
+        XCTAssertEqual(PaletteLevel.saved(in: defaults), .off)
+        defaults.set(true, forKey: "paletteReduction")
+        XCTAssertEqual(PaletteLevel.saved(in: defaults), .safe)
+        defaults.set("bogus", forKey: "paletteLevel")
+        XCTAssertEqual(PaletteLevel.saved(in: defaults), .safe)
+        defaults.removeObject(forKey: "paletteLevel")
+        PaletteLevel.migrate(defaults)
+        XCTAssertEqual(defaults.string(forKey: "paletteLevel"), "safe")
+        defaults.set("smaller", forKey: "paletteLevel")
+        PaletteLevel.migrate(defaults)
+        XCTAssertEqual(PaletteLevel.saved(in: defaults), .smaller)
     }
 
     func testOversizedOrBrokenInputIsSkippedInsteadOfFailing() throws {
@@ -95,6 +131,27 @@ final class PaletteReductionTests: XCTestCase {
             context.fillEllipse(in: CGRect(x: (index * 71) % 1200, y: (index * 29) % 800, width: 9, height: 9))
         }
         return try XCTUnwrap(context.makeImage())
+    }
+
+    // Gradient with +-6 noise: pngquant meets the 60 floor but not the 80 floor (measured with pngquant 3.0.3).
+    private func noisyGradient() throws -> CGImage {
+        let width = 256, height = 256
+        var bytes = [UInt8](repeating: 255, count: width * height * 4)
+        var seed: UInt32 = 12_345
+        for y in 0..<height {
+            for x in 0..<width {
+                for channel in 0..<3 {
+                    seed = seed &* 1_664_525 &+ 1_013_904_223
+                    let base = [x, y, (x + y) / 2][channel]
+                    bytes[(y * width + x) * 4 + channel] = UInt8(max(0, min(255, base + Int(seed >> 24) % 13 - 6)))
+                }
+            }
+        }
+        let provider = try XCTUnwrap(CGDataProvider(data: Data(bytes) as CFData))
+        return try XCTUnwrap(CGImage(width: width, height: height, bitsPerComponent: 8, bitsPerPixel: 32,
+            bytesPerRow: width * 4, space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.noneSkipLast.rawValue), provider: provider,
+            decode: nil, shouldInterpolate: false, intent: .defaultIntent))
     }
 
     private func noise() throws -> CGImage {

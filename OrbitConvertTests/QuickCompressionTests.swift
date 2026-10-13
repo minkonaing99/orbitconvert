@@ -100,9 +100,11 @@ final class QuickCompressionTests: XCTestCase {
         let defaults = UserDefaults(suiteName: name)!
         defer { defaults.removePersistentDomain(forName: name) }
         XCTAssertEqual(QuickCompressionSettings(defaults: defaults).preset, .balanced)
-        XCTAssertFalse(QuickCompressionSettings(defaults: defaults).palette, "Palette reduction is off by default")
+        XCTAssertEqual(QuickCompressionSettings(defaults: defaults).palette, .off, "Palette reduction is off by default")
         defaults.set(true, forKey: "paletteReduction")
-        XCTAssertTrue(QuickCompressionSettings(defaults: defaults).palette)
+        XCTAssertEqual(QuickCompressionSettings(defaults: defaults).palette, .safe)
+        defaults.set("smaller", forKey: "paletteLevel")
+        XCTAssertEqual(QuickCompressionSettings(defaults: defaults).palette, .smaller)
         defaults.set("aggressive", forKey: "defaultCompressionPreset")
         defaults.set(true, forKey: "removeMetadata")
         let settings = QuickCompressionSettings(defaults: defaults)

@@ -6,7 +6,7 @@ struct FileActionSettings: Sendable {
     var markdownImageFolder: URL? = nil
     var markdownPDFStyle = MarkdownPDFStyle()
     var strongerPDFCompression = false
-    var palettePNG = false
+    var palettePNG = PaletteLevel.off
     let jpegQuality: Double
     let stripMetadata: Bool
     let compressionPreset: CompressionPreset
