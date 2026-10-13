@@ -25,4 +25,11 @@ for tool in pandoc gs pngquant jpegtran; do
     fi
 done
 
+resources="${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}"
+for asset in katex/katex.min.js katex/katex-inline.css mermaid/mermaid.min.js; do
+    /usr/bin/gunzip -c "${SRCROOT}/ThirdParty/$asset.gz" > "$resources/$(basename "$asset")"
+done
+cp "${SRCROOT}/ThirdParty/katex/LICENSE" "$resources/katex-LICENSE.txt"
+cp "${SRCROOT}/ThirdParty/mermaid/LICENSE" "$resources/mermaid-LICENSE.txt"
+
 cp "${SRCROOT}/ThirdParty/ghostscript/THIRD-PARTY-NOTICES.txt" "${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ghostscript-THIRD-PARTY-NOTICES.txt"

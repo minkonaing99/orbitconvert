@@ -13,6 +13,7 @@ No version has been released yet (the app is set to version 2.0, build 1), so al
 ### Improvements
 ### Bug Fixes
 ### Security
+
 ### Deprecated
 ### Removed
 ### Breaking Changes
@@ -27,6 +28,7 @@ Entry format: `- **Headline** - what changed + why it matters to the user. (#iss
 
 ### New Features
 
+- **Formulas and diagrams in PDF export** (2026-10-13) - Markdown to PDF now draws math (`$...$`, `$$...$$`) as real typeset formulas and turns ```mermaid code blocks into diagrams, all offline. Anything that cannot be drawn keeps its text.
 - **Equations in Word export** (2026-10-13) - Confirmed and now tested: `$...$` and `$$...$$` math in Markdown becomes real, editable Word equations in DOCX export. Dollar amounts like `$5` stay as text. PDF export shows simple formulas but not yet fractions or integrals.
 - **Faster Compress to Size** (2026-10-13) - JPEG and HEIC targets are found with at most 6 trial encodes per size instead of up to 21, so large HEIC photos finish much sooner. Results are the same in normal cases.
 - **Smaller screenshots from folder rules** (2026-10-13) - A rule's Compress action now has a "PNG colors" option (Off, Safe, Smaller), so watched-folder rules can shrink screenshots as much as manual Compress. Existing rules stay Off.
@@ -70,6 +72,7 @@ Entry format: `- **Headline** - what changed + why it matters to the user. (#iss
 
 ### Security
 
+- The app now has the outbound-network sandbox permission (2026-10-13), required for the WebKit formula/diagram renderer to start. The renderer blocks every remote load (content rules, CSP, no navigation), and no feature sends data anywhere.
 - **Moved files go to Trash** (2026-10-11) - When an automation rule moves a file, the original is sent to Trash after the verified copy is saved, so a mistaken move can be recovered. If Trash is unavailable, the original is kept and the copy is reported.
 - **Rename no longer copies files** (2026-10-11) - Rule renames now rename the file in place: faster, no duplicate data, and nothing is deleted.
 - **Clearer Replace Original warning** (2026-10-11) - The rule editor shows a visible warning that in-place replacement cannot be undone.

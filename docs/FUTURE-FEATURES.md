@@ -20,7 +20,7 @@ Rules for every feature: TDD, code review (fix CRITICAL/HIGH), security review b
 | F8 | Palette PNG levels: Safe and Smaller | Both | 0.5 day | F5 | Done 2026-10-13 |
 | F9 | Palette PNG in rule Compress actions | Automation | 0.5 day | F8 | Done 2026-10-13 |
 | F10 | Faster Compress to Size quality search | Converter | 0.5 day | - | Done 2026-10-13 |
-| F11 | Markdown math and diagrams (PLAN stage 6) | Converter | 6A 0.5-1 day; 6B-6C several days | 6B before 6C | 6A done 2026-10-13; 6B/6C open |
+| F11 | Markdown math and diagrams (PLAN stage 6) | Converter | 6A 0.5-1 day; 6B-6C several days | 6B before 6C | Done 2026-10-13 |
 
 Suggested order: F3 (smallest, visible daily) -> F2 -> F4 -> F5 -> F1 (PNG part benefits from F5).
 
@@ -225,6 +225,8 @@ New rules without a Move action are inserted above existing Move rules, so sort 
 **Tests:** same results as today for the existing JPEG/HEIC fixtures (quality chosen is the highest fitting step); encode count per size level at most 6 (counted through an injected encode closure or by measuring calls in a test helper); unreachable target still errors; cancellation still stops.
 
 ## F11. Markdown math and diagrams
+
+**6B/6C done 2026-10-13.** WebKit needed `com.apple.security.network.client`; renderer locked down (see TECH ADR). PDF now draws formulas and Mermaid diagrams as vector graphics.
 
 **6A done 2026-10-13.** Finding: already worked; Pandoc 3.12 `gfm` parses dollar math, DOCX gets native Word equations. Added a regression test. PDF renders simple inline math as styled text but complex TeX (fractions, integrals) as raw TeX; fixing that is 6B/6C.
 

@@ -23,12 +23,13 @@ final class MarkdownPDFRenderer: NSObject {
     private var timeoutRequested = false
 
     static func render(_ rtf: Data, to destination: URL, style: MarkdownPDFStyle = MarkdownPDFStyle(),
-                       images: [String: Data] = [:]) async throws {
+                       images: [String: Data] = [:], graphics: [String: RenderedGraphic] = [:]) async throws {
         try style.validate()
         let renderer = MarkdownPDFRenderer()
         let imported = try NSAttributedString(data: rtf, options: [.documentType: NSAttributedString.DocumentType.rtf],
                                               documentAttributes: nil)
-        let document = try attachImages(imported, images: images, style: style)
+        let document = try attachGraphics(attachImages(imported, images: images, style: style),
+                                          graphics: graphics, style: style)
         guard document.length > 0 else { throw DocumentConversionError.invalidOutput }
         try Task.checkCancellation()
         try await withTaskCancellationHandler {
@@ -60,6 +61,35 @@ final class MarkdownPDFRenderer: NSObject {
             let attachment = NSTextAttachment()
             attachment.attachmentCell = NSTextAttachmentCell(imageCell: image)
             copy.replaceCharacters(in: range, with: NSAttributedString(attachment: attachment))
+        }
+        return NSAttributedString(attributedString: copy)
+    }
+
+    // Vector PDF snippets from MarkdownGraphicsRenderer; inline math is lowered by its depth to sit on the baseline.
+    private static func attachGraphics(_ document: NSAttributedString, graphics: [String: RenderedGraphic],
+                                       style: MarkdownPDFStyle) throws -> NSAttributedString {
+        guard !graphics.isEmpty else { return document }
+        let copy = NSMutableAttributedString(attributedString: document)
+        let width = (style.useLetter ? 612.0 : 595.28) - 2 * style.margin
+        for (marker, graphic) in graphics {
+            try Task.checkCancellation()
+            let range = (copy.string as NSString).range(of: marker)
+            guard range.location != NSNotFound else { continue }
+            guard let image = NSImage(data: graphic.pdf) else { throw DocumentConversionError.invalidOutput }
+            let scale = min(1, width / graphic.size.width)
+            let size = NSSize(width: graphic.size.width * scale, height: graphic.size.height * scale)
+            image.size = size
+            let attachment = NSTextAttachment()
+            attachment.image = image
+            attachment.bounds = CGRect(x: 0, y: -graphic.depth * scale, width: size.width, height: size.height)
+            copy.replaceCharacters(in: range, with: NSAttributedString(attachment: attachment))
+            if graphic.centered {
+                let paragraph = (copy.string as NSString).paragraphRange(for: NSRange(location: range.location, length: 1))
+                let centered = ((copy.attribute(.paragraphStyle, at: range.location, effectiveRange: nil)
+                    as? NSParagraphStyle)?.mutableCopy() as? NSMutableParagraphStyle) ?? NSMutableParagraphStyle()
+                centered.alignment = .center
+                copy.addAttribute(.paragraphStyle, value: centered, range: paragraph)
+            }
         }
         return NSAttributedString(attributedString: copy)
     }

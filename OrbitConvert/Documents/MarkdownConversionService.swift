@@ -56,7 +56,10 @@ struct MarkdownConversionService: Sendable {
             if ["Code", "CodeBlock", "Span", "Div", "Header", "Link"].contains(type ?? ""),
                var content = object["c"] as? [Any] {
                 let index = type == "Header" ? 1 : 0
-                if content.indices.contains(index) { content[index] = ["", [], []] }
+                // Keep only the "mermaid" class so PDF export can draw the diagram.
+                let mermaid = type == "CodeBlock" && ((content.first as? [Any])?.dropFirst().first as? [String])?
+                    .contains("mermaid") == true
+                if content.indices.contains(index) { content[index] = ["", mermaid ? ["mermaid"] : [], []] }
                 return ["t": type ?? "", "c": try clean(content, depth: depth + 1)]
             }
             var copy: [String: Any] = [:]
@@ -99,10 +102,16 @@ struct MarkdownConversionService: Sendable {
                 .trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw DocumentConversionError.invalidOutput }
         } else {
             let illustrated = try Self.pdfImages(safe.data)
-            try illustrated.data.write(to: job.appendingPathComponent("print.json"))
+            let items = try MarkdownGraphics.collect(illustrated.data)
+            let rendered = items.isEmpty ? [] : await MarkdownGraphicsRenderer.render(items, fontSize: pdfStyle.bodySize)
+            let drawn = Dictionary(zip(items, rendered).compactMap { item, result in result.map { (item, $0) } },
+                                   uniquingKeysWith: { first, _ in first })
+            let printable = try MarkdownGraphics.replace(illustrated.data, rendered: drawn)
+            try printable.data.write(to: job.appendingPathComponent("print.json"))
             try tool.run("pandoc", arguments: ["--sandbox", "--from=json", "--to=rtf", "--standalone", "--output=output.rtf", "print.json"], in: job)
             let rtf = try boundedData(job.appendingPathComponent("output.rtf"), limit: 40_000_000)
-            try await MarkdownPDFRenderer.render(rtf, to: candidate, style: pdfStyle, images: illustrated.images)
+            try await MarkdownPDFRenderer.render(rtf, to: candidate, style: pdfStyle, images: illustrated.images,
+                                                 graphics: printable.graphics)
             guard let document = PDFDocument(url: candidate), document.pageCount > 0 else { throw DocumentConversionError.invalidOutput }
         }
         try Task.checkCancellation()

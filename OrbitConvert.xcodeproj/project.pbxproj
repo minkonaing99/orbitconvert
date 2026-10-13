@@ -215,6 +215,11 @@
 				"$(SRCROOT)/ThirdParty/pngquant/LICENSE",
 				"$(SRCROOT)/ThirdParty/mozjpeg/jpegtran.gz",
 				"$(SRCROOT)/ThirdParty/mozjpeg/LICENSE",
+				"$(SRCROOT)/ThirdParty/katex/katex.min.js.gz",
+				"$(SRCROOT)/ThirdParty/katex/katex-inline.css.gz",
+				"$(SRCROOT)/ThirdParty/katex/LICENSE",
+				"$(SRCROOT)/ThirdParty/mermaid/mermaid.min.js.gz",
+				"$(SRCROOT)/ThirdParty/mermaid/LICENSE",
 			);
 			name = "Embed PNG optimizer";
 			outputPaths = (
@@ -235,6 +240,11 @@
 				"$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Helpers/jpegtran",
 				"$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Helpers/jpegtran.cstemp",
 				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/mozjpeg-LICENSE.txt",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/katex.min.js",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/katex-inline.css",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/katex-LICENSE.txt",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/mermaid.min.js",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/mermaid-LICENSE.txt",
 			);
 			shellPath = /bin/sh;
 			shellScript = (

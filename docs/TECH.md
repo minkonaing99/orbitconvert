@@ -34,7 +34,7 @@ OrbitConvert/                 App target (62 Swift files in feature folders; Xco
   QuickAction/                Finder Quick Action request (also compiled into the extension), controller, service, view
   Settings/                   General and watched-folder settings, resize and target-size sheets
   Assets.xcassets             AppIcon (16-512 pt @1x/@2x), symbols
-  OrbitConvert.entitlements   Sandbox, user-selected read/write, app-scope bookmarks
+  OrbitConvert.entitlements   Sandbox, user-selected read/write, app-scope bookmarks, network client (WebKit only)
 OrbitConvertQuickAction/      Finder Action extension (ActionRequestHandler, Info.plist, entitlements)
 OrbitConvertTests/            XCTest target (~36 files, 200 tests)
 Config/OrbitConvert-Info.plist
@@ -167,6 +167,8 @@ All helpers use fixed bundle paths, `Process.arguments` (no shell, no PATH looku
 | --- | --- | --- |
 | Oxipng | 10.2.1, universal (lipo of official arm64 + x86_64) | aarch64 tarball `7039fcfc78e8aa1ed2b57d848057a0296f082e92b3e1807ac65402d10d926764`; x86_64 tarball `111883bbe42b25e01cb1ca41f39f8094e4830b173f0e42be342ecc4ca48f3131`; combined binary before signing `3075732d53c63423b66fe6fcd4a0c3a7d8d0ed3c104cce28798512518b012647`. Committed. Notices cover all 75 crates in the pinned Cargo.lock |
 | Pandoc | 3.12, arm64 | `pandoc-3.12-arm64-macOS.zip` `f148ca09c9f36594db527a9fc988ad736290ce428f79594c50208cd1ec58b3c0`; executable `944a597887d68721af64673df44b366905f1771307bbb57615b299d0cb9245f4`. Gzip cache not committed |
+| KaTeX | 0.19.0 (MIT) | npm `katex-0.19.0.tgz` sha512 `v6Tznz3zJ7u3niRCoDTsumM2+HA2XXcCu+WAacCeHD2z3p9A9Ks987o5FzfTGBN0e8A0vjEgIDvLbICrXpdw/Q==` (sha256 `d8e49f2fea6eeed7cdae2cf4fd48e2f1d348758aa9e5740715e4533c2c96d1ee`); `katex.min.js` `103a53763cc033bba8d175bf3f0ba597c3505c9b6747dd3f2c7bc2a6bfcc8ae7`; `katex-inline.css` (katex.min.css with the 20 woff2 fonts inlined as data URIs) `c6457047d81b045d962c90ec3a2a690a46789d820b0a6d85ecabe5369621771a`. Committed gzipped in `ThirdParty/katex/` |
+| Mermaid | 12.1.0 (MIT) | npm `mermaid-12.1.0.tgz` sha512 `wlVCp+8eTupfCeeFvoZNNiTuHrvag0P2jz/ILgb/f/6jkVokUefOcujefi8qUe/j2asHiSePncVsz/xzzA80LQ==` (sha256 `3e516f33246e1a6a5bc5ebcabd35434669b487c3b3791f9b0466aa2c254d004a`); `mermaid.min.js` `6484afc32872a3aa16cac9a76ba1816a1ed4cc870a6593cc2e17757750f518b2` (global build, no eval). Committed gzipped in `ThirdParty/mermaid/` |
 | mozjpeg jpegtran | 4.1.1, universal static build (arm64 + x86_64, macOS 14 target) | Source `https://github.com/mozilla/mozjpeg/archive/refs/tags/v4.1.1.tar.gz` `66b1b8d6b55d263f35f27f55acaaa3234df2a401232de99b6d099e2bb0a9d196`; binary before signing `3ae83cef18c004629c9d29a328a71a57589be4e8775628aa129baa49d1eaa525`; committed gz `e86585497f76cb388496b8d9ca5327ce7995340ee193c6ea3142d605278f7f05`; links only libSystem; IJG + BSD licenses (`ThirdParty/mozjpeg/LICENSE`). Built locally (SETUP); x86_64 slice not run (no Rosetta here) |
 | pngquant | 3.0.3, universal (official macOS build) | `https://pngquant.org/pngquant.tar.bz2` `68c32e4988d3f99f79f0642a94900756b7a2a463166067c5862826ced1e0ce1e`; executable `00d3e980ab3c3c39a9df1069b406f4e5013b97394988f66d8356d4d7d05f011c`; Developer ID team 59KZTZA4XR; links only system libraries; GPL v3. Gzip cache not committed; publisher provides no checksum |
 | Ghostscript | 10.08.0, arm64, built locally | `ghostscript-10.08.0.tar.gz` `caf199e3f233f1290b27d0972d636f66c303355f2353309b7bfddf1edda06b3d`; executable `a94e0278a8dc5977f9d3c31fc44da5ee2e7e502c208ada974b99dc52692d410e`. Gzip cache not committed |
@@ -225,7 +227,13 @@ Logging categories (os.Logger) when added: FileAccess, Conversion, UI, Permissio
 **Status:** Accepted
 **Context:** The planned WebKit renderer failed to start its sandboxed content process; Core Text pagination flattened tables.
 **Decision:** Pandoc RTF writer plus `NSTextView` printing with native image attachments.
-**Consequences:** Links and tables work; no math/Mermaid; print cancellation is soft.
+**Consequences:** Links and tables work; print cancellation is soft. Math and Mermaid added on top on 2026-10-13 (see that ADR).
+
+### [2026-10-13] Offline KaTeX and Mermaid for Markdown PDF (stage 6B/6C)
+**Status:** Accepted (owner decision)
+**Context:** PDF export printed complex TeX and Mermaid as source text. 6B reproduced the 2026-10-01 WebKit failure in the sandboxed app: `WebContent ... Application does not have permission to communicate with network resources`; adding `com.apple.security.network.client` fixes it.
+**Decision:** Add the network-client entitlement. `MarkdownGraphicsRenderer` renders math (KaTeX 0.19.0, `trust:false`) and ```mermaid blocks (Mermaid 12.1.0, `securityLevel:'strict'`, `htmlLabels:false`) in one hidden `WKWebView` per document and exports each as a vector PDF snippet (`WKPDFConfiguration.rect`); `MarkdownPDFRenderer` inserts them as attachments (inline math lowered by its depth to the baseline; display math and diagrams centered). The existing RTF/AppKit pipeline, links, bookmarks and tables are unchanged. Lockdown: CSP `default-src 'none'` with `script-src` limited to SHA-256 hashes of the page's own three scripts (injected markup cannot run), inline styles, data: fonts/images only, `base-uri 'none'`, `form-action 'none'`; a content rule blocking every URL, non-persistent data store, navigation limited to the initial `about:blank`, `loadHTMLString(baseURL: nil)`; sources passed as `callAsyncJavaScript` arguments, never spliced into HTML; pages refuse assets containing `</script` or `</style`. Limits: 100 items, 8 KiB per equation, 64 KiB per diagram, 4096 pt edges, 15 s page load, 10 s per item (a timeout abandons the rest), 60 s total. Mermaid styling keys (`themeCSS`, `fontFamily`, etc.) are in its `secure` list so diagram frontmatter cannot override them. The script call uses the completion-handler API so a hung script does not keep the web view alive. Anything that fails keeps its previous output (Pandoc text or code block). All KaTeX fonts are loaded before the first render (with `font-display:block` text is invisible until its face loads). DOCX unchanged (native equations; Mermaid stays code).
+**Consequences:** The sandbox now permits outbound connections for the app and for helpers signed with `inherit` (residual risk: a future helper parser bug could reach the network). Every Pandoc call must keep `--sandbox` and Ghostscript `-dSAFER`; other helpers never open sockets. About 1.9 MB of gzipped JS/CSS in the repo, decompressed into Resources at build time. Formula text in PDF is vector but rendered inside the snippet.
 
 ### [2026-10-09] Remove floating action and drop windows
 **Status:** Accepted
@@ -247,7 +255,7 @@ Logging categories (os.Logger) when added: FileAccess, Conversion, UI, Permissio
 
 ## Security
 
-**Authorization.** No accounts. Access comes from App Sandbox grants only: `com.apple.security.app-sandbox`, `com.apple.security.files.user-selected.read-write`, `com.apple.security.files.bookmarks.app-scope`. A file grant does not authorize sibling creation; the app asks for the parent folder or another destination and never saves elsewhere silently. Stored paths are never treated as permission; bookmarks are resolved, refreshed when stale, and re-requested when lost. Start and stop scoped access in balanced pairs on every exit path.
+**Authorization.** No accounts. Access comes from App Sandbox grants only: `com.apple.security.app-sandbox`, `com.apple.security.files.user-selected.read-write`, `com.apple.security.files.bookmarks.app-scope`, and `com.apple.security.network.client` (added 2026-10-13 only because WebKit's content process cannot start in the sandbox without it; the app itself makes no network requests, see the Markdown math ADR). A file grant does not authorize sibling creation; the app asks for the parent folder or another destination and never saves elsewhere silently. Stored paths are never treated as permission; bookmarks are resolved, refreshed when stale, and re-requested when lost. Start and stop scoped access in balanced pairs on every exit path.
 
 **Input validation.**
 
