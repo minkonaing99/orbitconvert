@@ -6,9 +6,9 @@ import ImageIO
 // 20% unique colors qualify (measured: UI and text screenshots 2-16%, photos and video captures 23-38%), and the
 // JPEG is kept only when it saves at least 100 KB and 30% against the best PNG result.
 extension ImageOptimizationService {
-    static let convertPhotosKey = "convertPhotoPNGs"
-    static let photoMinimumSaving = 100_000
-    static let photoMaximumPixels = 40_000_000
+    nonisolated static let convertPhotosKey = "convertPhotoPNGs"
+    nonisolated static let photoMinimumSaving = 100_000
+    nonisolated static let photoMaximumPixels = 40_000_000
 
     // The cheap thumbnail color count runs first; the full-image opacity check only for photo-like candidates.
     nonisolated static func isPhotoLike(_ source: CGImageSource) -> Bool {
