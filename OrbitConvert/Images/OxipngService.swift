@@ -4,6 +4,18 @@ import Foundation
 struct OxipngService: Sendable {
     /// One thread for background jobs so automation never occupies more than one core.
     nonisolated static var threads: String { HelperPriority.isBackground ? "1" : "2" }
+    /// Background jobs cap effort: level 4 costs about 2x level 2 for about 0.5% smaller PNGs (measured on a 5K
+    /// screenshot), and palette output gains little beyond level 1. Manual work keeps the preset's level.
+    nonisolated static func level(for preset: CompressionPreset, quantized: Bool = false) -> String {
+        let background = HelperPriority.isBackground
+        switch preset {
+        case .lossless: return "1"
+        case _ where quantized && background: return "1"
+        case .aggressive: return background ? "2" : "4"
+        default: return "2"
+        }
+    }
+
     nonisolated static var executableURL: URL {
         Bundle.main.bundleURL.appendingPathComponent("Contents/Helpers/oxipng")
     }
@@ -14,7 +26,7 @@ struct OxipngService: Sendable {
         _ = try metadataChunks(in: url)
     }
 
-    nonisolated func optimize(source: URL, destination: URL, preset: CompressionPreset,
+    nonisolated func optimize(source: URL, destination: URL, preset: CompressionPreset, quantized: Bool = false,
                               timeout: Duration = .seconds(60)) throws {
         guard source.isFileURL, destination.isFileURL, source.standardizedFileURL != destination.standardizedFileURL,
               FileManager.default.isExecutableFile(atPath: Self.executableURL.path) else {
@@ -33,8 +45,7 @@ struct OxipngService: Sendable {
             try? output.close()
             if !succeeded { try? FileManager.default.removeItem(at: destination) }
         }
-        let level = preset == .aggressive ? "4" : preset == .lossless ? "1" : "2"
-        var arguments = ["--quiet", "--stdout", "--opt", level, "--threads", Self.threads,
+        var arguments = ["--quiet", "--stdout", "--opt", Self.level(for: preset, quantized: quantized), "--threads", Self.threads,
                          "--timeout", String(Int(HelperPriority.scaled(.seconds(30)).components.seconds)), "--max-raw-size", "256000000"]
         if !chunks.isEmpty { arguments += ["--keep", chunks.sorted().joined(separator: ",")] }
         arguments += ["--", "-"]

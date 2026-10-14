@@ -125,7 +125,7 @@ struct ImageOptimizationService: Sendable {
         let quantized = temporary.deletingLastPathComponent().appendingPathComponent("palette.png")
         defer { try? FileManager.default.removeItem(at: quantized) }
         guard try PngquantService().quantize(url, to: quantized, level: level) else { return false }
-        try OxipngService().optimize(source: quantized, destination: temporary, preset: preset)
+        try OxipngService().optimize(source: quantized, destination: temporary, preset: preset, quantized: true)
         return true
     }
 

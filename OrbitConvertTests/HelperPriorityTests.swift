@@ -29,6 +29,19 @@ final class HelperPriorityTests: XCTestCase {
         XCTAssertEqual(fast, .seconds(30))
     }
 
+    func testBackgroundJobsUseCheaperOxipngLevels() async {
+        let background = await Task.detached(priority: .background) {
+            [OxipngService.level(for: .lossless), OxipngService.level(for: .balanced),
+             OxipngService.level(for: .aggressive), OxipngService.level(for: .aggressive, quantized: true)]
+        }.value
+        XCTAssertEqual(background, ["1", "2", "2", "1"], "Maximum costs 2x level 2 for about 0.5% smaller files")
+        let manual = await Task.detached(priority: .userInitiated) {
+            [OxipngService.level(for: .lossless), OxipngService.level(for: .balanced),
+             OxipngService.level(for: .aggressive), OxipngService.level(for: .aggressive, quantized: true)]
+        }.value
+        XCTAssertEqual(manual, ["1", "2", "4", "4"])
+    }
+
     func testBackgroundPriorityCompressionStillWorks() async throws {
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)

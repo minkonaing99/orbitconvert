@@ -38,6 +38,12 @@ final class AutomationTemplateTests: XCTestCase {
         XCTAssertNotEqual(first.conditions.map(\.id), second.conditions.map(\.id))
     }
 
+    func testScreenshotTemplateUsesSafePaletteLikeClop() {
+        let compress = AutomationRuleTemplate.screenshots.makeRule().actions.first { $0.kind == .compress }
+        XCTAssertEqual(compress?.palette, .safe)
+        XCTAssertNil(AutomationRuleTemplate.tidyPDFs.makeRule().actions.first { $0.kind == .compress }?.palette)
+    }
+
     func testScreenshotTemplateMatchesScreenshotsAndRendersName() throws {
         let folder = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: folder) }

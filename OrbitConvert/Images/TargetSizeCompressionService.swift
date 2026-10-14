@@ -177,7 +177,8 @@ struct TargetSizeCompressionService: Sendable {
             preset: .balanced, jpegQuality: nil, to: raw)
         let usedPalette = try PngquantService().quantize(raw, to: quantized, level: palette)
         try? FileManager.default.removeItem(at: url)
-        try OxipngService().optimize(source: usedPalette ? quantized : raw, destination: url, preset: .balanced)
+        try OxipngService().optimize(source: usedPalette ? quantized : raw, destination: url, preset: .balanced,
+                                     quantized: usedPalette)
         return usedPalette
     }
 

@@ -92,7 +92,7 @@ Suggested order: F3 (smallest, visible daily) -> F2 -> F4 -> F5 -> F1 (PNG part 
 
 | Template | Conditions | Actions |
 | --- | --- | --- |
-| Screenshots: rename and compress | Name starts with "Screenshot" (English macOS; edit for other languages), file type PNG, name does not contain "-optimized" | Rename `'Screenshot'_{yyyy}-{MM}-{dd}_{HH}-{mm}-{ss}.{ext}`, Compress (Keep Both) |
+| Screenshots: rename and compress | Name starts with "Screenshot" (English macOS; edit for other languages), file type PNG, name does not contain "-optimized" | Rename `'Screenshot'_{yyyy}-{MM}-{dd}_{HH}-{mm}-{ss}.{ext}`, Compress (Keep Both, PNG colors Safe since 2026-10-14) |
 | Large JPEG photos: make smaller copy | File type JPEG, width greater than 2560 | Resize to fit 2560 x 2560 (separate `-resized` copy) |
 | PDFs: add date and compress | Category PDF | Rename `{yyyy}-{MM}-{dd}_{name}.{ext}`, Compress (Keep Both) |
 | Sort Downloads: Images / PDFs / Archives / Documents and text files | Category | Move (choose destination before Save) |

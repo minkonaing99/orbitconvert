@@ -54,7 +54,7 @@ nonisolated enum AutomationRuleTemplate: String, CaseIterable, Identifiable, Sen
         switch self {
         case .screenshots:
             [AutomationAction(kind: .rename, template: "'Screenshot'_{yyyy}-{MM}-{dd}_{HH}-{mm}-{ss}.{ext}"),
-             AutomationAction(kind: .compress, replacement: .keepBoth)]
+             AutomationAction(kind: .compress, replacement: .keepBoth, palette: .safe)]
         case .shrinkPhotos: [AutomationAction(kind: .resize, width: 2560, height: 2560)]
         case .tidyPDFs:
             [AutomationAction(kind: .rename, template: "{yyyy}-{MM}-{dd}_{name}.{ext}"),
