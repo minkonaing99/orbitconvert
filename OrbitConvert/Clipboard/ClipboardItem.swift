@@ -49,3 +49,9 @@ nonisolated struct ClipboardFingerprintRegistry {
             + [(fingerprint, now)]).suffix(128))
     }
 }
+
+/// Clipboard compression settings handed to the optimizer (palette is separate from the manual setting).
+nonisolated struct ClipboardCompression: Equatable, Sendable {
+    let preset: CompressionPreset
+    let palette: PaletteLevel
+}

@@ -21,11 +21,12 @@ import UniformTypeIdentifiers
     var showResults: Bool { didSet { defaults.set(showResults, forKey: "clipboardShowResults") } }
     var collectResults: Bool { didSet { defaults.set(collectResults, forKey: "clipboardCollect"); if !collectResults { results = [] } } }
     var preset: CompressionPreset { didSet { defaults.set(preset.rawValue, forKey: "clipboardPreset") } }
+    var palette: PaletteLevel { didSet { defaults.set(palette.rawValue, forKey: "clipboardPalette") } }
     var ignoredApps: [String] { didSet { defaults.set(ignoredApps, forKey: "clipboardIgnoredApps") } }
     private(set) var results: [ClipboardOptimizationResult] = []
     private(set) var lastResult: ClipboardOptimizationResult?
     var message: String?
-    @ObservationIgnored private let optimizer: @Sendable (ClipboardItem, CompressionPreset, ClipboardFingerprintRegistry) throws -> ClipboardOptimizationResult?
+    @ObservationIgnored private let optimizer: @Sendable (ClipboardItem, ClipboardCompression, ClipboardFingerprintRegistry) throws -> ClipboardOptimizationResult?
     @ObservationIgnored private var lifecycleGeneration = 0
     @ObservationIgnored private let defaults: UserDefaults
     @ObservationIgnored let writer: ClipboardWriterService
@@ -38,8 +39,10 @@ import UniformTypeIdentifiers
     @ObservationIgnored private var terminationObserver: NSObjectProtocol?
 
     init(defaults: UserDefaults = .standard, pasteboard: NSPasteboard = .general,
-         optimizer: @escaping @Sendable (ClipboardItem, CompressionPreset, ClipboardFingerprintRegistry) throws -> ClipboardOptimizationResult? = { item, preset, registry in
-             try ClipboardOptimizationService().optimize(item, preset: preset) { registry.contains($0) }
+         optimizer: @escaping @Sendable (ClipboardItem, ClipboardCompression, ClipboardFingerprintRegistry) throws -> ClipboardOptimizationResult? = { item, settings, registry in
+             try ClipboardOptimizationService().optimize(item, preset: settings.preset, palette: settings.palette) {
+                 registry.contains($0)
+             }
          }) {
         self.optimizer = optimizer
         self.defaults = defaults
@@ -51,6 +54,7 @@ import UniformTypeIdentifiers
         showResults = defaults.object(forKey: "clipboardShowResults") as? Bool ?? true
         collectResults = defaults.bool(forKey: "clipboardCollect")
         preset = CompressionPreset(rawValue: defaults.string(forKey: "clipboardPreset") ?? "") ?? .balanced
+        palette = PaletteLevel(rawValue: defaults.string(forKey: "clipboardPalette") ?? "") ?? .off
         ignoredApps = defaults.stringArray(forKey: "clipboardIgnoredApps") ?? []
     }
 
@@ -126,7 +130,7 @@ import UniformTypeIdentifiers
     func process(_ item: ClipboardItem) async -> WatchActivity? {
         guard enabled, writer.pasteboard.changeCount == item.generation else { return nil }
         let known = registry
-        let mode = preset
+        let mode = ClipboardCompression(preset: preset, palette: palette)
         let lifecycle = lifecycleGeneration
         let optimize = optimizer
         do {
@@ -136,7 +140,7 @@ import UniformTypeIdentifiers
             guard lifecycle == lifecycleGeneration else { return nil }
             guard let result else {
                 return WatchActivity(fileName: "Clipboard image", outcome: .skipped,
-                    message: mode == .lossless ? "No lossless reduction available" : "Already optimized or no useful reduction")
+                    message: mode.preset == .lossless ? "No lossless reduction available" : "Already optimized or no useful reduction")
             }
             registry.insert(result.sourceFingerprint)
             registry.insert(result.outputFingerprint)

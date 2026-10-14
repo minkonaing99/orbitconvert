@@ -19,6 +19,11 @@ struct ClipboardSettingsView: View {
             }
             Text("PNG and TIFF-to-PNG preserve pixels and transparency. Lossless JPEG/HEIC optimization is unavailable.")
                 .font(.caption).foregroundStyle(.secondary)
+            Picker("PNG colors", selection: $clipboard.palette) {
+                ForEach(PaletteLevel.allCases, id: \.self) { Text($0.label).tag($0) }
+            }
+            Text("Safe or Smaller uses a limited color palette, often making copied screenshots 50-80% smaller. Colors become sRGB and hidden details are removed. Not used with Lossless.")
+                .font(.caption).foregroundStyle(.secondary)
             Toggle("Show result after optimization", isOn: $clipboard.showResults)
             Toggle("Collect clipboard results", isOn: $clipboard.collectResults)
             Text("Collection stays in memory, up to 20 images or 128 MB. Copy All creates multiple clipboard items; destination app support varies.")

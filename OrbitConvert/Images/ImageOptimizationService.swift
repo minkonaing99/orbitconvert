@@ -76,7 +76,8 @@ struct ImageOptimizationService: Sendable {
 
     nonisolated private func encodePNG(_ url: URL, source: CGImageSource, to temporary: URL,
                                        preset: CompressionPreset, removeMetadata: Bool, palette: PaletteLevel) throws {
-        if palette != .off, try paletteCandidate(url, to: temporary, preset: preset, level: palette,
+        // Lossless means lossless: the lossy palette path never runs with that preset.
+        if palette != .off, preset != .lossless, try paletteCandidate(url, to: temporary, preset: preset, level: palette,
                                                  removeMetadata: removeMetadata) { return }
         if removeMetadata {
             let stripped = temporary.deletingLastPathComponent().appendingPathComponent("stripped.png")

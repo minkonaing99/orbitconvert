@@ -134,8 +134,7 @@ Next:
 
 ### In Progress
 
-- [ ] F15 palette option for clipboard compression - next
-- [ ] F13 optional PNG to JPEG for photo-like PNGs
+- [ ] F13 optional PNG to JPEG for photo-like PNGs - next
 - [ ] F16 benchmark against Clop (stage 0)
 - [ ] Installed-app check: Choose Files with a folder, then convert a file from it (sandbox access for folder contents) - owner
 
@@ -145,6 +144,7 @@ Next:
 
 ### Done
 
+- [x] F15 palette option for clipboard compression - 2026-10-14
 - [x] F14 rules skip files under 800 KB - 2026-10-14
 - [x] F12 automation waits while the Mac is warm or in Low Power Mode - 2026-10-14
 - [x] Clop-style background PNG: Oxipng effort capped in background, palette Safe in Screenshots template - 2026-10-14

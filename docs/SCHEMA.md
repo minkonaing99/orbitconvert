@@ -18,6 +18,7 @@ OrbitConvert has no backend, database, network API, HTTP server or OpenAPI schem
 | UserDefaults | `clipboardPreset` | Clipboard compression preset | String |
 | UserDefaults | `clipboardShowResults`, `clipboardCollect` | Result card, in-memory collection | Bool |
 | UserDefaults | `clipboardIgnoredApps` | Ignored bundle IDs | [String] |
+| UserDefaults | `clipboardPalette` | Clipboard PNG palette level: `off`, `safe`, `smaller`; default off; separate from `paletteLevel` | String (`PaletteLevel`) |
 | UserDefaults | `pauseAutomationUnderLoad` | Hold watched-folder/rule jobs while thermal state is fair or higher, or in Low Power Mode; default true when unset (false under XCTest) | Bool |
 | @AppStorage | `paletteLevel` | Palette PNG (pngquant) for Compress, Compress to Size and Quick Action: `off`, `safe` (quality 80-100), `smaller` (60-100); default off | String (`PaletteLevel`) |
 | (legacy) | `paletteReduction` | Pre-F8 Bool; read only when `paletteLevel` is missing or invalid (true = safe); `PaletteLevel.migrate` copies it to `paletteLevel` at app launch | Bool |

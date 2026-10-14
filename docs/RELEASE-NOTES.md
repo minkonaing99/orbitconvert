@@ -28,6 +28,7 @@ Entry format: `- **Headline** - what changed + why it matters to the user. (#iss
 
 ### New Features
 
+- **Smaller copied screenshots** (2026-10-14) - Clipboard settings now have "PNG colors" (Off, Safe, Smaller), so copied screenshots can shrink as much as in folder rules. Off by default. The Lossless preset now always stays lossless, even when PNG colors is on.
 - **Automation waits while your Mac is warm** (2026-10-14) - Watched folders and rules pause when macOS reports the Mac getting warm or Low Power Mode is on, and continue by themselves once it cools. Nothing is skipped. The menu shows why it is waiting; turn it off in Watched Folders settings.
 - **Formulas and diagrams in PDF export** (2026-10-13) - Markdown to PDF now draws math (`$...$`, `$$...$$`) as real typeset formulas and turns ```mermaid code blocks into diagrams, all offline. Anything that cannot be drawn keeps its text.
 - **Equations in Word export** (2026-10-13) - Confirmed and now tested: `$...$` and `$$...$$` math in Markdown becomes real, editable Word equations in DOCX export. Dollar amounts like `$5` stay as text. PDF export shows simple formulas but not yet fractions or integrals.

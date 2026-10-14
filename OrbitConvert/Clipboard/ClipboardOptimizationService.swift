@@ -4,7 +4,7 @@ import UniformTypeIdentifiers
 
 struct ClipboardOptimizationService: Sendable {
     nonisolated init() {}
-    nonisolated func optimize(_ item: ClipboardItem, preset: CompressionPreset,
+    nonisolated func optimize(_ item: ClipboardItem, preset: CompressionPreset, palette: PaletteLevel = .off,
                               workingRoot: URL = FileManager.default.temporaryDirectory.appendingPathComponent("OrbitConvert/Jobs"),
                               shouldSkip: @Sendable (String) -> Bool = { _ in false }) throws -> ClipboardOptimizationResult? {
         let started = Date()
@@ -54,7 +54,7 @@ struct ClipboardOptimizationService: Sendable {
         }
         if preset == .lossless && [UTType.jpeg.identifier, UTType.heic.identifier].contains(identifier) { return nil }
         let candidate: URL
-        switch try ImageOptimizationService().optimize(optimizationFile, in: directory, preset: preset) {
+        switch try ImageOptimizationService().optimize(optimizationFile, in: directory, preset: preset, palette: palette) {
         case .saved(let result): candidate = result.outputURL
         case .noReduction:
             guard let fallback else { return nil }

@@ -24,7 +24,7 @@ Rules for every feature: TDD, code review (fix CRITICAL/HIGH), security review b
 | F12 | Pause automation when hot or in Low Power Mode | Automation | 0.5 day | - | Done 2026-10-14 |
 | F13 | Optional PNG to JPEG for photo-like PNGs | Both | 1-2 days | - | Planned 2026-10-14 |
 | F14 | Skip small files in automation (under 800 KB) | Automation | 0.25 day | - | Done 2026-10-14 |
-| F15 | Palette option for clipboard compression | Automation | 0.5 day | F8 | Planned 2026-10-14 |
+| F15 | Palette option for clipboard compression | Automation | 0.5 day | F8 | Done 2026-10-14 |
 | F16 | Benchmark against Clop (PLAN stage 0) | Both | 1 day | Clop installed (yes) | Planned 2026-10-14 |
 
 Suggested order: F3 (smallest, visible daily) -> F2 -> F4 -> F5 -> F1 (PNG part benefits from F5).
@@ -282,6 +282,8 @@ Already planned as [PLAN stage 6](PLAN.md#stage-6-equations-and-diagrams). Order
 **Files:** `Automation/AutomationMediaService.swift` (`minimumBytes`, injectable for tests), tests. Legacy `AutoOptimizationService` not changed: stored folders are migrated to rules at launch.
 
 ## F15. Palette option for clipboard compression
+
+**Done 2026-10-14.** `clipboardPalette` setting and picker; the optimizer closure now receives `ClipboardCompression` (preset + palette).
 
 **Goal:** copied screenshots get palette savings like rules.
 
