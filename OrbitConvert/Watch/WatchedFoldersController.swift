@@ -477,7 +477,7 @@ final class WatchedFoldersController {
             activePhase = .checkingFile
             let approval = automationApprovals.removeValue(forKey: url)
             let checkpoint = automationRetries.removeValue(forKey: url)
-            let job = Task.detached(priority: .utility) { [self] in
+            let job = Task.detached(priority: .background) { [self] in
                 if folder.rules != nil || approval != nil || checkpoint != nil {
                     return await AutomationWatchService.process(url, folder: folder, approved: approval, resume: checkpoint, willPublish: { output in
                         try Task.checkCancellation()

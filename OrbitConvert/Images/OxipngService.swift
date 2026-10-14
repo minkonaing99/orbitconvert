@@ -2,6 +2,8 @@ import Darwin
 import Foundation
 
 struct OxipngService: Sendable {
+    /// One thread for background jobs so automation never occupies more than one core.
+    nonisolated static var threads: String { HelperPriority.isBackground ? "1" : "2" }
     nonisolated static var executableURL: URL {
         Bundle.main.bundleURL.appendingPathComponent("Contents/Helpers/oxipng")
     }
@@ -32,11 +34,12 @@ struct OxipngService: Sendable {
             if !succeeded { try? FileManager.default.removeItem(at: destination) }
         }
         let level = preset == .aggressive ? "4" : preset == .lossless ? "1" : "2"
-        var arguments = ["--quiet", "--stdout", "--opt", level, "--threads", "2",
-                         "--timeout", "30", "--max-raw-size", "256000000"]
+        var arguments = ["--quiet", "--stdout", "--opt", level, "--threads", Self.threads,
+                         "--timeout", String(Int(HelperPriority.scaled(.seconds(30)).components.seconds)), "--max-raw-size", "256000000"]
         if !chunks.isEmpty { arguments += ["--keep", chunks.sorted().joined(separator: ",")] }
         arguments += ["--", "-"]
         let process = Process()
+        process.qualityOfService = HelperPriority.helperQoS
         process.executableURL = Self.executableURL
         process.arguments = arguments
         process.environment = ["PATH": "/usr/bin:/bin", "LC_ALL": "C"]
@@ -46,7 +49,7 @@ struct OxipngService: Sendable {
         let finished = DispatchSemaphore(value: 0)
         process.terminationHandler = { _ in finished.signal() }
         try process.run()
-        let deadline = ContinuousClock.now.advanced(by: timeout)
+        let deadline = ContinuousClock.now.advanced(by: HelperPriority.scaled(timeout))
         while finished.wait(timeout: .now() + .milliseconds(100)) == .timedOut {
             if Task.isCancelled || ContinuousClock.now >= deadline {
                 process.terminate()

@@ -28,6 +28,7 @@ struct BundledDocumentTool: Sendable {
         }
         try Task.checkCancellation()
         let process = Process()
+        process.qualityOfService = HelperPriority.helperQoS
         process.executableURL = executable
         process.arguments = arguments
         process.currentDirectoryURL = directory
@@ -40,7 +41,7 @@ struct BundledDocumentTool: Sendable {
         let finished = DispatchSemaphore(value: 0)
         process.terminationHandler = { _ in finished.signal() }
         try process.run()
-        let deadline = ContinuousClock.now.advanced(by: timeout)
+        let deadline = ContinuousClock.now.advanced(by: HelperPriority.scaled(timeout))
         while finished.wait(timeout: .now() + .milliseconds(100)) == .timedOut {
             if Task.isCancelled || ContinuousClock.now >= deadline {
                 process.terminate()

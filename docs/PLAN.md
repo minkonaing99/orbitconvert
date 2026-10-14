@@ -145,6 +145,7 @@ Next:
 
 ### Done
 
+- [x] Background jobs on efficiency cores (helper QoS, 1 Oxipng thread, scaled deadlines) - 2026-10-14
 - [x] Installed-app check (locally signed Release, sandboxed, network.client): Markdown PDF with inline/display math and a Mermaid flowchart renders correctly - 2026-10-13
 - [x] F11 6B/6C PDF math and Mermaid (offline KaTeX + Mermaid via WebKit, network-client entitlement) - 2026-10-13
 - [x] F11 6A DOCX native equations (verified existing behavior, regression test) - 2026-10-13

@@ -60,6 +60,7 @@ Entry format: `- **Headline** - what changed + why it matters to the user. (#iss
 
 ### Improvements
 
+- **Cooler background work** (2026-10-14) - Watched folders, rules and clipboard compression now run on the Mac's efficiency cores with one helper thread, so automation no longer heats the Mac or competes with what you are doing. They take longer per file; manual Compress stays fast.
 - **Simpler General settings** (2026-10-10) - Everyday choices grouped with short explanations; saved preferences kept.
 - **Compact watched-folder layout** (2026-10-09) - Top-aligned folder section with scrollable recent activity.
 - **Compact main window** (2026-09-30) - Selectable rows and one shared action area (Compress, conversion picker, Tools, collapsed options) replace repeated per-file cards. Batches process only checked files and keep per-file failures.

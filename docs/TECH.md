@@ -229,6 +229,12 @@ Logging categories (os.Logger) when added: FileAccess, Conversion, UI, Permissio
 **Decision:** Pandoc RTF writer plus `NSTextView` printing with native image attachments.
 **Consequences:** Links and tables work; print cancellation is soft. Math and Mermaid added on top on 2026-10-13 (see that ADR).
 
+### [2026-10-14] Background jobs run on efficiency cores
+**Status:** Accepted
+**Context:** Idle cost is negligible (0.0% CPU, about 40 MB, no idle wakeups with the window open), but watched-folder PNG jobs heated the Mac: helper processes (Oxipng, pngquant, jpegtran, Pandoc, Ghostscript) ignored the job's `.utility` priority and ran at default QoS on performance cores. Measured per full screenshot (2915 x 1892): Lossless 1.8 s, Balanced 2.9 s, Maximum 5.6 s (7 s CPU), palette Safe 1.5 s.
+**Decision:** `HelperPriority` sets each helper's `Process.qualityOfService` from the job's base task priority (base, because awaiting from the main actor escalates the current priority): `<= .utility` -> `.background` (efficiency cores on Apple Silicon), otherwise `.userInitiated`. Watched-folder/rule and clipboard jobs run at `.background`; Oxipng uses 1 thread there (2 for manual work). Background helper deadlines (including Oxipng's own `--timeout`) are 4x longer so results do not depend on machine load. Manual Compress, Quick Action and exports stay `.userInitiated`.
+**Consequences:** Measured 5K screenshot at Maximum: 13 s on performance cores vs 54 s on efficiency cores. Background jobs take longer but draw far less power and leave performance cores free. Maximum (Oxipng level 4) costs about twice Balanced for about 1% smaller PNGs; palette Safe is the cheapest PNG path.
+
 ### [2026-10-13] Offline KaTeX and Mermaid for Markdown PDF (stage 6B/6C)
 **Status:** Accepted (owner decision)
 **Context:** PDF export printed complex TeX and Mermaid as source text. 6B reproduced the 2026-10-01 WebKit failure in the sandboxed app: `WebContent ... Application does not have permission to communicate with network resources`; adding `com.apple.security.network.client` fixes it.

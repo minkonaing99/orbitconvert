@@ -130,7 +130,7 @@ import UniformTypeIdentifiers
         let lifecycle = lifecycleGeneration
         let optimize = optimizer
         do {
-            let result = try await Task.detached(priority: .utility) {
+            let result = try await Task.detached(priority: .background) {
                 try optimize(item, mode, known)
             }.value
             guard lifecycle == lifecycleGeneration else { return nil }
