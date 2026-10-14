@@ -22,6 +22,29 @@ final class AutomationExecutionTests: XCTestCase {
         XCTAssertEqual(try Data(contentsOf: output.appendingPathComponent("Note_1.txt")), Data("original".utf8))
     }
 
+    func testSkippedSmallCompressStillRunsFollowingActions() async throws {
+        let root = try directory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let output = root.appendingPathComponent("output")
+        try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
+        let source = root.appendingPathComponent("Screenshot.png")
+        try Data(base64Encoded: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==")!
+            .write(to: source)
+        let rule = AutomationRule(name: "Screenshots", actions: [
+            AutomationAction(kind: .compress, replacement: .replaceOriginal),
+            AutomationAction(kind: .rename, template: "'Shot'.{ext}"),
+            AutomationAction(kind: .move, destinationBookmark: try bookmark(output))])
+        let files = AutomationFileOperations(trash: { try FileManager.default.removeItem(at: $0) })
+
+        let result = await AutomationExecutionService(files: files).run(source, rule: rule)
+
+        XCTAssertNil(result.checkpoint)
+        XCTAssertEqual(result.details.steps.map(\.failed), [false, false, false])
+        XCTAssertEqual(result.details.steps.first?.message, "Under 800 KB; not compressed")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: output.appendingPathComponent("Shot.png").path),
+                      "Rename and Move still run after a skipped compress")
+    }
+
     func testFailureStopsAndRetryDoesNotRepeatRename() async throws {
         let root = try directory()
         defer { try? FileManager.default.removeItem(at: root) }
