@@ -58,6 +58,32 @@ final class AutomationMediaTests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: folder.appendingPathComponent("image.tiff").path))
     }
 
+    func testFilesUnder800KBAreNotCompressed() async throws {
+        let folder = try directory()
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let source = try image(in: folder)
+        let before = try Data(contentsOf: source)
+        var action = AutomationAction()
+        action.kind = .compress
+        action.replacement = .replaceOriginal
+
+        let output = try await AutomationMediaService().perform(action, source: source,
+                                                                expected: FileFingerprint.read(source))
+
+        XCTAssertEqual(AutomationMediaService().minimumBytes, 800_000)
+        XCTAssertEqual(output.url, source)
+        XCTAssertEqual(output.savedBytes, 0)
+        XCTAssertEqual(output.message, "Under 800 KB; not compressed")
+        XCTAssertEqual(try Data(contentsOf: source), before)
+
+        let text = folder.appendingPathComponent("note.txt")
+        try Data("not an image".utf8).write(to: text)
+        do {
+            _ = try await AutomationMediaService().perform(action, source: text, expected: FileFingerprint.read(text))
+            XCTFail("Unsupported files must still report an error, not a size skip")
+        } catch {}
+    }
+
     func testNoReductionKeepsCopyForFollowingActions() async throws {
         let folder = try directory()
         defer { try? FileManager.default.removeItem(at: folder) }

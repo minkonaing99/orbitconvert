@@ -23,7 +23,7 @@ Rules for every feature: TDD, code review (fix CRITICAL/HIGH), security review b
 | F11 | Markdown math and diagrams (PLAN stage 6) | Converter | 6A 0.5-1 day; 6B-6C several days | 6B before 6C | Done 2026-10-13 |
 | F12 | Pause automation when hot or in Low Power Mode | Automation | 0.5 day | - | Done 2026-10-14 |
 | F13 | Optional PNG to JPEG for photo-like PNGs | Both | 1-2 days | - | Planned 2026-10-14 |
-| F14 | Skip tiny files in automation | Automation | 0.25 day | - | Planned 2026-10-14 |
+| F14 | Skip small files in automation (under 800 KB) | Automation | 0.25 day | - | Done 2026-10-14 |
 | F15 | Palette option for clipboard compression | Automation | 0.5 day | F8 | Planned 2026-10-14 |
 | F16 | Benchmark against Clop (PLAN stage 0) | Both | 1 day | Clop installed (yes) | Planned 2026-10-14 |
 
@@ -275,9 +275,11 @@ Already planned as [PLAN stage 6](PLAN.md#stage-6-equations-and-diagrams). Order
 
 **Goal:** no helper launches for files that cannot save meaningful bytes.
 
-**Behavior:** watched-folder and rule Compress skip images under 20 KB with "Too small to compress" (not an error; following rule actions still run on the original). Manual Compress unchanged.
+**Done 2026-10-14.** Owner raised the limit from the proposed 20 KB to 800 KB (decimal).
 
-**Files:** `Watch/AutoOptimizationService.swift`, `Automation/AutomationMediaService.swift`, tests.
+**Behavior:** rule Compress actions skip files under 800 KB (images and PDFs) with "Under 800 KB; not compressed" (not an error; following rule actions still run: Keep Both continues with a "-optimized" copy as after a no-reduction result, other modes with the original). Manual Compress, Quick Action and clipboard compression unchanged.
+
+**Files:** `Automation/AutomationMediaService.swift` (`minimumBytes`, injectable for tests), tests. Legacy `AutoOptimizationService` not changed: stored folders are migrated to rules at launch.
 
 ## F15. Palette option for clipboard compression
 

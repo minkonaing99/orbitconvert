@@ -41,13 +41,13 @@ final class AutomationPaletteTests: XCTestCase {
         var action = AutomationAction()
         action.kind = .compress
 
-        let lossless = try await AutomationMediaService().perform(action, source: source,
+        let lossless = try await AutomationMediaService(minimumBytes: 0).perform(action, source: source,
                                                                   expected: FileFingerprint.read(source))
         XCTAssertFalse(try chunks(lossless.url).contains("PLTE"))
         try FileManager.default.removeItem(at: lossless.url)
 
         action.palette = .safe
-        let palette = try await AutomationMediaService().perform(action, source: source,
+        let palette = try await AutomationMediaService(minimumBytes: 0).perform(action, source: source,
                                                                  expected: FileFingerprint.read(source))
         XCTAssertTrue(try chunks(palette.url).contains("PLTE"))
         XCTAssertGreaterThan(palette.savedBytes, lossless.savedBytes)
@@ -63,14 +63,14 @@ final class AutomationPaletteTests: XCTestCase {
         action.replacement = .replaceOriginal
         action.palette = .smaller
 
-        let replaced = try await AutomationMediaService().perform(action, source: source,
+        let replaced = try await AutomationMediaService(minimumBytes: 0).perform(action, source: source,
                                                                   expected: FileFingerprint.read(source))
         XCTAssertEqual(replaced.url.standardizedFileURL, source.standardizedFileURL)
         XCTAssertTrue(try chunks(source).contains("PLTE"))
 
         let noisy = try writePNG(noise(), to: folder.appendingPathComponent("noise.png"))
         action.replacement = .keepBoth
-        let fallback = try await AutomationMediaService().perform(action, source: noisy,
+        let fallback = try await AutomationMediaService(minimumBytes: 0).perform(action, source: noisy,
                                                                   expected: FileFingerprint.read(noisy))
         XCTAssertFalse(try chunks(fallback.url).contains("PLTE"))
     }

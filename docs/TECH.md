@@ -229,6 +229,12 @@ Logging categories (os.Logger) when added: FileAccess, Conversion, UI, Permissio
 **Decision:** Pandoc RTF writer plus `NSTextView` printing with native image attachments.
 **Consequences:** Links and tables work; print cancellation is soft. Math and Mermaid added on top on 2026-10-13 (see that ADR).
 
+### [2026-10-14] Rules skip files under 800 KB
+**Status:** Accepted (owner choice)
+**Context:** Small files save few bytes but still cost helper launches and full decodes.
+**Decision:** `AutomationMediaService.minimumBytes = 800_000`: rule Compress leaves smaller files as they are ("Under 800 KB; not compressed") and continues the rule like a no-reduction result. Manual Compress, Quick Action and clipboard are unchanged.
+**Consequences:** Many everyday screenshots are below 800 KB and are no longer compressed by rules; large captures still are.
+
 ### [2026-10-14] Automation waits while the Mac is warm
 **Status:** Accepted (owner choice)
 **Context:** The owner considers the laptop hot above about 70 C (CPU/GPU) or 33 C (battery). Degree readings need private APIs (IOHIDEventSystem/AppleSMC) and a sandbox IOKit exception; the M4 MacBook Air shows no battery temperature in IORegistry.
