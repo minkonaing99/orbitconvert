@@ -16,6 +16,9 @@ struct WatchMenuView: View {
                 Label("Some folders need attention in Settings", systemImage: "exclamationmark.triangle")
                     .font(.caption)
             }
+            if let reason = watcher.loadWaitReason, watcher.outstandingJobCount > 0 {
+                Label("Waiting: \(reason)", systemImage: "thermometer.medium").font(.caption)
+            }
             if watcher.outstandingJobCount > 0 {
                 Text("\(watcher.activeJobs.count) active · \(watcher.queuedJobs.count) waiting")
                 ScrollView {

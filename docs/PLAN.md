@@ -134,17 +134,20 @@ Next:
 
 ### In Progress
 
-- [ ] Optional: palette PNG for clipboard compression - owner TBD
+- [ ] F14 skip tiny files in automation - next
+- [ ] F15 palette option for clipboard compression
+- [ ] F13 optional PNG to JPEG for photo-like PNGs
+- [ ] F16 benchmark against Clop (stage 0)
 - [ ] Installed-app check: Choose Files with a folder, then convert a file from it (sandbox access for folder contents) - owner
 
 ### Backlog
 
-- [ ] Stage 0 benchmark fixtures - owner TBD
 - [ ] Stage 6 (Markdown math and Mermaid) - owner TBD
 - [ ] Large-image and large-PDF memory profiling - owner TBD
 
 ### Done
 
+- [x] F12 automation waits while the Mac is warm or in Low Power Mode - 2026-10-14
 - [x] Clop-style background PNG: Oxipng effort capped in background, palette Safe in Screenshots template - 2026-10-14
 - [x] Background jobs on efficiency cores (helper QoS, 1 Oxipng thread, scaled deadlines) - 2026-10-14
 - [x] Installed-app check (locally signed Release, sandboxed, network.client): Markdown PDF with inline/display math and a Mermaid flowchart renders correctly - 2026-10-13

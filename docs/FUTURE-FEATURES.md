@@ -1,6 +1,6 @@
 # Future Features
 
-Status: F1-F8 done; F9-F11 planned 2026-10-13. Order: F9 -> F10 -> F11 (6A first).
+Status: F1-F11 done. F12-F16 planned 2026-10-14. Order: F12 -> F14 -> F15 -> F13 -> F16.
 
 Product direction (decided 2026-10-12, see [PRD scope rule](PRD.md#scope-rule)): OrbitConvert stays **personal use only** and is both a **manual converter** and a **folder automation tool** (watched folders run rules). Features below serve one or both sides.
 
@@ -21,6 +21,11 @@ Rules for every feature: TDD, code review (fix CRITICAL/HIGH), security review b
 | F9 | Palette PNG in rule Compress actions | Automation | 0.5 day | F8 | Done 2026-10-13 |
 | F10 | Faster Compress to Size quality search | Converter | 0.5 day | - | Done 2026-10-13 |
 | F11 | Markdown math and diagrams (PLAN stage 6) | Converter | 6A 0.5-1 day; 6B-6C several days | 6B before 6C | Done 2026-10-13 |
+| F12 | Pause automation when hot or in Low Power Mode | Automation | 0.5 day | - | Done 2026-10-14 |
+| F13 | Optional PNG to JPEG for photo-like PNGs | Both | 1-2 days | - | Planned 2026-10-14 |
+| F14 | Skip tiny files in automation | Automation | 0.25 day | - | Planned 2026-10-14 |
+| F15 | Palette option for clipboard compression | Automation | 0.5 day | F8 | Planned 2026-10-14 |
+| F16 | Benchmark against Clop (PLAN stage 0) | Both | 1 day | Clop installed (yes) | Planned 2026-10-14 |
 
 Suggested order: F3 (smallest, visible daily) -> F2 -> F4 -> F5 -> F1 (PNG part benefits from F5).
 
@@ -231,6 +236,62 @@ New rules without a Move action are inserted above existing Move rules, so sort 
 **6A done 2026-10-13.** Finding: already worked; Pandoc 3.12 `gfm` parses dollar math, DOCX gets native Word equations. Added a regression test. PDF renders simple inline math as styled text but complex TeX (fractions, integrals) as raw TeX; fixing that is 6B/6C.
 
 Already planned as [PLAN stage 6](PLAN.md#stage-6-equations-and-diagrams). Order: 6A first (Pandoc `tex_math_dollars` so DOCX gets native Word equations; verify `m:oMath` in `word/document.xml`), small and self-contained. 6B (reproduce the WebKit startup failure in a signed installed app) decides whether 6C (offline KaTeX and Mermaid for PDF) is feasible; 6C needs a separate go-ahead.
+
+## F12. Pause automation when the Mac is hot or in Low Power Mode
+
+**Done 2026-10-14.** `Watch/LoadGate.swift`. Owner wanted "hot" to mean CPU/GPU above 70 C or battery above 33 C; degree readings are not public API (CPU/GPU need private sensor APIs plus a sandbox exception; this M4 MacBook Air exposes no battery temperature in IORegistry), so the owner chose macOS's thermal state with the earlier threshold: pause from `.fair` (first warm level), not `.serious`. Menu shows "Waiting: Mac is warm/hot" or "Low Power Mode".
+
+**Goal:** automation never adds heat when the Mac is already hot or saving power.
+
+**Behavior:**
+
+- Before starting each watched-folder or rule job, check `ProcessInfo.thermalState` (pause at `.serious` or `.critical`) and `isLowPowerModeEnabled`.
+- While paused, queued files wait (nothing is dropped); resume automatically on `thermalStateDidChangeNotification` / `NSProcessInfoPowerStateDidChange`, with a slow fallback check (60 s).
+- Menu bar shows "Waiting: Mac is hot" or "Waiting: Low Power Mode". Setting "Pause automation when the Mac is hot or in Low Power Mode", default on.
+- Manual Compress, Quick Action, exports and clipboard compression are not paused (the user is waiting for them).
+
+**Files:** `Watch/WatchedFoldersController.swift` (gate in the drain loop, injected condition for tests), small `Watch/SystemLoad.swift`, `Watch/WatchMenuView.swift`, settings view, SCHEMA (setting key).
+
+**Tests:** hot or Low Power defers jobs and keeps them queued; cooling resumes; setting off ignores the state; manual paths unaffected.
+
+## F13. Optional PNG to JPEG for photo-like PNGs
+
+**Goal:** photo-like PNGs (camera exports, photo screenshots) shrink 5-10x, as Clop does.
+
+**Behavior:**
+
+- Option "Convert photo-like PNGs to JPEG", off by default; per rule Compress action and in manual Compress settings.
+- Only opaque PNGs (no alpha channel, or alpha fully 255); encode JPEG at the preset quality and keep it only if it saves at least 100 KB and at least 30% versus the best PNG result (Clop uses a 100 KB rule).
+- Output gets `.jpg`. Keep Both writes `name-optimized.jpg`; Replace Original and Move to Trash publish the `.jpg` and remove/trash the `.png` with the same safety checks (fingerprint, validated output). Following rule actions continue with the `.jpg`.
+- Metadata policy and orientation as for normal JPEG output; transparency is never lost because transparent PNGs are excluded.
+
+**Open question (decide while building):** whether Replace Original should be allowed to change the extension or only Keep Both (default proposal: allowed, because Move to Trash is the safe alternative).
+
+**Files:** `Images/ImageOptimizationService.swift` (photo check + JPEG candidate), `Automation/AutomationRule.swift` (optional field, decode-safe), `Automation/AutomationMediaService.swift`, editor, settings, `Core/FileActionService.swift`.
+
+**Tests:** opaque gradient PNG converts and shrinks; transparent PNG never converts; small saving keeps PNG; screenshot-like PNG stays PNG; Replace Original swaps extension safely; old rules decode with the option off.
+
+## F14. Skip tiny files in automation
+
+**Goal:** no helper launches for files that cannot save meaningful bytes.
+
+**Behavior:** watched-folder and rule Compress skip images under 20 KB with "Too small to compress" (not an error; following rule actions still run on the original). Manual Compress unchanged.
+
+**Files:** `Watch/AutoOptimizationService.swift`, `Automation/AutomationMediaService.swift`, tests.
+
+## F15. Palette option for clipboard compression
+
+**Goal:** copied screenshots get palette savings like rules.
+
+**Behavior:** clipboard settings gain "PNG colors: Off / Safe / Smaller" (default Off, stored separately from the manual setting); `ClipboardOptimizationService` passes it to `ImageOptimizationService`. Same fallbacks and metadata note as F5.
+
+**Files:** `Clipboard/ClipboardOptimizationService.swift`, clipboard settings view, SCHEMA.
+
+## F16. Benchmark against Clop (PLAN stage 0)
+
+**Goal:** measured, honest comparison instead of claims.
+
+**Plan:** a fixture set (text screenshots, photo screenshots, transparent graphics, photos as JPEG/HEIC/PNG, already-optimized files) with hashes; run OrbitConvert presets (Balanced, Maximum, palette Safe/Smaller) through a test harness and Clop 2.x (installed at `/Applications/Clop.app`, run by the owner or via its CLI if available) on copies; record bytes, time and visual result. Results go to a new benchmark section in SETUP; no universal savings claims.
 
 ## Open: "watch folder changes"
 

@@ -9,6 +9,7 @@ struct WatchedFoldersSettingsView: View {
     @State private var editingFolder: WatchedFolder?
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
     @State private var confirmingReset = false
+    @AppStorage(LoadGate.settingKey) private var pauseUnderLoad = LoadGate.enabledByDefault
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -23,6 +24,9 @@ struct WatchedFoldersSettingsView: View {
                 get: { watcher.paused }, set: { watcher.setPaused($0) }
             ))
             .toggleStyle(.switch).controlSize(.small)
+            Toggle("Wait while the Mac is warm or in Low Power Mode", isOn: $pauseUnderLoad)
+                .toggleStyle(.switch).controlSize(.small)
+                .onChange(of: pauseUnderLoad) { watcher.loadGate.wake() }
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 20) {
                     if watcher.folders.isEmpty {

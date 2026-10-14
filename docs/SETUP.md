@@ -206,6 +206,7 @@ Only these test variables exist; nothing configures the app itself through the e
 
 | Date | Milestone | Tests | Whole-app coverage | Notes |
 | --- | --- | --- | --- | --- |
+| 2026-10-14 | F12 load gate (Release, arm64) | 268 run, 267 pass, 1 skipped | 81.94% (8696/10613) | Thermal/Low Power reasons, setting (on in the app, off by default under XCTest so tests do not depend on the real temperature), hot Mac holds a queued rule job until it cools |
 | 2026-10-14 | Clop-style background PNG (Release, arm64) | 265 run, 264 pass, 1 skipped | 81.89% (8594/10494) | Oxipng level policy per priority, Screenshots template palette Safe |
 | 2026-10-14 | Background helper priority (Release, arm64) | 263 run, 262 pass, 1 skipped | 81.82% (8578/10484) | Base-priority mapping (escalation-safe), 1 Oxipng thread and 4x deadlines in background, background compression still works. Manual cost probe: 5K PNG Maximum 13 s vs 54 s |
 | 2026-10-13 | Installed app: Markdown PDF math + Mermaid (Release, locally signed, sandboxed) | Manual | - | Owner exported `math-and-diagram.md`; PDF checked: inline math on baseline, centered display integral, Mermaid flowchart, `$5` text |

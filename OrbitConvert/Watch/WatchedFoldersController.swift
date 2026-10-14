@@ -17,6 +17,8 @@ final class WatchedFoldersController {
     @ObservationIgnored private var lifetimeObserver: NSObjectProtocol?
     private var activePhase = OptimizationJobPhase.checkingFile
     var paused = false
+    private(set) var loadWaitReason: String?
+    @ObservationIgnored let loadGate: LoadGate
     var currentFileName: String?
     var unavailableIDs: Set<UUID> = []
 
@@ -71,6 +73,7 @@ final class WatchedFoldersController {
 
     init(defaults: UserDefaults = .standard, startClipboard: Bool = false) {
         self.defaults = defaults
+        loadGate = LoadGate(defaults: defaults)
         clipboard = ClipboardMonitorService(defaults: defaults)
         if let data = defaults.data(forKey: "watchedFolders"),
            let stored = try? JSONDecoder().decode([WatchedFolder].self, from: data) {
@@ -116,6 +119,7 @@ final class WatchedFoldersController {
         let key = URL(fileURLWithPath: "/clipboard-job/" + UUID().uuidString)
         clipboardWork[key] = operation
         pending.append((key, clipboardOwnerID, 0, Date()))
+        loadGate.wake()
         if worker == nil { worker = Task { await drain() } }
     }
 
@@ -198,6 +202,7 @@ final class WatchedFoldersController {
     func setPaused(_ value: Bool) {
         paused = value
         defaults.set(value, forKey: "watchingPaused")
+        loadGate.wake()
         if !value {
             for folder in folders where folder.isEnabled { start(folder) }
             if worker == nil && !pending.isEmpty { worker = Task { await drain() } }
@@ -337,6 +342,7 @@ final class WatchedFoldersController {
         automationRetries = automationRetries.filter { !removed.contains($0.key) }
         pending.removeAll { $0.1 == id }
         queuedURLs = Set(pending.map(\.0))
+        loadGate.wake()
         if activeFolderID == id { activeTask?.cancel() }
     }
 
@@ -466,6 +472,17 @@ final class WatchedFoldersController {
                 }
                 continue
             }
+            if next.1 != clipboardOwnerID, let reason = loadGate.reason {
+                // Hot Mac or Low Power Mode: folder jobs stay queued; clipboard work still runs.
+                loadWaitReason = reason
+                if let ready = pending.firstIndex(where: { $0.1 == clipboardOwnerID }) {
+                    await runClipboard(pending.remove(at: ready).0)
+                } else {
+                    await loadGate.wait()
+                }
+                continue
+            }
+            loadWaitReason = nil
             let (url, id, attempt, _) = pending.remove(at: index)
             if id == clipboardOwnerID { await runClipboard(url); continue }
             queuedURLs.remove(url)
@@ -531,6 +548,7 @@ final class WatchedFoldersController {
             currentFileName = nil
         }
         worker = nil
+        loadWaitReason = nil
     }
 
     func canRunAutomation(_ id: UUID) -> Bool { !paused && running[id] != nil }

@@ -28,6 +28,7 @@ Entry format: `- **Headline** - what changed + why it matters to the user. (#iss
 
 ### New Features
 
+- **Automation waits while your Mac is warm** (2026-10-14) - Watched folders and rules pause when macOS reports the Mac getting warm or Low Power Mode is on, and continue by themselves once it cools. Nothing is skipped. The menu shows why it is waiting; turn it off in Watched Folders settings.
 - **Formulas and diagrams in PDF export** (2026-10-13) - Markdown to PDF now draws math (`$...$`, `$$...$$`) as real typeset formulas and turns ```mermaid code blocks into diagrams, all offline. Anything that cannot be drawn keeps its text.
 - **Equations in Word export** (2026-10-13) - Confirmed and now tested: `$...$` and `$$...$$` math in Markdown becomes real, editable Word equations in DOCX export. Dollar amounts like `$5` stay as text. PDF export shows simple formulas but not yet fractions or integrals.
 - **Faster Compress to Size** (2026-10-13) - JPEG and HEIC targets are found with at most 6 trial encodes per size instead of up to 21, so large HEIC photos finish much sooner. Results are the same in normal cases.

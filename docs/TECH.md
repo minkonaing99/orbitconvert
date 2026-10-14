@@ -229,6 +229,12 @@ Logging categories (os.Logger) when added: FileAccess, Conversion, UI, Permissio
 **Decision:** Pandoc RTF writer plus `NSTextView` printing with native image attachments.
 **Consequences:** Links and tables work; print cancellation is soft. Math and Mermaid added on top on 2026-10-13 (see that ADR).
 
+### [2026-10-14] Automation waits while the Mac is warm
+**Status:** Accepted (owner choice)
+**Context:** The owner considers the laptop hot above about 70 C (CPU/GPU) or 33 C (battery). Degree readings need private APIs (IOHIDEventSystem/AppleSMC) and a sandbox IOKit exception; the M4 MacBook Air shows no battery temperature in IORegistry.
+**Decision:** `LoadGate` holds watched-folder and rule jobs while `ProcessInfo.thermalState` is `.fair` or higher, or Low Power Mode is on (setting `pauseAutomationUnderLoad`, default on; default off under XCTest so the suite does not depend on the real temperature). Jobs stay queued; the gate wakes on `thermalStateDidChangeNotification`, `NSProcessInfoPowerStateDidChange`, new clipboard work or the setting, with a 60 s fallback check. Manual work, Quick Action, exports and clipboard compression are never held.
+**Consequences:** On a fanless Mac under sustained load, automation may wait a long time; files are processed once it cools. No private APIs, sandbox unchanged.
+
 ### [2026-10-14] Background jobs run on efficiency cores
 **Status:** Accepted
 **Context:** Idle cost is negligible (0.0% CPU, about 40 MB, no idle wakeups with the window open), but watched-folder PNG jobs heated the Mac: helper processes (Oxipng, pngquant, jpegtran, Pandoc, Ghostscript) ignored the job's `.utility` priority and ran at default QoS on performance cores. Measured per full screenshot (2915 x 1892): Lossless 1.8 s, Balanced 2.9 s, Maximum 5.6 s (7 s CPU), palette Safe 1.5 s.
