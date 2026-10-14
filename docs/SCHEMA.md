@@ -18,6 +18,7 @@ OrbitConvert has no backend, database, network API, HTTP server or OpenAPI schem
 | UserDefaults | `clipboardPreset` | Clipboard compression preset | String |
 | UserDefaults | `clipboardShowResults`, `clipboardCollect` | Result card, in-memory collection | Bool |
 | UserDefaults | `clipboardIgnoredApps` | Ignored bundle IDs | [String] |
+| @AppStorage | `convertPhotoPNGs` | Manual Compress saves opaque photo-like PNGs as JPEG when it saves at least 100 KB and 30%; default off | Bool |
 | UserDefaults | `clipboardPalette` | Clipboard PNG palette level: `off`, `safe`, `smaller`; default off; separate from `paletteLevel` | String (`PaletteLevel`) |
 | UserDefaults | `pauseAutomationUnderLoad` | Hold watched-folder/rule jobs while thermal state is fair or higher, or in Low Power Mode; default true when unset (false under XCTest) | Bool |
 | @AppStorage | `paletteLevel` | Palette PNG (pngquant) for Compress, Compress to Size and Quick Action: `off`, `safe` (quality 80-100), `smaller` (60-100); default off | String (`PaletteLevel`) |
@@ -80,6 +81,7 @@ Derived: `effectiveRules` returns `rules`, or, when nil, one "Compress new files
 | destinationName | String | "Choose a folder" | Display only |
 | preset | CompressionPreset | `.balanced` | Not `.custom` |
 | replacement | ReplacementBehavior | `.keepBoth` | Compress only |
+| convertPhotos | Bool? | nil (off) | Compress only; photo-like PNG to JPEG; Replace Original/Move to Trash publish name.jpg and trash the PNG |
 | palette | PaletteLevel? | nil (Off) | Compress only, PNG only; optional so rules saved before 2026-10-13 decode; unknown stored values decode as Off so the watched-folder list never fails to load |
 | format | String | `jpeg` | `jpeg`, `png`, `heic`, `tiff`, `pdf` |
 | width / height | Int | 1920 / 1080 | 1-100,000 |

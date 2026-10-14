@@ -28,6 +28,7 @@ Entry format: `- **Headline** - what changed + why it matters to the user. (#iss
 
 ### New Features
 
+- **Photo PNGs to JPEG** (2026-10-14) - New option (off by default) in Settings and in rule Compress actions: photo-like PNGs, such as camera exports or video-call captures, are saved as much smaller JPEGs. Screenshots of text and transparent images always stay PNG, and with Replace Original the PNG goes to the Trash.
 - **Smaller copied screenshots** (2026-10-14) - Clipboard settings now have "PNG colors" (Off, Safe, Smaller), so copied screenshots can shrink as much as in folder rules. Off by default. The Lossless preset now always stays lossless, even when PNG colors is on.
 - **Automation waits while your Mac is warm** (2026-10-14) - Watched folders and rules pause when macOS reports the Mac getting warm or Low Power Mode is on, and continue by themselves once it cools. Nothing is skipped. The menu shows why it is waiting; turn it off in Watched Folders settings.
 - **Formulas and diagrams in PDF export** (2026-10-13) - Markdown to PDF now draws math (`$...$`, `$$...$$`) as real typeset formulas and turns ```mermaid code blocks into diagrams, all offline. Anything that cannot be drawn keeps its text.

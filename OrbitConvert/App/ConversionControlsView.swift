@@ -11,6 +11,7 @@ struct ConversionControlsView: View {
     @AppStorage("jpegExportQuality") private var jpegQuality = 0.90
     @AppStorage("removeMetadata") private var stripMetadata = false
     @AppStorage(PaletteLevel.storageKey) private var palettePNG = PaletteLevel.off
+    @AppStorage(ImageOptimizationService.convertPhotosKey) private var convertPhotos = false
     @AppStorage("pdfImageDPI") private var pdfDPI = 150
     @State private var strongerPDFCompression = false
     @State private var pdfLayout = PDFPageLayout.fit
@@ -294,7 +295,7 @@ struct ConversionControlsView: View {
         let files = selection
         let settings = FileActionSettings(targetBytes: targetBytes, resizeOptions: resizeOptions, markdownImageFolder: markdownImageFolder,
                                           markdownPDFStyle: markdownPDFStyle,
-                                          strongerPDFCompression: strongerPDFCompression && preset != .lossless, palettePNG: palettePNG, jpegQuality: jpegQuality, stripMetadata: stripMetadata,
+                                          strongerPDFCompression: strongerPDFCompression && preset != .lossless, palettePNG: palettePNG, convertPhotos: convertPhotos, jpegQuality: jpegQuality, stripMetadata: stripMetadata,
                                           compressionPreset: action.kind == .resize ? resizeCompression : preset, pdfDPI: pdfDPI,
                                           pdfLayout: pdfLayout, pageSelection: pageSelection)
         let (updates, continuation) = AsyncStream<String>.makeStream()

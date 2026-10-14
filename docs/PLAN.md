@@ -134,8 +134,7 @@ Next:
 
 ### In Progress
 
-- [ ] F13 optional PNG to JPEG for photo-like PNGs - next
-- [ ] F16 benchmark against Clop (stage 0)
+- [ ] F16 benchmark against Clop (stage 0) - next
 - [ ] Installed-app check: Choose Files with a folder, then convert a file from it (sandbox access for folder contents) - owner
 
 ### Backlog
@@ -144,6 +143,7 @@ Next:
 
 ### Done
 
+- [x] F13 optional PNG to JPEG for photo-like PNGs - 2026-10-14
 - [x] F15 palette option for clipboard compression - 2026-10-14
 - [x] F14 rules skip files under 800 KB - 2026-10-14
 - [x] F12 automation waits while the Mac is warm or in Low Power Mode - 2026-10-14

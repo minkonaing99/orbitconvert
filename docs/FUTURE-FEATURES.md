@@ -22,7 +22,7 @@ Rules for every feature: TDD, code review (fix CRITICAL/HIGH), security review b
 | F10 | Faster Compress to Size quality search | Converter | 0.5 day | - | Done 2026-10-13 |
 | F11 | Markdown math and diagrams (PLAN stage 6) | Converter | 6A 0.5-1 day; 6B-6C several days | 6B before 6C | Done 2026-10-13 |
 | F12 | Pause automation when hot or in Low Power Mode | Automation | 0.5 day | - | Done 2026-10-14 |
-| F13 | Optional PNG to JPEG for photo-like PNGs | Both | 1-2 days | - | Planned 2026-10-14 |
+| F13 | Optional PNG to JPEG for photo-like PNGs | Both | 1-2 days | - | Done 2026-10-14 |
 | F14 | Skip small files in automation (under 800 KB) | Automation | 0.25 day | - | Done 2026-10-14 |
 | F15 | Palette option for clipboard compression | Automation | 0.5 day | F8 | Done 2026-10-14 |
 | F16 | Benchmark against Clop (PLAN stage 0) | Both | 1 day | Clop installed (yes) | Planned 2026-10-14 |
@@ -255,6 +255,8 @@ Already planned as [PLAN stage 6](PLAN.md#stage-6-equations-and-diagrams). Order
 **Tests:** hot or Low Power defers jobs and keeps them queued; cooling resumes; setting off ignores the state; manual paths unaffected.
 
 ## F13. Optional PNG to JPEG for photo-like PNGs
+
+**Done 2026-10-14.** `Images/PhotoPNGConversion.swift`. Photo-like = opaque, at most 40 MP, and at least 20% unique colors in a 256 px thumbnail (measured on the owner's captures: UI/text screenshots 2-16%, photos and video-call captures 23-38%). Decision on the open question: Replace Original and Move to Trash both publish `name.jpg` and move the PNG to the Trash (recoverable). Manual setting `convertPhotoPNGs`; rules `AutomationAction.convertPhotos`. Quick Action and clipboard unchanged.
 
 **Goal:** photo-like PNGs (camera exports, photo screenshots) shrink 5-10x, as Clop does.
 

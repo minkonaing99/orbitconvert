@@ -7,6 +7,7 @@ struct CompressionSettingsView: View {
     @AppStorage("pdfImageDPI") private var pdfImageDPI = 150
     @AppStorage("removeMetadata") private var removeMetadata = false
     @AppStorage(PaletteLevel.storageKey) private var paletteLevel = PaletteLevel.off
+    @AppStorage(ImageOptimizationService.convertPhotosKey) private var convertPhotos = false
 
     var body: some View {
         TabView {
@@ -66,6 +67,14 @@ struct CompressionSettingsView: View {
                     .font(.caption).foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
+            Toggle(isOn: $convertPhotos) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Convert photo-like PNGs to JPEG")
+                    Text("Compress saves opaque, photo-like PNGs as JPEG when that saves at least 100 KB and 30%. Screenshots of text and transparent images stay PNG.")
+                        .font(.caption).foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }.toggleStyle(.switch)
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
                     Text("JPEG output quality")

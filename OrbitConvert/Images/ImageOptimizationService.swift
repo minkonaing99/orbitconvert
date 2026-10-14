@@ -21,7 +21,8 @@ struct ImageOptimizationService: Sendable {
                               preset: CompressionPreset = .balanced,
                               jpegQuality: Double? = nil,
                               removeMetadata: Bool = false,
-                              palette: PaletteLevel = .off) throws -> OptimizationOutcome {
+                              palette: PaletteLevel = .off,
+                              convertPhotos: Bool = false) throws -> OptimizationOutcome {
         guard let format = ConversionFormat.sourceFormat(for: file.contentTypeIdentifier),
               [.jpeg, .png, .heic].contains(format) else { throw OptimizationError.unsupportedInput }
         guard Set(CGImageDestinationCopyTypeIdentifiers() as? [String] ?? []).contains(format.typeIdentifier) else {
@@ -42,9 +43,18 @@ struct ImageOptimizationService: Sendable {
         }
         let temporary = try output.makeTemporaryFile(in: directory)
         defer { output.removeTemporaryFile(temporary) }
+        var outputFormat = format
         if format == .png {
-            try encodePNG(file.url, source: source, to: temporary, preset: preset,
-                          removeMetadata: removeMetadata, palette: palette)
+            if convertPhotos, palette == .off, try jpegClearlyWins(source, originalSize: Int64(originalSize), preset: preset,
+                                                                  removeMetadata: removeMetadata, to: temporary) {
+                outputFormat = .jpeg
+            } else {
+                try encodePNG(file.url, source: source, to: temporary, preset: preset,
+                              removeMetadata: removeMetadata, palette: palette)
+                if convertPhotos, try preferJPEG(source, over: temporary, preset: preset, removeMetadata: removeMetadata) {
+                    outputFormat = .jpeg
+                }
+            }
         } else if format == .jpeg, let quality {
             if let estimate = try encodeJPEG(file.url, source: source, to: temporary, quality: quality,
                                              removeMetadata: removeMetadata) {
@@ -56,7 +66,7 @@ struct ImageOptimizationService: Sendable {
         }
         try Task.checkCancellation()
         guard let candidate = CGImageSourceCreateWithURL(temporary as CFURL, nil),
-              CGImageSourceGetType(candidate) as String? == format.typeIdentifier,
+              CGImageSourceGetType(candidate) as String? == outputFormat.typeIdentifier,
               CGImageSourceGetCount(candidate) == 1,
               CGImageSourceGetStatusAtIndex(candidate, 0) == .statusComplete,
               let originalImage = CGImageSourceCreateImageAtIndex(source, 0, nil),
@@ -69,7 +79,7 @@ struct ImageOptimizationService: Sendable {
             return .noReduction(originalBytes: Int64(originalSize), candidateBytes: Int64(candidateSize))
         }
         let stem = file.url.deletingPathExtension().lastPathComponent + "-optimized"
-        let url = try output.publish(temporary, stem: stem, fileExtension: format.fileExtension, in: directory)
+        let url = try output.publish(temporary, stem: stem, fileExtension: outputFormat.fileExtension, in: directory)
         return .saved(CompressionResult(originalURL: file.url, outputURL: url,
                                         originalBytes: Int64(originalSize), outputBytes: Int64(candidateSize)))
     }
@@ -146,7 +156,7 @@ struct ImageOptimizationService: Sendable {
         }
     }
 
-    nonisolated private func encode(_ source: CGImageSource, to url: URL,
+    nonisolated func encode(_ source: CGImageSource, to url: URL,
                                     format: ConversionFormat, quality: Double?,
                                     removeMetadata: Bool) throws {
         guard let destination = CGImageDestinationCreateWithURL(url as CFURL,

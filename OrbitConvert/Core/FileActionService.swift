@@ -7,6 +7,7 @@ struct FileActionSettings: Sendable {
     var markdownPDFStyle = MarkdownPDFStyle()
     var strongerPDFCompression = false
     var palettePNG = PaletteLevel.off
+    var convertPhotos = false
     let jpegQuality: Double
     let stripMetadata: Bool
     let compressionPreset: CompressionPreset
@@ -94,7 +95,7 @@ struct FileActionService: Sendable {
                 outcome = try ImageOptimizationService().optimize(
                     file, in: directory, preset: settings.compressionPreset,
                     jpegQuality: settings.jpegQuality, removeMetadata: settings.stripMetadata,
-                    palette: settings.palettePNG
+                    palette: settings.palettePNG, convertPhotos: settings.convertPhotos
                 )
             }
             switch outcome {

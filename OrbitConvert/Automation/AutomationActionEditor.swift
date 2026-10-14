@@ -78,6 +78,13 @@ struct AutomationActionEditor: View {
                                                     set: { var next = action; next.palette = $0; action = next })) {
                 ForEach(PaletteLevel.allCases, id: \.self) { Text($0.label).tag($0) }
             }.fixedSize()
+            Toggle("Convert photo-like PNGs to JPEG", isOn: Binding(get: { action.convertPhotos ?? false },
+                set: { var next = action; next.convertPhotos = $0; action = next }))
+            if action.convertPhotos == true {
+                Text("Only opaque, photo-like PNGs, and only when JPEG saves at least 100 KB and 30%. The file becomes .jpg; with Replace Original or Move to Trash the PNG goes to the Trash.")
+                    .font(.caption).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             Text("Supports JPEG, PNG, HEIC and PDF. Lossless is unavailable for JPEG and HEIC.")
                 .font(.caption).foregroundStyle(.secondary)
             if (action.palette ?? .off) != .off {

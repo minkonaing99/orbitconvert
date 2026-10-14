@@ -229,6 +229,13 @@ Logging categories (os.Logger) when added: FileAccess, Conversion, UI, Permissio
 **Decision:** Pandoc RTF writer plus `NSTextView` printing with native image attachments.
 **Consequences:** Links and tables work; print cancellation is soft. Math and Mermaid added on top on 2026-10-13 (see that ADR).
 
+### [2026-10-14] Optional PNG to JPEG for photo-like PNGs
+**Status:** Accepted
+**Context:** Photo-like PNGs (camera exports, video-call or photo captures) stay large even after lossless optimization; Clop converts opaque PNGs to JPEG.
+**Decision:** Off by default (manual `convertPhotoPNGs`, rule `convertPhotos`). Candidates are opaque (alpha-free or every alpha byte 255), at most 40 MP, with at least 20% unique colors in a 256 px thumbnail; never with Lossless. The JPEG (0.85, Maximum 0.70) replaces the PNG candidate only if it saves at least 100 KB and 30%. In rules, Keep Both writes `name-optimized.jpg`; Replace Original and Move to Trash publish `name.jpg` beside the original and move the PNG to the Trash; following actions continue with the JPEG.
+Cost control: the thumbnail color count runs first and the full-image opacity decode only for photo-like candidates; with palette off, a JPEG at most 30% of the original (and 100 KB smaller) skips the slow Oxipng pass entirely (lossless PNG of photos stays near 90% of the original). Rules decide "converted" from the output's real image type, not its extension.
+**Consequences:** Transparency is never dropped; text/UI screenshots stay PNG. If the Trash is unavailable, both files remain and the rule continues with the JPEG ("original PNG kept").
+
 ### [2026-10-14] Rules skip files under 800 KB
 **Status:** Accepted (owner choice)
 **Context:** Small files save few bytes but still cost helper launches and full decodes.

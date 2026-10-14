@@ -42,6 +42,8 @@ nonisolated struct AutomationAction: Identifiable, Codable, Equatable, Sendable 
     var replacement: ReplacementBehavior = .keepBoth
     // Optional so rules saved before palette support still decode (missing means Off).
     var palette: PaletteLevel?
+    // Optional for the same reason; nil means off.
+    var convertPhotos: Bool?
     var format = "jpeg"
     var width = 1920
     var height = 1080

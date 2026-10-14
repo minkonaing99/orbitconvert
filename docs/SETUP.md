@@ -206,6 +206,7 @@ Only these test variables exist; nothing configures the app itself through the e
 
 | Date | Milestone | Tests | Whole-app coverage | Notes |
 | --- | --- | --- | --- | --- |
+| 2026-10-14 | F13 photo PNG to JPEG (Release, arm64) | 277 run, 276 pass, 1 skipped | 82.08% (8856/10790) | Opaque photo converts only when allowed; transparent, screenshot, small and Lossless stay PNG; clear JPEG win skips the PNG pass; rule Replace Original publishes .jpg and trashes the PNG; Trash failure keeps both and continues; old rules decode |
 | 2026-10-14 | F15 clipboard palette (Release, arm64) | 271 run, 270 pass, 1 skipped | 82.03% (8731/10644) | Copied screenshot gets PLTE only with palette, never with Lossless; monitor stores level and passes it to the optimizer; pause-queue test made load-independent (it flaked under full-suite load) |
 | 2026-10-14 | F14 800 KB floor (Release, arm64) | 269 run, 268 pass, 1 skipped | 81.93% (8702/10621) | Rule Compress leaves a small file untouched with the floor message; palette rule tests use a zero floor |
 | 2026-10-14 | F12 load gate (Release, arm64) | 268 run, 267 pass, 1 skipped | 81.94% (8696/10613) | Thermal/Low Power reasons, setting (on in the app, off by default under XCTest so tests do not depend on the real temperature), hot Mac holds a queued rule job until it cools |

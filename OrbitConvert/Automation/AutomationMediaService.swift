@@ -5,6 +5,7 @@ import PDFKit
 nonisolated struct AutomationMediaService: Sendable {
     /// Rule Compress leaves files under this size alone (owner choice): little to save, not worth the work.
     var minimumBytes: Int64 = 800_000
+    var trash: @Sendable (URL) throws -> Void = { _ = try AutomationFileOperations.moveToTrash($0) }
 
     func perform(_ action: AutomationAction, source: URL, expected: FileFingerprint,
                  willPublish: @escaping @Sendable (URL) async throws -> Void = { _ in }) async throws -> AutomationActionOutput {
@@ -43,13 +44,24 @@ nonisolated struct AutomationMediaService: Sendable {
         }
         let outcome = try file.isPDF
             ? PDFOptimizationService().optimize(file, in: work, options: PDFOptimizationOptions(preset: action.preset))
-            : ImageOptimizationService().optimize(file, in: work, preset: action.preset, palette: action.palette ?? .off)
+            : ImageOptimizationService().optimize(file, in: work, preset: action.preset, palette: action.palette ?? .off,
+                                                 convertPhotos: action.convertPhotos ?? false)
         switch outcome {
         case .saved(let result):
             let output: URL
+            // Decided by the real output format, not the file extension.
+            let converted = FileTypeService().inspect([result.outputURL]).files.first?.contentTypeIdentifier
+                != file.contentTypeIdentifier
+            var message = "Compressed"
             if action.replacement == .keepBoth {
                 output = try await publish(result.outputURL, name: result.outputURL.lastPathComponent,
                     original: file.url, expected: expected, willPublish: willPublish)
+            } else if converted {
+                let published = try await publishConverted(result.outputURL, original: file.url, expected: expected,
+                                                           willPublish: willPublish)
+                output = published.url
+                message = published.trashed ? "Compressed and converted to JPEG"
+                    : "Converted to JPEG; original PNG kept (Trash unavailable)"
             } else {
                 try await willPublish(file.url)
                 try Task.checkCancellation()
@@ -57,12 +69,25 @@ nonisolated struct AutomationMediaService: Sendable {
                 output = try SafeFileReplacementService().replace(source: file.url, candidate: result.outputURL,
                     expected: expected, trashOriginal: action.replacement == .moveOriginalToTrash)
             }
-            return AutomationActionOutput(url: output, message: "Compressed", savedBytes: result.originalBytes - result.outputBytes,
+            return AutomationActionOutput(url: output, message: message, savedBytes: result.originalBytes - result.outputBytes,
                                           compressedBytes: result.originalBytes)
         case .noReduction:
             return try await keepUncompressed(action, file: file, expected: expected, willPublish: willPublish,
                                               message: "Already small; continued without compression")
         }
+    }
+
+    // A new format cannot replace the file in place: publish "name.jpg" beside it, then move the PNG to Trash
+    // (also for Replace Original, so the original stays recoverable). If Trash fails, both files remain and the
+    // rule continues with the JPEG; a changed original is never trashed.
+    private func publishConverted(_ candidate: URL, original: URL, expected: FileFingerprint,
+                                  willPublish: @escaping @Sendable (URL) async throws -> Void) async throws
+        -> (url: URL, trashed: Bool) {
+        let name = original.deletingPathExtension().lastPathComponent + "." + candidate.pathExtension
+        let output = try await publish(candidate, name: name, original: original, expected: expected, willPublish: willPublish)
+        try check(original, expected)
+        do { try trash(original) } catch { return (output, false) }
+        return (output, true)
     }
 
     // Keep Both still publishes a "-optimized" copy so following actions behave the same as after compression.
