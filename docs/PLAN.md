@@ -143,6 +143,7 @@ Next:
 
 ### Done
 
+- [x] Clipboard fix: interrupted results no longer mark an image done (screenshot tools that write the clipboard twice) - 2026-10-15
 - [x] F13 optional PNG to JPEG for photo-like PNGs - 2026-10-14
 - [x] F15 palette option for clipboard compression - 2026-10-14
 - [x] F14 rules skip files under 800 KB - 2026-10-14

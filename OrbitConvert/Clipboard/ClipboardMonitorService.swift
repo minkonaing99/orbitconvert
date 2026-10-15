@@ -139,11 +139,11 @@ import UniformTypeIdentifiers
             }.value
             guard lifecycle == lifecycleGeneration else { return nil }
             guard let result else {
+                let known = item.data.map { known.contains(ClipboardFingerprintRegistry.fingerprint($0)) } ?? false
                 return WatchActivity(fileName: "Clipboard image", outcome: .skipped,
-                    message: mode.preset == .lossless ? "No lossless reduction available" : "Already optimized or no useful reduction")
+                    message: known ? "Already optimized by OrbitConvert"
+                        : mode.preset == .lossless ? "No lossless reduction available" : "No useful size reduction")
             }
-            registry.insert(result.sourceFingerprint)
-            registry.insert(result.outputFingerprint)
             let stillCurrent = enabled && writer.pasteboard.changeCount == item.generation
             var written = false
             if stillCurrent {
@@ -153,6 +153,12 @@ import UniformTypeIdentifiers
                 } else { writer.discard([output]) }
             }
             writer.cleanupExports()
+            // Only a result that reached the clipboard marks the image as done; an interrupted one is retried
+            // when the same image is copied again (some screenshot tools write the clipboard twice).
+            if written {
+                registry.insert(result.sourceFingerprint)
+                registry.insert(result.outputFingerprint)
+            }
             if collectResults { retain(result) }
             if written {
                 lastResult = result

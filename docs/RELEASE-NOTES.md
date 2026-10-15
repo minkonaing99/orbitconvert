@@ -63,6 +63,7 @@ Entry format: `- **Headline** - what changed + why it matters to the user. (#iss
 
 ### Improvements
 
+- **Cleaner clipboard result card** (2026-10-15) - The card now leads with how much was saved, shows a larger thumbnail and the size change on one line, uses small buttons ("Show in Finder" instead of "Reveal") and a quiet close button, and disappears on its own after 6 seconds unless the pointer is over it.
 - **Rules skip small files** (2026-10-14) - Rule compression now leaves files under 800 KB alone, since they save little and still cost work. Other rule steps still run. Compressing by hand is unchanged.
 - **Lighter PNG automation, Clop-style** (2026-10-14) - Folder rules no longer spend extra minutes on Maximum effort for about 0.5% smaller PNGs, and palette-reduced screenshots get a quick final pass. New "Screenshots" rules turn on PNG colors: Safe by default, which is about 5x faster and half the size of lossless on a 5K screenshot. Manual Compress keeps full effort.
 - **Cooler background work** (2026-10-14) - Watched folders, rules and clipboard compression now run on the Mac's efficiency cores with one helper thread, so automation no longer heats the Mac or competes with what you are doing. They take longer per file; manual Compress stays fast.
@@ -73,6 +74,7 @@ Entry format: `- **Headline** - what changed + why it matters to the user. (#iss
 
 ### Bug Fixes
 
+- **Clipboard screenshots skipped** (2026-10-15) - When a screenshot tool wrote the clipboard twice (for example Vorssaint), OrbitConvert dropped its first result and then wrongly skipped the second copy as "already optimized", so the screenshot was never optimized. An image now only counts as done once its optimized version is actually on the clipboard, and skips say why: "Already optimized by OrbitConvert" or "No useful size reduction".
 - **Menu bar popup sizing** (2026-10-01) - Fixed collapsed popup sizing.
 - **Repeated target-size measurements** (2026-10-09) - Candidate sizes use fresh file attributes instead of cached values.
 

@@ -206,6 +206,8 @@ Only these test variables exist; nothing configures the app itself through the e
 
 | Date | Milestone | Tests | Whole-app coverage | Notes |
 | --- | --- | --- | --- | --- |
+| 2026-10-15 | Clipboard result card redesign (Release, arm64) | 280 run, 279 pass, 1 skipped | 82.15% (8922/10860) | Card auto-dismisses (waits while hovered); visually checked |
+| 2026-10-15 | Clipboard double-write fix (Release, arm64) | 279 run, 278 pass, 1 skipped | 82.09% (8864/10798) | Interrupted clipboard result does not mark the image done; same image copied again is optimized; known image says "Already optimized by OrbitConvert" |
 | 2026-10-14 | F13 photo PNG to JPEG (Release, arm64) | 277 run, 276 pass, 1 skipped | 82.08% (8856/10790) | Opaque photo converts only when allowed; transparent, screenshot, small and Lossless stay PNG; clear JPEG win skips the PNG pass; rule Replace Original publishes .jpg and trashes the PNG; Trash failure keeps both and continues; old rules decode |
 | 2026-10-14 | F15 clipboard palette (Release, arm64) | 271 run, 270 pass, 1 skipped | 82.03% (8731/10644) | Copied screenshot gets PLTE only with palette, never with Lossless; monitor stores level and passes it to the optimizer; pause-queue test made load-independent (it flaked under full-suite load) |
 | 2026-10-14 | F14 800 KB floor (Release, arm64) | 269 run, 268 pass, 1 skipped | 81.93% (8702/10621) | Rule Compress leaves a small file untouched with the floor message; palette rule tests use a zero floor |

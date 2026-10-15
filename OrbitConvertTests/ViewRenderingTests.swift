@@ -102,6 +102,23 @@ final class ViewRenderingTests: XCTestCase {
     }
 
     @MainActor
+    func testClipboardResultPanelDismissesItself() throws {
+        let result = ClipboardOptimizationResult(data: Data(count: 600), typeIdentifier: UTType.png.identifier,
+            originalBytes: 1_000, width: 1024, height: 768, thumbnailData: try pngData(width: 64, height: 64), duration: 0.2,
+            sourceFingerprint: "a", outputFingerprint: "b", fileBacked: false)
+        var actions: [String] = []
+        let panel = ClipboardResultPanel(result: result, copy: {}, save: {}, reveal: {},
+                                         onClose: { actions.append("close") }, autoDismiss: .milliseconds(300))
+        defer { panel.close() }
+        panel.show()
+        RunLoop.main.run(until: Date().addingTimeInterval(0.1))
+        XCTAssertTrue(NSApp.windows.contains { isResultCard($0) && $0.isVisible })
+        RunLoop.main.run(until: Date().addingTimeInterval(1.0))
+        XCTAssertFalse(NSApp.windows.contains { isResultCard($0) && $0.isVisible }, "The card goes away by itself")
+        XCTAssertEqual(actions, ["close"])
+    }
+
+    @MainActor
     private func isResultCard(_ window: NSWindow) -> Bool {
         String(describing: type(of: window)) == "ClipboardResultWindow"
     }

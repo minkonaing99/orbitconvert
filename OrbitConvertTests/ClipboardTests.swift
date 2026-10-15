@@ -128,6 +128,43 @@ import UniformTypeIdentifiers
         XCTAssertEqual(board.string(forType: .string), "newer copy C")
     }
 
+    func testInterruptedImageIsOptimizedWhenCopiedAgain() async throws {
+        let board = NSPasteboard.withUniqueName()
+        defer { board.releaseGlobally() }
+        let data = try fixture(.png)
+        let defaults = try isolatedDefaults()
+        defer { defaults.removePersistentDomain(forName: defaults.string(forKey: "testSuite") ?? "") }
+        let started = expectation(description: "Optimization started")
+        started.assertForOverFulfill = false
+        let monitor = ClipboardMonitorService(defaults: defaults, pasteboard: board) { item, _, registry in
+            let fingerprint = ClipboardFingerprintRegistry.fingerprint(item.data ?? Data())
+            guard !registry.contains(fingerprint) else { return nil }
+            started.fulfill()
+            Thread.sleep(forTimeInterval: 0.15)
+            return ClipboardOptimizationResult(data: Data(data.prefix(data.count / 2)), typeIdentifier: UTType.png.identifier,
+                originalBytes: Int64(data.count), width: 256, height: 256, thumbnailData: Data(), duration: 0,
+                sourceFingerprint: fingerprint, outputFingerprint: "out-\(item.generation)", fileBacked: false)
+        }
+        monitor.showResults = false
+
+        board.setData(data, forType: .png)
+        let first = ClipboardItem(generation: board.changeCount, data: data, fileURL: nil, typeIdentifier: UTType.png.identifier)
+        let job = Task { await monitor.process(first) }
+        await fulfillment(of: [started], timeout: 2)
+        board.clearContents(); board.setData(data, forType: .png)
+        let interrupted = await job.value
+        XCTAssertEqual(interrupted?.message, "Newer clipboard kept; result not applied")
+
+        let again = ClipboardItem(generation: board.changeCount, data: data, fileURL: nil, typeIdentifier: UTType.png.identifier)
+        let retried = await monitor.process(again)
+        XCTAssertEqual(retried?.outcome, .optimized, "A result that never reached the clipboard must not mark the image done")
+
+        board.clearContents(); board.setData(data, forType: .png)
+        let repeated = ClipboardItem(generation: board.changeCount, data: data, fileURL: nil, typeIdentifier: UTType.png.identifier)
+        let known = await monitor.process(repeated)
+        XCTAssertEqual(known?.message, "Already optimized by OrbitConvert")
+    }
+
     func testCollectedResultsCanBeCopiedAgainAndCleared() async throws {
         let board = NSPasteboard.withUniqueName()
         defer { board.releaseGlobally() }
